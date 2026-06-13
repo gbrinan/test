@@ -5,7 +5,7 @@ aliases: ["가바", "감마 아미노부티르산", "gamma-aminobutyric acid"]
 summary: "신경의 과잉발화를 억제해 이완과 진정을 유도하는 대표적 억제성 신경전달물질."
 relations:
   - [증가시킨다, 이완]
-  - [권장한다, 입면]
+  - [증가시킨다, 입면]
 sources: ["260608 §5-2"]
 evidence: 일반원칙
 ---
