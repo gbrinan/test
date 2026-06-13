@@ -1,0 +1,7 @@
+# 개인정보·운영 로그는 커밋 금지 (R4 / C6)
+profiles/
+logs/
+
+# 파이썬 캐시
+__pycache__/
+*.pyc
