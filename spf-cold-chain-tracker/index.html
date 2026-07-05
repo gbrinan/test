@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SPF Ops Console</title>
+<style>
+  :root{
+    --bg:#0f1720; --panel:#151f2b; --panel2:#1b2836; --line:#26364a;
+    --ink:#e6edf5; --muted:#8ba0b6; --accent:#4f9cf7;
+    --ok:#2fbf71; --ok-bg:#12331f; --warn:#e0a53b; --warn-bg:#3a2c10;
+    --exc:#f0603c; --exc-bg:#3a160f; --unv:#7d8fa3; --unv-bg:#20303f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,Segoe UI,Roboto,'Malgun Gothic',sans-serif}
+  header{padding:16px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:650}
+  .badge{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .tabs{margin-left:auto;display:flex;gap:6px}
+  .tab{cursor:pointer;padding:7px 16px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-weight:600}
+  .tab.active{background:var(--accent);color:#04121f;border-color:var(--accent)}
+  .wrap{max-width:1120px;margin:0 auto;padding:22px 20px 60px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
+  .card h2{font-size:14px;margin:0 0 14px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  input,textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 11px;font:inherit}
+  textarea{min-height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;white-space:pre;resize:vertical}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:90px}
+  button{cursor:pointer;background:var(--accent);color:#04121f;border:none;border-radius:8px;padding:10px 16px;font:inherit;font-weight:650;transition:transform .08s ease, filter .15s ease}
+  button:hover{filter:brightness(1.06)}
+  button:active{transform:translateY(1px)}
+  button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500}
+  button.ghost:hover{border-color:var(--accent);filter:none}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .stepper{display:flex;flex-wrap:wrap;gap:6px}
+  .step{flex:1;min-width:94px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px}
+  .step .n{color:var(--muted);font-size:10px}
+  .step.done{border-color:#2c6b45}.step.done .n{color:var(--ok)}
+  .step.current{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  .step.blocked{border-color:var(--exc)}
+  .verdict{border-radius:12px;padding:18px;border:1px solid var(--line)}
+  .verdict .v{font-size:26px;font-weight:750}
+  .verdict.OK{background:var(--ok-bg);border-color:#2c6b45}.verdict.OK .v{color:var(--ok)}
+  .verdict.WARN{background:var(--warn-bg);border-color:#6a5216}.verdict.WARN .v{color:var(--warn)}
+  .verdict.EXCURSION{background:var(--exc-bg);border-color:#7a2a19}.verdict.EXCURSION .v{color:var(--exc)}
+  .verdict.UNVERIFIED{background:var(--unv-bg);border-color:#3a4a5c}.verdict.UNVERIFIED .v{color:var(--unv)}
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+  @media(max-width:560px){.metrics{grid-template-columns:repeat(2,1fr)}}
+  .metric{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+  .metric b{display:block;font-size:18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}.metric span{font-size:11px;color:var(--muted)}
+  .alert{border-radius:8px;padding:10px 12px;margin-top:8px;font-size:13.5px;border:1px solid var(--line)}
+  .alert.CRITICAL{background:var(--exc-bg);border-color:#7a2a19}
+  .alert.HIGH{background:var(--warn-bg);border-color:#6a5216}
+  .alert.INFO{background:var(--unv-bg)}
+  .note{font-size:12px;color:var(--muted);margin-top:10px}
+  .basis{font-size:12.5px;color:var(--muted);margin-top:10px;font-family:ui-monospace,monospace;white-space:pre-wrap}
+  .unvbanner{background:var(--unv-bg);border:1px solid #3a4a5c;border-radius:8px;padding:8px 12px;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+  code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12px}
+  /* risk */
+  .risk{border-radius:10px;padding:14px;border:1px solid var(--line);margin-top:6px}
+  .risk.LOW{background:var(--ok-bg);border-color:#2c6b45}
+  .risk.MEDIUM{background:var(--warn-bg);border-color:#6a5216}
+  .risk.HIGH{background:var(--exc-bg);border-color:#7a2a19}
+  .risk .lvl{font-size:20px;font-weight:750}
+  .factors{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  @media(max-width:560px){.factors{grid-template-columns:1fr}}
+  .fx{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px}
+  .fx b{display:block;font-size:15px;font-variant-numeric:tabular-nums}.fx span{font-size:11px;color:var(--muted)}
+  .reasons{margin:10px 0 0;padding-left:18px;font-size:13px}
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+  tr.clk{cursor:pointer}tr.clk:hover{background:rgba(255,255,255,.03)}
+  .pill{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+  .pill.OK{color:var(--ok);border-color:#2c6b45}.pill.WARN{color:var(--warn);border-color:#6a5216}
+  .pill.EXCURSION{color:var(--exc);border-color:#7a2a19}.pill.UNVERIFIED{color:var(--unv)}
+  .pill.LOW{color:var(--ok)}.pill.MEDIUM{color:var(--warn)}.pill.HIGH{color:var(--exc)}
+  .pill.HOT{color:var(--exc);border-color:#7a2a19}.pill.WARM{color:var(--warn);border-color:#6a5216}.pill.COOL{color:var(--accent)}.pill.NQ{color:var(--muted)}
+  .pill.Won{color:var(--ok);border-color:#2c6b45}.pill.Lost{color:var(--muted)}.pill.Meeting{color:var(--accent)}
+  .empty{color:var(--muted);text-align:center;padding:30px}
+</style>
+</head>
+<body>
+<header>
+  <h1>SPF Ops Console</h1>
+  <span class="badge">Acro Bio</span>
+  <div class="tabs">
+    <button class="tab active" id="mSales" onclick="switchMode('sales')">영업 앞단</button>
+    <button class="tab" id="mLogi" onclick="switchMode('logi')">물류 뒷단</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- ============ SALES FRONT (앞단) ============ -->
+  <div id="salesRoot">
+    <section class="card">
+      <h2>1 · 뉴스 신호 → 타깃</h2>
+      <label>뉴스 헤드라인 / 요약 붙여넣기</label>
+      <textarea id="newsIn" style="min-height:78px" placeholder="예: 국내 고병원성 조류인플루엔자(HPAI) 추가 발생, 방역 강화"></textarea>
+      <div class="btns"><button onclick="classifyNews()">신호 분류</button>
+        <button class="ghost" onclick="loadNewsSample()">샘플 뉴스</button></div>
+      <div id="newsOut"></div>
+      <div class="note">라이브 뉴스 검색·HPAI 실데이터는 에이전트(spf-daily-news) 영역입니다. 여기서는 붙여넣은 신호를 섹터·긴급도로 분류합니다.</div>
+    </section>
+
+    <section class="card">
+      <h2>2 · 리드 파이프라인</h2>
+      <div id="leadBody"></div>
+      <div id="leadForm" style="display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+        <div class="row">
+          <div><label>회사</label><input id="lfCompany"></div>
+          <div><label>섹터</label><select id="lfSector"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+          <div><label>단계</label><select id="lfStage"><option>Lead</option><option>Contacted</option><option>Meeting</option><option>Won</option><option>Lost</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>신호 출처</label><input id="lfSource" placeholder="예: HPAI 추가 발생"></div>
+          <div><label>긴급도</label><select id="lfUrg"><option>CRITICAL</option><option>HIGH</option><option>WATCH</option></select></div>
+        </div>
+        <div class="row">
+          <div><label style="display:inline"><input type="checkbox" id="lfBudget" style="width:auto;margin-right:6px">예산 확인</label></div>
+          <div><label style="display:inline"><input type="checkbox" id="lfDm" style="width:auto;margin-right:6px">의사결정자 파악</label></div>
+        </div>
+        <label>메모</label><input id="lfNote">
+        <div class="btns"><button onclick="saveLead()">저장</button><button class="ghost" onclick="hideLeadForm()">취소</button></div>
+      </div>
+      <div class="btns"><button onclick="newLead()">＋ 리드 추가</button>
+        <button class="ghost" onclick="exportLeads()">Notion으로 내보내기</button></div>
+      <div class="note"><b>정본은 Notion</b>입니다. 이 목록은 로컬 임시 작업본 - 확정 리드는 “Notion으로 내보내기”로 복사해 리드 DB에 붙여넣거나 에이전트에 넘기세요. 여기 스코어는 <b>빠른 추정</b>이며, 정식 판정은 spf-target 스킬(에이전트)이 합니다.</div>
+    </section>
+
+    <section class="card">
+      <h2>3 · 콜드메일 작성기</h2>
+      <div class="row">
+        <div><label>리드 선택</label><select id="mailLead"></select></div>
+        <div><label>모드</label><select id="mailMode"><option>Fast</option><option>Deep</option></select></div>
+      </div>
+      <div class="btns"><button onclick="genMail()">메일 생성</button></div>
+      <div id="mailOut"></div>
+    </section>
+
+    <section class="card">
+      <h2>4 · 일정 · 미팅</h2>
+      <div class="row">
+        <div><label>리드</label><select id="mtgLead"></select></div>
+        <div><label>일시</label><input id="mtgWhen" type="datetime-local"></div>
+        <div><label>형식</label><select id="mtgType"><option>화상</option><option>방문</option></select></div>
+      </div>
+      <div class="btns"><button onclick="addMeeting()">미팅 추가</button></div>
+      <div id="mtgBody"></div>
+    </section>
+
+    <section class="card">
+      <h2>5 · 설정 (셀링넘버 · 브라우저 로컬 저장)</h2>
+      <div class="unvbanner">단가·회사·발신자 등 기밀은 공개 소스에 없습니다. 이 브라우저에만 저장됩니다.</div>
+      <div class="row">
+        <div><label>발신자명</label><input id="setSender" placeholder="예: 김성호"></div>
+        <div><label>회사명</label><input id="setCompany" placeholder="예: 아크로바이오"></div>
+      </div>
+      <div class="row">
+        <div><label>단가</label><input id="setPrice" placeholder="예: $1.78/egg"></div>
+        <div><label>배송</label><input id="setShip" placeholder="예: 4-5시간 방콕 인천"></div>
+      </div>
+      <div class="row">
+        <div><label>MOQ</label><input id="setMoq" placeholder="예: 1,080"></div>
+        <div><label>관세</label><input id="setTariff" placeholder="예: 한-태 FTA 0%"></div>
+      </div>
+      <div class="btns"><button onclick="saveSettings()">설정 저장</button></div>
+    </section>
+  </div>
+
+  <!-- ============ LOGISTICS BACK (뒷단) ============ -->
+  <div id="logiRoot" style="display:none">
+  <div class="subbar" style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+    <span class="badge" id="modeBadge">UNVERIFIED mode</span>
+    <div class="tabs" style="margin-left:auto">
+      <button class="tab active" id="tabList" onclick="switchView('list')">목록</button>
+      <button class="tab" id="tabDetail" onclick="switchView('detail')">상세</button>
+    </div>
+  </div>
+  <!-- ===== LIST VIEW ===== -->
+  <div id="listView">
+    <div class="card">
+      <h2>배송 목록</h2>
+      <div id="listBody"></div>
+      <div class="btns"><button onclick="newShipment()">＋ 새 배송</button>
+        <button class="ghost" onclick="seedSamples()">샘플 2건 불러오기</button>
+        <button class="ghost" onclick="exportShipments()">Notion으로 내보내기</button></div>
+      <div class="note"><b>정본은 Notion</b>(물류 배송 DB)입니다. 이 목록은 로컬 임시 작업본이며 서버로 전송되지 않습니다. 확정 배송은 “Notion으로 내보내기”로 복사해 배송 DB에 붙여넣거나 에이전트에 넘기세요.</div>
+    </div>
+  </div>
+
+  <!-- ===== DETAIL VIEW ===== -->
+  <div id="detailView" style="display:none">
+    <div class="grid">
+      <!-- product -->
+      <section class="card">
+        <h2>1 · 상품 종류</h2>
+        <label>SPF 상품</label>
+        <select id="product" onchange="selectProduct()"></select>
+        <div class="note" id="prodNote"></div>
+      </section>
+      <!-- band -->
+      <section class="card">
+        <h2>2 · 온도 밴드 (상품별 · 후보)</h2>
+        <div class="unvbanner" id="thBanner">후보값입니다. 공급사가 실제 밴드를 확인하기 전까지 판정은 <code>UNVERIFIED</code>로 표기됩니다.</div>
+        <div class="row">
+          <div><label>T_min °C</label><input id="tmin" type="number" step="0.1"></div>
+          <div><label>T_max °C</label><input id="tmax" type="number" step="0.1"></div>
+          <div><label>WARN m</label><input id="marg" type="number" step="0.1" value="1"></div>
+        </div>
+        <div class="row">
+          <div><label>이탈한도 E_max(분)</label><input id="emax" type="number" value="30"></div>
+          <div><label>MKT 상한 °C</label><input id="mktmax" type="number" step="0.1" value="22"></div>
+        </div>
+        <label style="margin-top:12px"><input type="checkbox" id="confirmed" style="width:auto;margin-right:8px">이 상품 밴드 공급사 확인 완료 - 실판정(GRADED)</label>
+      </section>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>3 · 배송 정보</h2>
+        <div class="row">
+          <div><label>PO 번호</label><input id="po" value="PO-2026-0142"></div>
+          <div><label>수량(MOQ 1,080 배수)</label><input id="qty" type="number" value="2160"></div>
+        </div>
+        <div class="row">
+          <div><label>섹터</label><select id="sector"><option>A</option><option selected>B</option><option>C</option><option>D</option></select></div>
+          <div><label>현재 단계</label><select id="state" onchange="renderStepper()">
+            <option>PO_PLACED</option><option>PO_CONFIRMED</option><option>PICKED_UP</option>
+            <option selected>IN_TRANSIT</option><option>CUSTOMS</option><option>WAREHOUSED</option>
+            <option>LAST_MILE</option><option>DELIVERED</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>로거 ID</label><input id="logger" value="LT-88231"></div>
+          <div><label>채란일 (보관일수 계산)</label><input id="collect" type="date"></div>
+        </div>
+        <div class="note" id="moqNote"></div>
+      </section>
+
+      <section class="card">
+        <h2>4 · 상태머신</h2>
+        <div class="stepper" id="stepper"></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>5 · 온도 로거 CSV</h2>
+      <textarea id="csv" spellcheck="false"></textarea>
+      <div class="btns">
+        <button onclick="evaluate()">콜드체인 판정</button>
+        <button class="ghost" onclick="loadCsv('T7')">T7 정상</button>
+        <button class="ghost" onclick="loadCsv('T8')">T8 이탈</button>
+        <button class="ghost" onclick="document.getElementById('file').click()">파일 업로드</button>
+        <input id="file" type="file" accept=".csv,.txt" style="display:none">
+      </div>
+      <div class="note">형식 <code>Timestamp,Temperature(C)</code> · <code>#</code> 주석줄 무시 · 로컬시간 그대로 가능</div>
+    </section>
+
+    <section class="card" id="resultCard" style="display:none">
+      <h2>6 · 콜드체인 판정</h2>
+      <div class="verdict" id="verdict"><div class="v" id="vText">-</div><div id="vLeg" class="note"></div></div>
+      <div class="metrics" id="metrics"></div>
+      <div id="alerts"></div>
+      <div class="basis" id="basis"></div>
+    </section>
+
+    <section class="card">
+      <h2>7 · 부화율 영향 외부요인</h2>
+      <div class="note" style="margin-top:0">부화율은 <b>온도 이탈·보관일수</b>(확립된 요인)와 <b>출발/도착지 지상 기온·습도</b>(이탈 위험 프록시)로 추정 위험을 표시합니다. 정밀 부화율 예측이 아니라 <b>위험 신호</b>입니다.</div>
+      <div id="riskBox"><div class="note">날씨 불러오는 중…</div></div>
+      <div class="btns"><button class="ghost" onclick="refreshWeather()">날씨 새로고침</button></div>
+    </section>
+
+    <div class="btns" style="margin-top:4px">
+      <button onclick="saveCurrent()">이 배송 저장 / 갱신</button>
+      <button class="ghost" onclick="switchView('list')">목록으로</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+/* ---------- products (candidate bands - confirm with supplier) ---------- */
+const PRODUCTS=[
+  {id:"jong_short", label:"SPF 종란 · 단기운송(<7일)", tmin:15, tmax:20, note:"SSOT 후보 밴드 15-20°C(최적 16-18). 부화란 표준 운송."},
+  {id:"jong_long",  label:"SPF 종란 · 장기보관(≥7일)", tmin:12, tmax:15, note:"보관 7일↑ 시 저온으로. 보관일수 길수록 부화율 저하."},
+  {id:"jong_old",   label:"SPF 종란 · 종계 노령(>55주)", tmin:15, tmax:21, note:"노령계 physiological zero 높음(~24°C). 상한 소폭 완화, 발육 정지 위해 냉장."},
+  {id:"embryo",     label:"SPF 발육란 · 백신용(9-11일)", tmin:2,  tmax:8,  note:"⚠ 특수: 발육란은 공급사 스펙 필수. 후보값은 임시 - 반드시 확인."},
+  {id:"sample",     label:"SPF 시료/무정란(검사용)", tmin:2, tmax:8, note:"비수정란. 부화율 무관, 시료 안정성 기준."}
+];
+const STATES=["PO_PLACED","PO_CONFIRMED","PICKED_UP","IN_TRANSIT","CUSTOMS","WAREHOUSED","LAST_MILE","DELIVERED"];
+const SAMPLES={
+T7:`# LogTag | LT-88231 | Asia/Bangkok(UTC+7) | 15min
+Timestamp,Temperature(C)
+2026-07-03 05:00,16.0
+2026-07-03 05:15,16.2
+2026-07-03 05:30,15.8
+2026-07-03 05:45,15.6
+2026-07-03 06:00,16.1
+2026-07-03 06:15,16.5
+2026-07-03 06:30,17.0
+2026-07-03 06:45,17.3
+2026-07-03 07:00,17.6
+2026-07-03 07:15,17.9
+2026-07-03 07:30,18.1
+2026-07-03 07:45,18.2
+2026-07-03 08:00,17.9
+2026-07-03 08:15,17.5
+2026-07-03 08:30,17.1
+2026-07-03 08:45,16.7
+2026-07-03 09:00,16.4
+2026-07-03 09:15,16.1
+2026-07-03 09:30,15.9
+2026-07-03 09:45,16.0`,
+T8:`# LogTag | LT-90042 | Asia/Bangkok(UTC+7) | 15min
+Timestamp,Temperature(C)
+2026-07-05 05:00,16.4
+2026-07-05 05:15,16.6
+2026-07-05 05:30,17.0
+2026-07-05 05:45,17.8
+2026-07-05 06:00,18.9
+2026-07-05 06:15,20.6
+2026-07-05 06:30,22.7
+2026-07-05 06:45,24.5
+2026-07-05 07:00,24.3
+2026-07-05 07:15,23.1
+2026-07-05 07:30,21.0
+2026-07-05 07:45,18.6
+2026-07-05 08:00,17.4
+2026-07-05 08:15,16.8
+2026-07-05 08:30,16.5
+2026-07-05 08:45,16.2
+2026-07-05 09:00,16.1
+2026-07-05 09:15,16.0`};
+const LOCS={BKK:{lat:13.68,lon:100.75},ICN:{lat:37.46,lon:126.44}};
+const KEY="spf_shipments_v1";
+const $=id=>document.getElementById(id);
+let lastVerdict=null, lastMetrics=null, WEATHER=null, currentId=null;
+
+/* ---------- init ---------- */
+function initProducts(){
+  $('product').innerHTML=PRODUCTS.map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+  selectProduct();
+}
+function selectProduct(){
+  const p=PRODUCTS.find(x=>x.id===$('product').value)||PRODUCTS[0];
+  $('tmin').value=p.tmin; $('tmax').value=p.tmax;
+  $('prodNote').textContent=p.note;
+  if($('csv').value.trim())evaluate(); else renderStepper();
+}
+function num(id){return parseFloat($(id).value);}
+function updateMode(){const c=$('confirmed').checked;$('modeBadge').textContent=c?'GRADED mode':'UNVERIFIED mode';$('thBanner').style.display=c?'none':'block';}
+
+/* ---------- view switch ---------- */
+function switchView(v){
+  $('listView').style.display=v==='list'?'block':'none';
+  $('detailView').style.display=v==='detail'?'block':'none';
+  $('tabList').classList.toggle('active',v==='list');
+  $('tabDetail').classList.toggle('active',v==='detail');
+  if(v==='list')renderList();
+  if(v==='detail'&&!WEATHER)refreshWeather();
+}
+
+/* ---------- stepper / moq ---------- */
+function renderStepper(){
+  const cur=STATES.indexOf($('state').value), blocked=lastVerdict==='EXCURSION';
+  $('stepper').innerHTML=STATES.map((s,i)=>{
+    let cls='step'; if(i<cur)cls+=' done'; if(i===cur)cls+=' current';
+    if(blocked&&s==='LAST_MILE')cls+=' blocked';
+    return `<div class="${cls}"><div class="n">${i}</div>${s}${(blocked&&s==='LAST_MILE')?' 🔒':''}</div>`;
+  }).join('');
+}
+function checkMoq(){const q=num('qty');const ok=q%1080===0;$('moqNote').textContent=ok?`✓ ${q/1080} × MOQ(1,080)`:`⚠ ${q} 은(는) MOQ 1,080 배수 아님 (data.gap)`;$('moqNote').style.color=ok?'var(--ok)':'var(--warn)';}
+
+/* ---------- cold-chain gate ---------- */
+function parseCsv(text){
+  const rows=[];
+  text.split(/\r?\n/).forEach(line=>{const t=line.trim();
+    if(!t||t.startsWith('#'))return;
+    if(/timestamp/i.test(t)&&/temp/i.test(t))return;
+    const p=t.split(','); if(p.length<2)return;
+    const ts=Date.parse(p[0].replace(' ','T')+':00');
+    const temp=parseFloat(p[1].replace(/[^0-9.\-]/g,''));
+    if(isFinite(ts)&&isFinite(temp))rows.push({t:ts,temp});
+  });
+  rows.sort((a,b)=>a.t-b.t); return rows;
+}
+function computeMetrics(rows,lo,hi){
+  const temps=rows.map(r=>r.temp);
+  const min=Math.min(...temps),max=Math.max(...temps),mean=temps.reduce((a,b)=>a+b,0)/temps.length;
+  let exc=0,ser=[];
+  for(let i=0;i<rows.length-1;i++){const dt=Math.round((rows[i+1].t-rows[i].t)/60000);
+    for(let m=0;m<dt;m++){const T=rows[i].temp+(rows[i+1].temp-rows[i].temp)*(m/dt);ser.push(T);if(T>hi||T<lo)exc++;}}
+  ser.push(rows[rows.length-1].temp);
+  const dH=83144,R=8.314,me=ser.reduce((a,T)=>a+Math.exp(-dH/(R*(T+273.15))),0)/ser.length;
+  const mkt=(-dH/(R*Math.log(me)))-273.15;
+  const iv=[];for(let i=0;i<rows.length-1;i++)iv.push((rows[i+1].t-rows[i].t)/60000);
+  iv.sort((a,b)=>a-b);const median=iv.length?iv[Math.floor(iv.length/2)]:0;
+  const gaps=[];for(let i=0;i<rows.length-1;i++){const g=(rows[i+1].t-rows[i].t)/60000;if(median&&g>2*median)gaps.push(g);}
+  return {min,max,mean,mkt,exc,gaps,median,n:rows.length};
+}
+function evaluate(){
+  const rows=parseCsv($('csv').value);
+  if(rows.length<2){alert('로거 데이터가 부족합니다. CSV를 넣거나 샘플을 불러오세요.');return;}
+  const lo=num('tmin'),hi=num('tmax'),m=num('marg'),emax=num('emax'),mktmax=num('mktmax');
+  const mx=computeMetrics(rows,lo,hi); let verdict,basis;
+  if(!$('confirmed').checked){verdict='UNVERIFIED';basis=`임계값 미확정 → 판정 보류. 관측: min ${mx.min.toFixed(1)} / max ${mx.max.toFixed(1)} / MKT ${mx.mkt.toFixed(1)}°C · 이탈 ${mx.exc}분`;}
+  else if(mx.exc===0&&mx.max<=hi&&mx.min>=lo){verdict='OK';basis=`전 구간 밴드 내(${lo}-${hi}°C). 이탈 0분.`;}
+  else if(mx.exc<=emax&&mx.max<=hi+m&&mx.min>=lo-m&&mx.mkt<=mktmax){verdict='WARN';basis=`이탈 ${mx.exc}분 ≤ ${emax} · WARN 여유 내 · MKT ${mx.mkt.toFixed(1)}≤${mktmax}. 출고 전 QA 검토.`;}
+  else{verdict='EXCURSION';const w=[];if(mx.exc>emax)w.push(`이탈 ${mx.exc}분>${emax}`);if(mx.max>hi+m)w.push(`max ${mx.max.toFixed(1)}>${(hi+m).toFixed(1)}`);if(mx.min<lo-m)w.push(`min ${mx.min.toFixed(1)}<${(lo-m).toFixed(1)}`);if(mx.mkt>mktmax)w.push(`MKT ${mx.mkt.toFixed(1)}>${mktmax}`);basis='EXCURSION 근거: '+w.join(' · ');}
+  lastVerdict=verdict; lastMetrics=mx;
+  renderResult(verdict,mx,rows,basis); renderStepper(); renderRisk();
+}
+function renderResult(verdict,mx,rows,basis){
+  $('resultCard').style.display='block';
+  $('verdict').className='verdict '+verdict; $('vText').textContent=verdict;
+  $('vLeg').textContent=`로거 ${$('logger').value} · ${rows.length} 리딩 · 단계 ${$('state').value}`;
+  $('metrics').innerHTML=[['min',mx.min.toFixed(1)+'°'],['max',mx.max.toFixed(1)+'°'],['mean',mx.mean.toFixed(1)+'°'],['MKT',mx.mkt.toFixed(1)+'°'],['이탈',mx.exc+'분'],['커버리지',mx.gaps.length?'갭'+mx.gaps.length:'100%'],['주기','~'+Math.round(mx.median)+'분'],['리딩',mx.n]].map(([k,v])=>`<div class="metric"><b>${v}</b><span>${k}</span></div>`).join('');
+  const A=[];
+  if(verdict==='EXCURSION')A.push(['CRITICAL','콜드체인 이탈 - LAST_MILE 차단, QA 처분 필요. 출고 금지.']);
+  if(verdict==='WARN')A.push(['HIGH','WARN - 출고 전 QA 검토 필요.']);
+  if(verdict==='UNVERIFIED')A.push(['INFO','임계값 미확정 - 공급사 밴드 확정 필요.']);
+  if(mx.gaps.length)A.push(['HIGH',`센서 갭 ${mx.gaps.length}건 - 커버리지 불완전.`]);
+  if(num('qty')%1080!==0)A.push(['HIGH','수량 MOQ 1,080 배수 아님.']);
+  if(!A.length)A.push(['INFO','이상 없음.']);
+  $('alerts').innerHTML=A.map(([s,t])=>`<div class="alert ${s}"><b>[${s}]</b> ${t}</div>`).join('');
+  $('basis').textContent=basis||'';
+}
+
+/* ---------- hatchability risk (external factors) ---------- */
+function storageDays(){const v=$('collect').value;if(!v)return null;const d=Math.floor((Date.now()-Date.parse(v))/86400000);return d>=0?d:null;}
+function currentSeason(){const m=new Date().getMonth()+1;if([12,1,2].includes(m))return{k:'겨울',mode:'winter'};if([6,7,8].includes(m))return{k:'여름',mode:'summer'};return{k:[3,4,5].includes(m)?'봄':'가을',mode:'mild'};}
+async function refreshWeather(){
+  $('riskBox').innerHTML='<div class="note">날씨 불러오는 중…</div>';
+  try{
+    const q=l=>`https://api.open-meteo.com/v1/forecast?latitude=${l.lat}&longitude=${l.lon}&current=temperature_2m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto`;
+    const [b,i]=await Promise.all([fetch(q(LOCS.BKK)).then(r=>r.json()),fetch(q(LOCS.ICN)).then(r=>r.json())]);
+    WEATHER={BKK:{t:b.current.temperature_2m,rh:b.current.relative_humidity_2m,max:b.daily.temperature_2m_max[0],min:b.daily.temperature_2m_min[0]},
+             ICN:{t:i.current.temperature_2m,rh:i.current.relative_humidity_2m,max:i.daily.temperature_2m_max[0],min:i.daily.temperature_2m_min[0]}};
+  }catch(e){WEATHER='error';}
+  renderRisk();
+}
+function renderRisk(){
+  let pts=0; const reasons=[];
+  if(lastVerdict==='EXCURSION'){pts+=3;reasons.push('콜드체인 EXCURSION (+3) - 부화율 직접 타격');}
+  else if(lastVerdict==='WARN'||lastVerdict==='UNVERIFIED'){pts+=1;reasons.push(`콜드체인 ${lastVerdict} (+1)`);}
+  const sd=storageDays();
+  if(sd!==null){let sp=sd>10?3:sd>7?2:sd>4?1:0;if(sp){pts+=sp;reasons.push(`보관 ${sd}일 (+${sp}) - 7일↑ 부화율 저하`);}else reasons.push(`보관 ${sd}일 (0) - 단기`);}
+  else reasons.push('채란일 미입력 - 보관일수 위험 미반영');
+  const heat=loc=>{if(!WEATHER||WEATHER==='error')return 0;const mx=WEATHER[loc].max;if(mx>=32)return 2;if(mx>=28)return 1;return 0;};
+  const hb=heat('BKK'),hi=heat('ICN');
+  if(hb){pts+=hb;reasons.push(`방콕 지상 최고 ${WEATHER.BKK.max}°C (+${hb}) - 조업 중 이탈 위험`);}
+  if(hi){pts+=hi;reasons.push(`인천 지상 최고 ${WEATHER.ICN.max}°C (+${hi}) - 조업 중 이탈 위험`);}
+  if(WEATHER&&WEATHER!=='error'&&WEATHER.ICN.min<=0){pts+=1;reasons.push(`인천 최저 ${WEATHER.ICN.min}°C (+1) - 한파 저온 손상`);}
+  const season=currentSeason();
+  if(season.mode!=='mild')reasons.push(`계절: ${season.k} - ${season.mode==='summer'?'폭염 조업 노출':'한파 저온'} 주의`);
+  const lvl=pts>=4?'HIGH':pts>=2?'MEDIUM':'LOW';
+  const w=WEATHER, wblock=(!w||w==='error')?'<div class="note">날씨 데이터 없음(오프라인/차단). 새로고침 시도.</div>':
+    `<div class="factors">
+      <div class="fx"><b>방콕(출발) ${w.BKK.t}°C · RH ${w.BKK.rh}%</b><span>오늘 최고 ${w.BKK.max}° / 최저 ${w.BKK.min}°</span></div>
+      <div class="fx"><b>인천(도착) ${w.ICN.t}°C · RH ${w.ICN.rh}%</b><span>오늘 최고 ${w.ICN.max}° / 최저 ${w.ICN.min}°</span></div>
+    </div>`;
+  $('riskBox').innerHTML=`<div class="risk ${lvl}"><div class="lvl">부화율 위험: ${lvl} <span style="font-size:13px;color:var(--muted)">(${pts}점)</span></div>${wblock}
+    <ul class="reasons">${reasons.map(r=>`<li>${r}</li>`).join('')}</ul>
+    <div class="note">지표(indicative)입니다. 온도·보관일수는 확립된 요인, 지상기온은 이탈 위험 프록시. 정밀 부화율 예측 아님.</div></div>`;
+}
+
+/* ---------- persistence / list ---------- */
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+function store(a){localStorage.setItem(KEY,JSON.stringify(a));}
+function collectDetail(){return{id:currentId||('S'+Date.now()),po:$('po').value,productId:$('product').value,productLabel:(PRODUCTS.find(p=>p.id===$('product').value)||{}).label,sector:$('sector').value,qty:+$('qty').value,state:$('state').value,logger:$('logger').value,collect:$('collect').value,tmin:num('tmin'),tmax:num('tmax'),marg:num('marg'),emax:num('emax'),mktmax:num('mktmax'),confirmed:$('confirmed').checked,csv:$('csv').value,verdict:lastVerdict,risk:currentRiskLevel(),updatedAt:new Date().toISOString()};}
+function currentRiskLevel(){const box=$('riskBox').querySelector('.risk');return box?(box.classList.contains('HIGH')?'HIGH':box.classList.contains('MEDIUM')?'MEDIUM':'LOW'):'-';}
+function saveCurrent(){const arr=load();const d=collectDetail();currentId=d.id;const i=arr.findIndex(x=>x.id===d.id);if(i>=0)arr[i]=d;else arr.push(d);store(arr);switchView('list');}
+function loadShipment(id){const d=load().find(x=>x.id===id);if(!d)return;currentId=d.id;
+  $('product').value=d.productId||'jong_short';selectProduct();
+  $('po').value=d.po;$('qty').value=d.qty;$('sector').value=d.sector;$('state').value=d.state;$('logger').value=d.logger;$('collect').value=d.collect||'';
+  $('tmin').value=d.tmin;$('tmax').value=d.tmax;$('marg').value=d.marg;$('emax').value=d.emax;$('mktmax').value=d.mktmax;$('confirmed').checked=d.confirmed;$('csv').value=d.csv||'';
+  updateMode();checkMoq();lastVerdict=d.verdict;switchView('detail');if(d.csv&&d.csv.trim())evaluate();else{renderStepper();renderRisk();}}
+function deleteShipment(id,e){e.stopPropagation();const arr=load().filter(x=>x.id!==id);store(arr);renderList();}
+function newShipment(){currentId=null;lastVerdict=null;lastMetrics=null;
+  $('product').value='jong_short';selectProduct();
+  $('po').value='PO-'+new Date().getFullYear()+'-';$('qty').value=1080;$('sector').value='A';$('state').value='PO_PLACED';$('logger').value='';$('collect').value='';
+  $('confirmed').checked=false;$('csv').value='';$('resultCard').style.display='none';
+  updateMode();checkMoq();renderStepper();switchView('detail');}
+function renderList(){
+  const arr=load();
+  if(!arr.length){$('listBody').innerHTML='<div class="empty">저장된 배송이 없습니다. “새 배송” 또는 “샘플 2건”으로 시작하세요.</div>';return;}
+  $('listBody').innerHTML=`<table><thead><tr><th>PO</th><th>상품</th><th>섹터</th><th>단계</th><th>콜드체인</th><th>부화율</th><th></th></tr></thead><tbody>${
+    arr.map(d=>`<tr class="clk" onclick="loadShipment('${d.id}')">
+      <td>${d.po}</td><td>${(d.productLabel||'').replace('SPF ','')}</td><td>${d.sector}</td><td>${d.state}</td>
+      <td><span class="pill ${d.verdict||'UNVERIFIED'}">${d.verdict||'-'}</span></td>
+      <td><span class="pill ${d.risk||''}">${d.risk||'-'}</span></td>
+      <td><button class="ghost" style="padding:4px 9px" onclick="deleteShipment('${d.id}',event)">삭제</button></td></tr>`).join('')}
+  </tbody></table>`;
+}
+function seedSamples(){
+  const arr=load();
+  [['T7','PO-2026-0142','jong_short','B','CUSTOMS','LT-88231',2160],
+   ['T8','PO-2026-0147','jong_old','A','WAREHOUSED','LT-90042',1080]].forEach(([s,po,pid,sec,st,lg,q])=>{
+    if(arr.find(x=>x.po===po))return;
+    arr.push({id:'S'+po,po,productId:pid,productLabel:(PRODUCTS.find(p=>p.id===pid)||{}).label,sector:sec,qty:q,state:st,logger:lg,collect:'',tmin:(PRODUCTS.find(p=>p.id===pid)||{}).tmin,tmax:(PRODUCTS.find(p=>p.id===pid)||{}).tmax,marg:1,emax:30,mktmax:22,confirmed:false,csv:SAMPLES[s],verdict:'UNVERIFIED',risk:'-',updatedAt:new Date().toISOString()});
+  });
+  store(arr);renderList();
+}
+function loadCsv(k){$('csv').value=SAMPLES[k];if(k==='T8'){$('product').value='jong_old';selectProduct();$('po').value='PO-2026-0147';$('qty').value=1080;$('sector').value='A';$('state').value='WAREHOUSED';$('logger').value='LT-90042';}checkMoq();evaluate();}
+$('file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$('csv').value=r.result;evaluate();};r.readAsText(f);});
+$('qty').addEventListener('input',checkMoq);
+$('confirmed').addEventListener('change',()=>{updateMode();if($('csv').value.trim())evaluate();});
+$('collect').addEventListener('change',renderRisk);
+
+/* ================= SALES FRONT (앞단) ================= */
+const LKEY="spf_leads_v1", SKEY="spf_settings_v1";
+function leads(){try{return JSON.parse(localStorage.getItem(LKEY))||[]}catch(e){return[]}}
+function storeLeads(a){localStorage.setItem(LKEY,JSON.stringify(a));refreshLeadSelects();}
+function settings(){try{return JSON.parse(localStorage.getItem(SKEY))||{}}catch(e){return{}}}
+const pad=n=>String(n).padStart(2,'0');
+let lastSignal=null, editingLead=null;
+
+/* --- mode switch --- */
+function switchMode(m){
+  $('salesRoot').style.display=m==='sales'?'block':'none';
+  $('logiRoot').style.display=m==='logi'?'block':'none';
+  $('mSales').classList.toggle('active',m==='sales');
+  $('mLogi').classList.toggle('active',m==='logi');
+  if(m==='sales'){renderLeads();renderMeetings();refreshLeadSelects();}
+  if(m==='logi')renderList();
+}
+
+/* --- news signal classifier --- */
+const NEWS_RULES=[
+  {re:/HPAI|조류\s*인플|조류\s*독감|고병원성|H5N1|살처분/i, sectors:['A','B'], urgency:'CRITICAL', angle:'백신 긴급 증산 대비 종란 공급 안정성·이중소싱', tag:'HPAI 발생'},
+  {re:/백신|vaccine|접종|증설|생산\s*능력|수주|위탁생산|CMO/i, sectors:['A','B'], urgency:'HIGH', angle:'백신 생산능력 확대 후 종란 수요 증가', tag:'백신·증설'},
+  {re:/화장품|코스메틱|원료|시험|시료|GLP|OECD|독성|CRO/i, sectors:['C'], urgency:'HIGH', angle:'시험·화장품 원료 배치 일관성과 리드타임', tag:'시험·화장품'},
+  {re:/수출|계약|투자|공장|증산|MOU|라이선스/i, sectors:['A','B','D'], urgency:'WATCH', angle:'생산 확대 신호, 조기 접촉 기회', tag:'확장 신호'}
+];
+const URG_CLASS={CRITICAL:'HIGH', HIGH:'MEDIUM', WATCH:'LOW'};
+function newsSignal(t){
+  const hits=[], secs=new Set(); let urg='WATCH', angle='일반 모니터링';
+  const order={CRITICAL:3,HIGH:2,WATCH:1};
+  NEWS_RULES.forEach(r=>{ if(r.re.test(t)){ hits.push(`${r.tag} → 섹터 ${r.sectors.join(',')} (${r.urgency})`); r.sectors.forEach(s=>secs.add(s)); if(order[r.urgency]>order[urg]){urg=r.urgency;angle=r.angle;} }});
+  if(!hits.length){hits.push('매칭 규칙 없음 - 일반 모니터링'); ['A','B','C','D'].forEach(s=>secs.add(s));}
+  return {urgency:urg, sectors:[...secs], angle, hits, source:t.slice(0,60), sevClass:URG_CLASS[urg]};
+}
+function classifyNews(){
+  const t=$('newsIn').value; if(!t.trim()){alert('뉴스 헤드라인을 입력하세요.');return;}
+  const s=newsSignal(t); lastSignal=s;
+  $('newsOut').innerHTML=`<div class="risk ${s.sevClass}" style="margin-top:12px"><div class="lvl">신호 ${s.urgency}</div>
+    <div class="note" style="margin-top:8px">영향 섹터 <b>${s.sectors.join(', ')}</b> · 앵글: ${s.angle}</div>
+    <ul class="reasons">${s.hits.map(h=>`<li>${h}</li>`).join('')}</ul>
+    <div class="btns"><button onclick="newLeadFromSignal()">이 신호로 리드 추가</button></div></div>`;
+}
+function loadNewsSample(){$('newsIn').value='국내 고병원성 조류인플루엔자(HPAI) 추가 발생, 방역당국 백신 접종 확대 검토';classifyNews();}
+function newLeadFromSignal(){ if(!lastSignal)return; newLead({sector:lastSignal.sectors[0],source:lastSignal.source,urgency:lastSignal.urgency}); }
+
+/* --- lead scoring --- */
+function scoreLead(l){
+  let p=0; const r=[];
+  const sp=({A:30,B:30,C:25,D:20})[l.sector]||15; p+=sp; r.push(`섹터 ${l.sector} +${sp}`);
+  const up=({CRITICAL:30,HIGH:20,WATCH:10})[l.urgency]||10; p+=up; r.push(`신호 ${l.urgency||'WATCH'} +${up}`);
+  if(l.budget){p+=15;r.push('예산 확인 +15');}
+  if(l.dm){p+=15;r.push('의사결정자 파악 +15');}
+  const band=p>=80?'HOT':p>=60?'WARM':p>=40?'COOL':'NQ';
+  return {p,band,r};
+}
+
+/* --- lead CRUD --- */
+function newLead(prefill){
+  editingLead=null;
+  $('lfCompany').value=''; $('lfSector').value=(prefill&&prefill.sector)||'A';
+  $('lfStage').value='Lead'; $('lfSource').value=(prefill&&prefill.source)||'';
+  $('lfUrg').value=(prefill&&prefill.urgency)||'HIGH'; $('lfBudget').checked=false; $('lfDm').checked=false; $('lfNote').value='';
+  $('leadForm').style.display='block';
+}
+function editLead(id){
+  const l=leads().find(x=>x.id===id); if(!l)return; editingLead=id;
+  $('lfCompany').value=l.company; $('lfSector').value=l.sector; $('lfStage').value=l.stage;
+  $('lfSource').value=l.source||''; $('lfUrg').value=l.urgency||'HIGH'; $('lfBudget').checked=!!l.budget; $('lfDm').checked=!!l.dm; $('lfNote').value=l.note||'';
+  $('leadForm').style.display='block';
+}
+function hideLeadForm(){$('leadForm').style.display='none';}
+function saveLead(){
+  const c=$('lfCompany').value.trim(); if(!c){alert('회사명을 입력하세요.');return;}
+  const arr=leads();
+  const data={company:c,sector:$('lfSector').value,stage:$('lfStage').value,source:$('lfSource').value.trim(),urgency:$('lfUrg').value,budget:$('lfBudget').checked,dm:$('lfDm').checked,note:$('lfNote').value.trim()};
+  if(editingLead){const i=arr.findIndex(x=>x.id===editingLead); arr[i]={...arr[i],...data};}
+  else arr.push({id:'L'+Date.now(),meetings:[],...data});
+  storeLeads(arr); hideLeadForm(); renderLeads();
+}
+function deleteLead(id,e){e.stopPropagation(); storeLeads(leads().filter(x=>x.id!==id)); renderLeads(); renderMeetings();}
+function advanceLead(id,e){e.stopPropagation(); const order=['Lead','Contacted','Meeting','Won','Lost']; const arr=leads(); const l=arr.find(x=>x.id===id); const i=order.indexOf(l.stage); if(i<3)l.stage=order[i+1]; storeLeads(arr); renderLeads();}
+function renderLeads(){
+  const arr=leads();
+  if(!arr.length){$('leadBody').innerHTML='<div class="empty">리드가 없습니다. 뉴스 신호 분류 또는 “리드 추가”로 시작하세요.</div>';return;}
+  $('leadBody').innerHTML=`<table><thead><tr><th>회사</th><th>섹터</th><th>스코어</th><th>단계</th><th>출처</th><th></th></tr></thead><tbody>${
+    arr.map(l=>{const s=scoreLead(l);return `<tr class="clk" onclick="editLead('${l.id}')">
+      <td>${l.company}</td><td>${l.sector}</td>
+      <td><span class="pill ${s.band}">${s.band} ${s.p}</span></td>
+      <td><span class="pill ${l.stage}">${l.stage}</span></td>
+      <td style="color:var(--muted);font-size:12px">${(l.source||'').slice(0,20)}</td>
+      <td style="white-space:nowrap">
+        <button class="ghost" style="padding:4px 8px" onclick="advanceLead('${l.id}',event)">단계+</button>
+        ${l.stage==='Won'?`<button class="ghost" style="padding:4px 8px" onclick="toShipment('${l.id}',event)">물류전환</button>`:''}
+        <button class="ghost" style="padding:4px 8px" onclick="deleteLead('${l.id}',event)">삭제</button>
+      </td></tr>`;}).join('')}
+  </tbody></table>`;
+}
+
+/* --- email composer --- */
+function refreshLeadSelects(){
+  const arr=leads(); const opts=arr.map(l=>`<option value="${l.id}">${l.company} (${l.sector})</option>`).join('');
+  ['mailLead','mtgLead'].forEach(id=>{const el=$(id); if(el)el.innerHTML=opts||'<option value="">리드 없음</option>';});
+}
+function genMail(){
+  const l=leads().find(x=>x.id===$('mailLead').value); if(!l){alert('먼저 리드를 추가하세요.');return;}
+  const s=settings(), mode=$('mailMode').value;
+  const nums=[]; if(s.price)nums.push(`단가 ${s.price}`); if(s.ship)nums.push(`배송 ${s.ship}`); if(s.moq)nums.push(`MOQ ${s.moq}`); if(s.tariff)nums.push(s.tariff);
+  const pick=mode==='Fast'?nums.slice(0,2):nums.slice(0,3);
+  const sender=s.sender||'담당자', comp=s.company||'당사';
+  const subject=`${l.company} SPF egg 공급 제안`;
+  const lines=[`${l.company} 담당자님께,`,'',
+    `${l.source||'최근 업계 동향'} 관련하여 ${comp}의 SPF egg 공급을 제안드립니다.`,''];
+  if(pick.length){lines.push('핵심 조건:'); pick.forEach(n=>lines.push(` - ${n}`)); lines.push('');}
+  else lines.push('(설정에서 셀링넘버를 입력하면 이 자리에 자동 삽입됩니다.)','');
+  lines.push('30분 화상 미팅을 제안드립니다. 아래 두 슬롯 중 편하신 시간을 알려주세요.',' - (요일/오전 슬롯 1)',' - (요일/오전 슬롯 2)','','감사합니다.',`${sender} 드림`);
+  const body=lines.join('\n');
+  const mailto=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  $('mailOut').innerHTML=`<textarea style="min-height:210px" readonly>${body.replace(/</g,'&lt;')}</textarea>
+    <div class="btns"><a href="${mailto}" style="text-decoration:none"><button>메일 앱으로 열기</button></a>
+    <button class="ghost" onclick="copyMail(this)" data-b="${encodeURIComponent(body)}">본문 복사</button></div>
+    <div class="note">${mode} 모드 · ${l.company}. 실제 발송·추적은 메일앱 또는 Gmail 연동 에이전트에서 처리합니다.</div>`;
+}
+function copyMail(btn){navigator.clipboard.writeText(decodeURIComponent(btn.dataset.b)).then(()=>{btn.textContent='복사됨';setTimeout(()=>btn.textContent='본문 복사',1500);});}
+
+/* --- schedule / meetings --- */
+function addMeeting(){
+  const l=leads().find(x=>x.id===$('mtgLead').value); if(!l){alert('리드를 선택하세요.');return;}
+  const when=$('mtgWhen').value; if(!when){alert('일시를 입력하세요.');return;}
+  const arr=leads(); const li=arr.find(x=>x.id===l.id); li.meetings=li.meetings||[]; li.meetings.push({when,type:$('mtgType').value});
+  if(li.stage==='Lead'||li.stage==='Contacted')li.stage='Meeting';
+  storeLeads(arr); renderMeetings(); renderLeads(); $('mtgWhen').value='';
+}
+function gcal(title,when){
+  const d=new Date(when), e=new Date(d.getTime()+30*60000);
+  const f=x=>x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+'T'+pad(x.getHours())+pad(x.getMinutes())+'00';
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${f(d)}/${f(e)}`;
+}
+function icsDownload(title,when){
+  const d=new Date(when), e=new Date(d.getTime()+30*60000);
+  const f=x=>x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+'T'+pad(x.getHours())+pad(x.getMinutes())+'00';
+  const ics=`BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:${title}\nDTSTART:${f(d)}\nDTEND:${f(e)}\nEND:VEVENT\nEND:VCALENDAR`;
+  const a=document.createElement('a'); a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(ics); a.download='meeting.ics'; a.click();
+}
+function renderMeetings(){
+  const rows=[]; leads().forEach(l=>(l.meetings||[]).forEach(m=>rows.push({co:l.company,sec:l.sector,...m})));
+  rows.sort((a,b)=>a.when.localeCompare(b.when));
+  if(!rows.length){$('mtgBody').innerHTML='<div class="empty">예정된 미팅이 없습니다.</div>';return;}
+  $('mtgBody').innerHTML=`<table><thead><tr><th>일시</th><th>회사</th><th>형식</th><th></th></tr></thead><tbody>${
+    rows.map(m=>{const title=`${m.co} SPF egg 미팅`;return `<tr>
+      <td class="mono">${m.when.replace('T',' ')}</td><td>${m.co} (${m.sec})</td><td>${m.type}</td>
+      <td style="white-space:nowrap"><a href="${gcal(title,m.when)}" target="_blank" rel="noopener"><button class="ghost" style="padding:4px 8px">구글캘린더</button></a>
+      <button class="ghost" style="padding:4px 8px" onclick="icsDownload('${title}','${m.when}')">.ics</button></td></tr>`;}).join('')}
+  </tbody></table>`;
+}
+
+/* --- settings --- */
+function saveSettings(){
+  localStorage.setItem(SKEY,JSON.stringify({sender:$('setSender').value.trim(),company:$('setCompany').value.trim(),price:$('setPrice').value.trim(),ship:$('setShip').value.trim(),moq:$('setMoq').value.trim(),tariff:$('setTariff').value.trim()}));
+  alert('설정이 이 브라우저에 저장되었습니다.');
+}
+function loadSettings(){const s=settings(); if(s.sender)$('setSender').value=s.sender; if(s.company)$('setCompany').value=s.company; if(s.price)$('setPrice').value=s.price; if(s.ship)$('setShip').value=s.ship; if(s.moq)$('setMoq').value=s.moq; if(s.tariff)$('setTariff').value=s.tariff;}
+
+/* --- front→back handoff (수주 전환) --- */
+function toShipment(id,e){
+  if(e)e.stopPropagation();
+  const l=leads().find(x=>x.id===id); if(!l)return;
+  const arr=load(); const po='PO-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4);
+  const p=PRODUCTS[0];
+  arr.push({id:'S'+Date.now(),po,productId:p.id,productLabel:p.label,sector:l.sector,qty:1080,state:'PO_PLACED',logger:'',collect:'',tmin:p.tmin,tmax:p.tmax,marg:1,emax:30,mktmax:22,confirmed:false,csv:'',verdict:'UNVERIFIED',risk:'-',updatedAt:new Date().toISOString()});
+  store(arr);
+  alert(`${l.company} → 물류 배송 ${po} 생성. 물류 뒷단으로 이동합니다.`);
+  switchMode('logi'); renderList();
+}
+
+/* --- Notion export (bridge: local → Notion system of record) --- */
+function copyText(text,label){
+  navigator.clipboard.writeText(text).then(()=>alert((label||'복사')+' 완료 - Notion DB에 붙여넣거나 에이전트에게 전달하세요.'),
+    ()=>alert('복사 실패: 브라우저 권한을 확인하세요.'));
+}
+function exportLeads(){
+  const arr=leads(); if(!arr.length){alert('내보낼 리드가 없습니다.');return;}
+  const head='| 회사 | 섹터 | 스코어 | 단계 | 긴급도 | 신호 출처 | 의사결정자 | 다음 액션 |\n|---|---|---|---|---|---|---|---|';
+  const rows=arr.map(l=>{const s=scoreLead(l);return `| ${l.company} | ${l.sector} | ${s.band} | ${l.stage} | ${l.urgency||''} | ${(l.source||'').replace(/\|/g,'/')} | ${(l.dm?'확인':'')} | ${(l.note||'').replace(/\|/g,'/')} |`;});
+  copyText([head,...rows].join('\n'),'리드 '+arr.length+'건');
+}
+function exportShipments(){
+  const arr=load(); if(!arr.length){alert('내보낼 배송이 없습니다.');return;}
+  const head='| PO | 상품 | 섹터 | 수량 | 단계 | 콜드체인 | 로거 |\n|---|---|---|---|---|---|---|';
+  const rows=arr.map(d=>`| ${d.po} | ${(d.productLabel||'').replace('SPF ','')} | ${d.sector} | ${d.qty} | ${d.state} | ${d.verdict||'-'} | ${d.logger||''} |`);
+  copyText([head,...rows].join('\n'),'배송 '+arr.length+'건');
+}
+
+/* ================= INIT ================= */
+initProducts();updateMode();checkMoq();renderStepper();renderList();switchView('list');
+loadSettings();renderLeads();renderMeetings();refreshLeadSelects();switchMode('sales');
+</script>
+</body>
+</html>
