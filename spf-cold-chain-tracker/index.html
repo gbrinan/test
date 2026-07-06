@@ -73,6 +73,7 @@
   .fx b{display:block;font-size:15px;font-variant-numeric:tabular-nums}.fx span{font-size:11px;color:var(--muted)}
   .reasons{margin:10px 0 0;padding-left:18px;font-size:13px}
   /* table */
+  .tbl-wrap{width:100%;overflow-x:auto}
   table{width:100%;border-collapse:collapse;font-size:13.5px}
   th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
   th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.03em}
@@ -91,14 +92,40 @@
   <h1>SPF Ops Console</h1>
   <span class="badge">Acro Bio</span>
   <div class="tabs">
-    <button class="tab active" id="mSales" onclick="switchMode('sales')">영업 앞단</button>
+    <button class="tab active" id="mHome" onclick="switchMode('home')">홈</button>
+    <button class="tab" id="mSales" onclick="switchMode('sales')">영업 앞단</button>
     <button class="tab" id="mLogi" onclick="switchMode('logi')">물류 뒷단</button>
   </div>
 </header>
 
 <div class="wrap">
+  <!-- ============ HOME (오늘 확인할 것) ============ -->
+  <div id="homeRoot">
+    <section class="card">
+      <h2>오늘 확인할 것</h2>
+      <div id="homeSummary"></div>
+    </section>
+    <section class="card">
+      <h2>긴급 리드 (HOT · WARM)</h2>
+      <div id="homeLeads"></div>
+    </section>
+    <section class="card">
+      <h2>물류 경고 (온도 이탈 · QA 보류)</h2>
+      <div id="homeShipments"></div>
+    </section>
+    <section class="card">
+      <h2>다가오는 미팅</h2>
+      <div id="homeMeetings"></div>
+    </section>
+    <section class="card">
+      <h2>최근 뉴스 신호</h2>
+      <div id="homeNews"></div>
+    </section>
+    <div class="note">이 화면은 영업 앞단·물류 뒷단의 로컬 데이터를 모아 보여줄 뿐 별도로 저장하지 않습니다.</div>
+  </div>
+
   <!-- ============ SALES FRONT (앞단) ============ -->
-  <div id="salesRoot">
+  <div id="salesRoot" style="display:none">
     <section class="card">
       <h2>1 · 뉴스 신호 → 타깃</h2>
       <label>뉴스 헤드라인 / 요약 붙여넣기</label>
@@ -109,8 +136,26 @@
       <div class="note">라이브 뉴스 검색·HPAI 실데이터는 에이전트(spf-daily-news) 영역입니다. 여기서는 붙여넣은 신호를 섹터·긴급도로 분류합니다.</div>
     </section>
 
+    <section class="card" id="settingsCard">
+      <h2>2 · 설정 (셀링넘버 · 브라우저 로컬 저장)</h2>
+      <div class="unvbanner">단가·회사·발신자 등 기밀은 공개 소스에 없습니다. 이 브라우저에만 저장됩니다. 콜드메일 작성 전 먼저 채워두세요.</div>
+      <div class="row">
+        <div><label>발신자명</label><input id="setSender" placeholder="예: 김성호"></div>
+        <div><label>회사명</label><input id="setCompany" placeholder="예: 아크로바이오"></div>
+      </div>
+      <div class="row">
+        <div><label>단가</label><input id="setPrice" placeholder="예: $1.78/egg"></div>
+        <div><label>배송</label><input id="setShip" placeholder="예: 4-5시간 방콕 인천"></div>
+      </div>
+      <div class="row">
+        <div><label>MOQ</label><input id="setMoq" placeholder="예: 1,080"></div>
+        <div><label>관세</label><input id="setTariff" placeholder="예: 한-태 FTA 0%"></div>
+      </div>
+      <div class="btns"><button onclick="saveSettings()">설정 저장</button></div>
+    </section>
+
     <section class="card">
-      <h2>2 · 리드 파이프라인</h2>
+      <h2>3 · 리드 파이프라인</h2>
       <div id="leadBody"></div>
       <div id="leadForm" style="display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
         <div class="row">
@@ -135,7 +180,7 @@
     </section>
 
     <section class="card">
-      <h2>3 · 콜드메일 작성기</h2>
+      <h2>4 · 콜드메일 작성기</h2>
       <div class="row">
         <div><label>리드 선택</label><select id="mailLead"></select></div>
         <div><label>모드</label><select id="mailMode"><option>Fast</option><option>Deep</option></select></div>
@@ -144,8 +189,8 @@
       <div id="mailOut"></div>
     </section>
 
-    <section class="card">
-      <h2>4 · 일정 · 미팅</h2>
+    <section class="card" id="meetingsCard">
+      <h2>5 · 일정 · 미팅</h2>
       <div class="row">
         <div><label>리드</label><select id="mtgLead"></select></div>
         <div><label>일시</label><input id="mtgWhen" type="datetime-local"></div>
@@ -154,30 +199,12 @@
       <div class="btns"><button onclick="addMeeting()">미팅 추가</button></div>
       <div id="mtgBody"></div>
     </section>
-
-    <section class="card">
-      <h2>5 · 설정 (셀링넘버 · 브라우저 로컬 저장)</h2>
-      <div class="unvbanner">단가·회사·발신자 등 기밀은 공개 소스에 없습니다. 이 브라우저에만 저장됩니다.</div>
-      <div class="row">
-        <div><label>발신자명</label><input id="setSender" placeholder="예: 김성호"></div>
-        <div><label>회사명</label><input id="setCompany" placeholder="예: 아크로바이오"></div>
-      </div>
-      <div class="row">
-        <div><label>단가</label><input id="setPrice" placeholder="예: $1.78/egg"></div>
-        <div><label>배송</label><input id="setShip" placeholder="예: 4-5시간 방콕 인천"></div>
-      </div>
-      <div class="row">
-        <div><label>MOQ</label><input id="setMoq" placeholder="예: 1,080"></div>
-        <div><label>관세</label><input id="setTariff" placeholder="예: 한-태 FTA 0%"></div>
-      </div>
-      <div class="btns"><button onclick="saveSettings()">설정 저장</button></div>
-    </section>
   </div>
 
   <!-- ============ LOGISTICS BACK (뒷단) ============ -->
   <div id="logiRoot" style="display:none">
   <div class="subbar" style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
-    <span class="badge" id="modeBadge">UNVERIFIED mode</span>
+    <span class="badge" id="modeBadge">온도밴드 미확정</span>
     <div class="tabs" style="margin-left:auto">
       <button class="tab active" id="tabList" onclick="switchView('list')">목록</button>
       <button class="tab" id="tabDetail" onclick="switchView('detail')">상세</button>
@@ -185,6 +212,19 @@
   </div>
   <!-- ===== LIST VIEW ===== -->
   <div id="listView">
+    <div class="card">
+      <h2>빠른 온도 판정 (저장 없이 즉시 확인)</h2>
+      <div class="row">
+        <div><label>상품(밴드)</label><select id="qProduct"></select></div>
+        <div><label style="display:inline;margin-top:22px"><input type="checkbox" id="qConfirmed" style="width:auto;margin-right:6px">밴드 확정됨</label></div>
+      </div>
+      <textarea id="qCsv" style="min-height:100px" placeholder="Timestamp,Temperature(C) 형식으로 로거 데이터를 붙여넣으세요"></textarea>
+      <div class="btns"><button onclick="quickCheck()">판정</button>
+        <button class="ghost" onclick="quickLoad('T7')">T7 예시</button>
+        <button class="ghost" onclick="quickLoad('T8')">T8 예시</button></div>
+      <div id="quickOut"></div>
+      <div class="note">이 화면은 아무것도 저장하지 않습니다. 기록을 남기려면 아래 “＋ 새 배송”으로 전체 정보를 입력하세요.</div>
+    </div>
     <div class="card">
       <h2>배송 목록</h2>
       <div id="listBody"></div>
@@ -218,7 +258,7 @@
           <div><label>이탈한도 E_max(분)</label><input id="emax" type="number" value="30"></div>
           <div><label>MKT 상한 °C</label><input id="mktmax" type="number" step="0.1" value="22"></div>
         </div>
-        <label style="margin-top:12px"><input type="checkbox" id="confirmed" style="width:auto;margin-right:8px">이 상품 밴드 공급사 확인 완료 - 실판정(GRADED)</label>
+        <label style="margin-top:12px"><input type="checkbox" id="confirmed" style="width:auto;margin-right:8px">이 상품 밴드 공급사 확인 완료 - 실제 판정 활성화</label>
       </section>
     </div>
 
@@ -355,7 +395,7 @@ function selectProduct(){
   if($('csv').value.trim())evaluate(); else renderStepper();
 }
 function num(id){return parseFloat($(id).value);}
-function updateMode(){const c=$('confirmed').checked;$('modeBadge').textContent=c?'GRADED mode':'UNVERIFIED mode';$('thBanner').style.display=c?'none':'block';}
+function updateMode(){const c=$('confirmed').checked;$('modeBadge').textContent=c?'온도밴드 확정됨':'온도밴드 미확정';$('thBanner').style.display=c?'none':'block';}
 
 /* ---------- view switch ---------- */
 function switchView(v){
@@ -405,32 +445,75 @@ function computeMetrics(rows,lo,hi){
   const gaps=[];for(let i=0;i<rows.length-1;i++){const g=(rows[i+1].t-rows[i].t)/60000;if(median&&g>2*median)gaps.push(g);}
   return {min,max,mean,mkt,exc,gaps,median,n:rows.length};
 }
+function tentativeVerdict(mx,lo,hi,m,emax,mktmax){
+  if(mx.exc===0&&mx.max<=hi&&mx.min>=lo)return 'OK';
+  if(mx.exc<=emax&&mx.max<=hi+m&&mx.min>=lo-m&&mx.mkt<=mktmax)return 'WARN';
+  return 'EXCURSION';
+}
+function verdictBasis(tv,mx,lo,hi,m,emax,mktmax){
+  if(tv==='OK')return `전 구간 밴드 내(${lo}-${hi}°C). 이탈 0분.`;
+  if(tv==='WARN')return `이탈 ${mx.exc}분 ≤ ${emax} · WARN 여유 내 · MKT ${mx.mkt.toFixed(1)}≤${mktmax}. 출고 전 QA 검토.`;
+  const w=[];if(mx.exc>emax)w.push(`이탈 ${mx.exc}분>${emax}`);if(mx.max>hi+m)w.push(`max ${mx.max.toFixed(1)}>${(hi+m).toFixed(1)}`);if(mx.min<lo-m)w.push(`min ${mx.min.toFixed(1)}<${(lo-m).toFixed(1)}`);if(mx.mkt>mktmax)w.push(`MKT ${mx.mkt.toFixed(1)}>${mktmax}`);
+  return 'EXCURSION 근거: '+w.join(' · ');
+}
+function metricsHtml(mx){
+  return [['min',mx.min.toFixed(1)+'°'],['max',mx.max.toFixed(1)+'°'],['mean',mx.mean.toFixed(1)+'°'],['MKT',mx.mkt.toFixed(1)+'°'],['이탈',mx.exc+'분'],['커버리지',mx.gaps.length?'갭'+mx.gaps.length:'100%'],['주기','~'+Math.round(mx.median)+'분'],['리딩',mx.n]].map(([k,v])=>`<div class="metric"><b>${v}</b><span>${k}</span></div>`).join('');
+}
 function evaluate(){
   const rows=parseCsv($('csv').value);
   if(rows.length<2){alert('로거 데이터가 부족합니다. CSV를 넣거나 샘플을 불러오세요.');return;}
   const lo=num('tmin'),hi=num('tmax'),m=num('marg'),emax=num('emax'),mktmax=num('mktmax');
-  const mx=computeMetrics(rows,lo,hi); let verdict,basis;
-  if(!$('confirmed').checked){verdict='UNVERIFIED';basis=`임계값 미확정 → 판정 보류. 관측: min ${mx.min.toFixed(1)} / max ${mx.max.toFixed(1)} / MKT ${mx.mkt.toFixed(1)}°C · 이탈 ${mx.exc}분`;}
-  else if(mx.exc===0&&mx.max<=hi&&mx.min>=lo){verdict='OK';basis=`전 구간 밴드 내(${lo}-${hi}°C). 이탈 0분.`;}
-  else if(mx.exc<=emax&&mx.max<=hi+m&&mx.min>=lo-m&&mx.mkt<=mktmax){verdict='WARN';basis=`이탈 ${mx.exc}분 ≤ ${emax} · WARN 여유 내 · MKT ${mx.mkt.toFixed(1)}≤${mktmax}. 출고 전 QA 검토.`;}
-  else{verdict='EXCURSION';const w=[];if(mx.exc>emax)w.push(`이탈 ${mx.exc}분>${emax}`);if(mx.max>hi+m)w.push(`max ${mx.max.toFixed(1)}>${(hi+m).toFixed(1)}`);if(mx.min<lo-m)w.push(`min ${mx.min.toFixed(1)}<${(lo-m).toFixed(1)}`);if(mx.mkt>mktmax)w.push(`MKT ${mx.mkt.toFixed(1)}>${mktmax}`);basis='EXCURSION 근거: '+w.join(' · ');}
+  const mx=computeMetrics(rows,lo,hi);
+  const tv=tentativeVerdict(mx,lo,hi,m,emax,mktmax);
+  const confirmed=$('confirmed').checked;
+  const verdict=confirmed?tv:'UNVERIFIED';
+  const basis=confirmed?verdictBasis(tv,mx,lo,hi,m,emax,mktmax)
+    :`온도밴드 미확정 → 최종판정 보류. 잠정판정(밴드 확정 시): ${tv}. 관측: min ${mx.min.toFixed(1)} / max ${mx.max.toFixed(1)} / MKT ${mx.mkt.toFixed(1)}°C · 이탈 ${mx.exc}분`;
   lastVerdict=verdict; lastMetrics=mx;
-  renderResult(verdict,mx,rows,basis); renderStepper(); renderRisk();
+  renderResult(verdict,mx,rows,basis,confirmed?null:tv); renderStepper(); renderRisk();
 }
-function renderResult(verdict,mx,rows,basis){
+function renderResult(verdict,mx,rows,basis,tv){
   $('resultCard').style.display='block';
   $('verdict').className='verdict '+verdict; $('vText').textContent=verdict;
-  $('vLeg').textContent=`로거 ${$('logger').value} · ${rows.length} 리딩 · 단계 ${$('state').value}`;
-  $('metrics').innerHTML=[['min',mx.min.toFixed(1)+'°'],['max',mx.max.toFixed(1)+'°'],['mean',mx.mean.toFixed(1)+'°'],['MKT',mx.mkt.toFixed(1)+'°'],['이탈',mx.exc+'분'],['커버리지',mx.gaps.length?'갭'+mx.gaps.length:'100%'],['주기','~'+Math.round(mx.median)+'분'],['리딩',mx.n]].map(([k,v])=>`<div class="metric"><b>${v}</b><span>${k}</span></div>`).join('');
+  $('vLeg').textContent=`로거 ${$('logger').value} · ${rows.length} 리딩 · 단계 ${$('state').value}`
+    +(tv?` · 잠정판정: ${tv} (밴드 확정 시 이렇게 표시됩니다)`:'');
+  $('metrics').innerHTML=metricsHtml(mx);
   const A=[];
   if(verdict==='EXCURSION')A.push(['CRITICAL','콜드체인 이탈 - LAST_MILE 차단, QA 처분 필요. 출고 금지.']);
   if(verdict==='WARN')A.push(['HIGH','WARN - 출고 전 QA 검토 필요.']);
-  if(verdict==='UNVERIFIED')A.push(['INFO','임계값 미확정 - 공급사 밴드 확정 필요.']);
+  if(verdict==='UNVERIFIED'){
+    A.push(['INFO','온도밴드 미확정 - 공급사 밴드 확정 필요.']);
+    if(tv==='EXCURSION')A.push(['CRITICAL',`[잠정] 밴드 확정 시 이 판정은 EXCURSION입니다 - 안전을 위해 지금부터 이탈로 취급하고 출고를 보류하세요.`]);
+    else if(tv==='WARN')A.push(['HIGH',`[잠정] 밴드 확정 시 이 판정은 WARN입니다 - 출고 전 QA 검토를 권장합니다.`]);
+  }
   if(mx.gaps.length)A.push(['HIGH',`센서 갭 ${mx.gaps.length}건 - 커버리지 불완전.`]);
   if(num('qty')%1080!==0)A.push(['HIGH','수량 MOQ 1,080 배수 아님.']);
   if(!A.length)A.push(['INFO','이상 없음.']);
   $('alerts').innerHTML=A.map(([s,t])=>`<div class="alert ${s}"><b>[${s}]</b> ${t}</div>`).join('');
   $('basis').textContent=basis||'';
+}
+
+/* ---------- quick check (list view, no save) ---------- */
+function initQuickProduct(){$('qProduct').innerHTML=PRODUCTS.map(p=>`<option value="${p.id}">${p.label}</option>`).join('');}
+function quickLoad(k){$('qCsv').value=SAMPLES[k];quickCheck();}
+function quickCheck(){
+  const rows=parseCsv($('qCsv').value);
+  if(rows.length<2){alert('로거 데이터를 입력하세요.');return;}
+  const p=PRODUCTS.find(x=>x.id===$('qProduct').value)||PRODUCTS[0];
+  const lo=p.tmin,hi=p.tmax,m=1,emax=30,mktmax=22;
+  const mx=computeMetrics(rows,lo,hi);
+  const tv=tentativeVerdict(mx,lo,hi,m,emax,mktmax);
+  const confirmed=$('qConfirmed').checked;
+  const verdict=confirmed?tv:'UNVERIFIED';
+  const tvNote=confirmed?'':` · 잠정판정: ${tv} (밴드 확정 시 이렇게 표시됩니다)`;
+  const warn=(!confirmed&&(tv==='EXCURSION'||tv==='WARN'))
+    ?`<div class="alert ${tv==='EXCURSION'?'CRITICAL':'HIGH'}"><b>[잠정]</b> 밴드 확정 시 이 판정은 ${tv}입니다 - 안전을 위해 지금부터 그렇게 취급하세요.</div>`:'';
+  $('quickOut').innerHTML=`<div class="verdict ${verdict}" style="margin-top:12px">
+      <div class="v">${verdict}</div>
+      <div class="note">${p.label} 밴드(${lo}-${hi}°C) 기준${tvNote}</div>
+    </div>
+    <div class="metrics">${metricsHtml(mx)}</div>
+    ${warn}`;
 }
 
 /* ---------- hatchability risk (external factors) ---------- */
@@ -491,13 +574,13 @@ function newShipment(){currentId=null;lastVerdict=null;lastMetrics=null;
 function renderList(){
   const arr=load();
   if(!arr.length){$('listBody').innerHTML='<div class="empty">저장된 배송이 없습니다. “새 배송” 또는 “샘플 2건”으로 시작하세요.</div>';return;}
-  $('listBody').innerHTML=`<table><thead><tr><th>PO</th><th>상품</th><th>섹터</th><th>단계</th><th>콜드체인</th><th>부화율</th><th></th></tr></thead><tbody>${
+  $('listBody').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>PO</th><th>상품</th><th>섹터</th><th>단계</th><th>콜드체인</th><th>부화율</th><th></th></tr></thead><tbody>${
     arr.map(d=>`<tr class="clk" onclick="loadShipment('${d.id}')">
       <td>${d.po}</td><td>${(d.productLabel||'').replace('SPF ','')}</td><td>${d.sector}</td><td>${d.state}</td>
       <td><span class="pill ${d.verdict||'UNVERIFIED'}">${d.verdict||'-'}</span></td>
       <td><span class="pill ${d.risk||''}">${d.risk||'-'}</span></td>
       <td><button class="ghost" style="padding:4px 9px" onclick="deleteShipment('${d.id}',event)">삭제</button></td></tr>`).join('')}
-  </tbody></table>`;
+  </tbody></table></div>`;
 }
 function seedSamples(){
   const arr=load();
@@ -524,13 +607,60 @@ let lastSignal=null, editingLead=null;
 
 /* --- mode switch --- */
 function switchMode(m){
+  $('homeRoot').style.display=m==='home'?'block':'none';
   $('salesRoot').style.display=m==='sales'?'block':'none';
   $('logiRoot').style.display=m==='logi'?'block':'none';
+  $('mHome').classList.toggle('active',m==='home');
   $('mSales').classList.toggle('active',m==='sales');
   $('mLogi').classList.toggle('active',m==='logi');
+  if(m==='home')renderHome();
   if(m==='sales'){renderLeads();renderMeetings();refreshLeadSelects();}
   if(m==='logi')renderList();
 }
+
+/* --- home dashboard (aggregates sales+logistics local data, no new storage) --- */
+function renderHome(){
+  const allLeads=leads();
+  const urgent=allLeads.filter(l=>l.stage!=='Won'&&l.stage!=='Lost')
+    .map(l=>({l,s:scoreLead(l)})).filter(x=>x.s.band==='HOT'||x.s.band==='WARM')
+    .sort((a,b)=>b.s.p-a.s.p);
+  const shipments=load();
+  const warns=shipments.filter(d=>d.verdict==='EXCURSION'||d.state==='HELD_QA');
+  const meetings=[]; allLeads.forEach(l=>(l.meetings||[]).forEach(m=>meetings.push({co:l.company,sec:l.sector,...m})));
+  meetings.sort((a,b)=>a.when.localeCompare(b.when));
+  const upcoming=meetings.slice(0,5);
+
+  $('homeSummary').innerHTML=`<div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+    <div class="metric"><b>${urgent.length}</b><span>긴급 리드</span></div>
+    <div class="metric"><b>${warns.length}</b><span>물류 경고</span></div>
+    <div class="metric"><b>${upcoming.length}</b><span>예정 미팅</span></div>
+  </div>`;
+
+  $('homeLeads').innerHTML=urgent.length?`<div class="tbl-wrap"><table><thead><tr><th>회사</th><th>섹터</th><th>스코어</th><th>단계</th></tr></thead><tbody>${
+    urgent.slice(0,5).map(({l,s})=>`<tr class="clk" onclick="homeJumpLead('${l.id}')">
+      <td>${l.company}</td><td>${l.sector}</td>
+      <td><span class="pill ${s.band}">${s.band} ${s.p}</span></td>
+      <td><span class="pill ${l.stage}">${l.stage}</span></td></tr>`).join('')
+  }</tbody></table></div>`:`<div class="empty">긴급 리드 없음 - 좋은 상태입니다.</div>`;
+
+  $('homeShipments').innerHTML=warns.length?`<div class="tbl-wrap"><table><thead><tr><th>PO</th><th>단계</th><th>콜드체인</th></tr></thead><tbody>${
+    warns.map(d=>`<tr class="clk" onclick="homeJumpShipment('${d.id}')">
+      <td>${d.po}</td><td>${d.state}</td>
+      <td><span class="pill ${d.verdict||'UNVERIFIED'}">${d.verdict||'-'}</span></td></tr>`).join('')
+  }</tbody></table></div>`:`<div class="empty">물류 경고 없음.</div>`;
+
+  $('homeMeetings').innerHTML=upcoming.length?`<div class="tbl-wrap"><table><thead><tr><th>일시</th><th>회사</th><th>형식</th></tr></thead><tbody>${
+    upcoming.map(m=>`<tr class="clk" onclick="switchMode('sales');document.getElementById('meetingsCard').scrollIntoView({behavior:'smooth'})">
+      <td class="mono">${m.when.replace('T',' ')}</td><td>${m.co} (${m.sec})</td><td>${m.type}</td></tr>`).join('')
+  }</tbody></table></div>`:`<div class="empty">예정된 미팅이 없습니다.</div>`;
+
+  $('homeNews').innerHTML=lastSignal?`<div class="risk ${lastSignal.sevClass}"><div class="lvl">신호 ${lastSignal.urgency}</div>
+      <div class="note" style="margin-top:8px">영향 섹터 <b>${lastSignal.sectors.join(', ')}</b> · ${lastSignal.source}</div>
+      <div class="btns"><button onclick="switchMode('sales');newLeadFromSignal()">이 신호로 리드 추가</button></div></div>`
+    :`<div class="empty">아직 분류한 뉴스가 없습니다. 영업 앞단에서 뉴스를 붙여넣어 분류하세요.</div>`;
+}
+function homeJumpLead(id){switchMode('sales');editLead(id);}
+function homeJumpShipment(id){switchMode('logi');loadShipment(id);}
 
 /* --- news signal classifier --- */
 const NEWS_RULES=[
@@ -597,7 +727,7 @@ function advanceLead(id,e){e.stopPropagation(); const order=['Lead','Contacted',
 function renderLeads(){
   const arr=leads();
   if(!arr.length){$('leadBody').innerHTML='<div class="empty">리드가 없습니다. 뉴스 신호 분류 또는 “리드 추가”로 시작하세요.</div>';return;}
-  $('leadBody').innerHTML=`<table><thead><tr><th>회사</th><th>섹터</th><th>스코어</th><th>단계</th><th>출처</th><th></th></tr></thead><tbody>${
+  $('leadBody').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>회사</th><th>섹터</th><th>스코어</th><th>단계</th><th>출처</th><th></th></tr></thead><tbody>${
     arr.map(l=>{const s=scoreLead(l);return `<tr class="clk" onclick="editLead('${l.id}')">
       <td>${l.company}</td><td>${l.sector}</td>
       <td><span class="pill ${s.band}">${s.band} ${s.p}</span></td>
@@ -608,7 +738,7 @@ function renderLeads(){
         ${l.stage==='Won'?`<button class="ghost" style="padding:4px 8px" onclick="toShipment('${l.id}',event)">물류전환</button>`:''}
         <button class="ghost" style="padding:4px 8px" onclick="deleteLead('${l.id}',event)">삭제</button>
       </td></tr>`;}).join('')}
-  </tbody></table>`;
+  </tbody></table></div>`;
 }
 
 /* --- email composer --- */
@@ -630,7 +760,9 @@ function genMail(){
   lines.push('30분 화상 미팅을 제안드립니다. 아래 두 슬롯 중 편하신 시간을 알려주세요.',' - (요일/오전 슬롯 1)',' - (요일/오전 슬롯 2)','','감사합니다.',`${sender} 드림`);
   const body=lines.join('\n');
   const mailto=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  $('mailOut').innerHTML=`<textarea style="min-height:210px" readonly>${body.replace(/</g,'&lt;')}</textarea>
+  const missingWarn=nums.length===0?`<div class="alert HIGH"><b>[안내]</b> 설정이 비어 있어 셀링넘버 없이 초안이 생성됐습니다.
+    <button class="ghost" style="padding:4px 8px;margin-left:6px" onclick="document.getElementById('settingsCard').scrollIntoView({behavior:'smooth'})">설정으로 이동</button></div>`:'';
+  $('mailOut').innerHTML=`${missingWarn}<textarea style="min-height:210px" readonly>${body.replace(/</g,'&lt;')}</textarea>
     <div class="btns"><a href="${mailto}" style="text-decoration:none"><button>메일 앱으로 열기</button></a>
     <button class="ghost" onclick="copyMail(this)" data-b="${encodeURIComponent(body)}">본문 복사</button></div>
     <div class="note">${mode} 모드 · ${l.company}. 실제 발송·추적은 메일앱 또는 Gmail 연동 에이전트에서 처리합니다.</div>`;
@@ -660,12 +792,12 @@ function renderMeetings(){
   const rows=[]; leads().forEach(l=>(l.meetings||[]).forEach(m=>rows.push({co:l.company,sec:l.sector,...m})));
   rows.sort((a,b)=>a.when.localeCompare(b.when));
   if(!rows.length){$('mtgBody').innerHTML='<div class="empty">예정된 미팅이 없습니다.</div>';return;}
-  $('mtgBody').innerHTML=`<table><thead><tr><th>일시</th><th>회사</th><th>형식</th><th></th></tr></thead><tbody>${
+  $('mtgBody').innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>일시</th><th>회사</th><th>형식</th><th></th></tr></thead><tbody>${
     rows.map(m=>{const title=`${m.co} SPF egg 미팅`;return `<tr>
       <td class="mono">${m.when.replace('T',' ')}</td><td>${m.co} (${m.sec})</td><td>${m.type}</td>
       <td style="white-space:nowrap"><a href="${gcal(title,m.when)}" target="_blank" rel="noopener"><button class="ghost" style="padding:4px 8px">구글캘린더</button></a>
       <button class="ghost" style="padding:4px 8px" onclick="icsDownload('${title}','${m.when}')">.ics</button></td></tr>`;}).join('')}
-  </tbody></table>`;
+  </tbody></table></div>`;
 }
 
 /* --- settings --- */
@@ -706,8 +838,8 @@ function exportShipments(){
 }
 
 /* ================= INIT ================= */
-initProducts();updateMode();checkMoq();renderStepper();renderList();switchView('list');
-loadSettings();renderLeads();renderMeetings();refreshLeadSelects();switchMode('sales');
+initProducts();initQuickProduct();updateMode();checkMoq();renderStepper();renderList();switchView('list');
+loadSettings();renderLeads();renderMeetings();refreshLeadSelects();switchMode('home');
 </script>
 </body>
 </html>
