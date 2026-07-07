@@ -24,6 +24,12 @@
   @media(max-width:820px){.grid{grid-template-columns:1fr}}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
   .card h2{font-size:14px;margin:0 0 14px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+  details.card summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font-size:14px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);font-weight:650;user-select:none}
+  details.card summary::-webkit-details-marker{display:none}
+  details.card summary::before{content:'▸';color:var(--accent);display:inline-block;font-size:11px;transition:transform .15s ease}
+  details.card[open] summary::before{transform:rotate(90deg)}
+  details.card[open] summary{margin-bottom:14px}
+  details.card summary .badge{margin-left:auto;font-size:10px;text-transform:none;letter-spacing:0}
   label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
   input,textarea,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 11px;font:inherit}
   textarea{min-height:140px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;white-space:pre;resize:vertical}
@@ -126,18 +132,18 @@
 
   <!-- ============ SALES FRONT (앞단) ============ -->
   <div id="salesRoot" style="display:none">
-    <section class="card">
-      <h2>1 · 뉴스 신호 → 타깃</h2>
+    <details class="card" open>
+      <summary>1 · 뉴스 신호 → 타깃</summary>
       <label>뉴스 헤드라인 / 요약 붙여넣기</label>
       <textarea id="newsIn" style="min-height:78px" placeholder="예: 국내 고병원성 조류인플루엔자(HPAI) 추가 발생, 방역 강화"></textarea>
       <div class="btns"><button onclick="classifyNews()">신호 분류</button>
         <button class="ghost" onclick="loadNewsSample()">샘플 뉴스</button></div>
       <div id="newsOut"></div>
       <div class="note">라이브 뉴스 검색·HPAI 실데이터는 에이전트(spf-daily-news) 영역입니다. 여기서는 붙여넣은 신호를 섹터·긴급도로 분류합니다.</div>
-    </section>
+    </details>
 
-    <section class="card" id="settingsCard">
-      <h2>2 · 설정 (셀링넘버 · 브라우저 로컬 저장)</h2>
+    <details class="card" id="settingsCard">
+      <summary>2 · 설정 (셀링넘버 · 브라우저 로컬 저장) <span class="badge" id="settingsBadge">미입력</span></summary>
       <div class="unvbanner">단가·회사·발신자 등 기밀은 공개 소스에 없습니다. 이 브라우저에만 저장됩니다. 콜드메일 작성 전 먼저 채워두세요.</div>
       <div class="row">
         <div><label>발신자명</label><input id="setSender" placeholder="예: 김성호"></div>
@@ -151,11 +157,14 @@
         <div><label>MOQ</label><input id="setMoq" placeholder="예: 1,080"></div>
         <div><label>관세</label><input id="setTariff" placeholder="예: 한-태 FTA 0%"></div>
       </div>
+      <label>Notion 동기화 URL (선택)</label>
+      <input id="setNotionUrl" placeholder="Google Apps Script 웹앱 /exec URL - tools/notion-bridge/SETUP.md 참고">
+      <div class="note" style="margin-top:4px">비워두면 "Notion으로 내보내기"가 표 복사 방식으로 동작합니다. 채우면 Notion DB에 직접 기록됩니다.</div>
       <div class="btns"><button onclick="saveSettings()">설정 저장</button></div>
-    </section>
+    </details>
 
-    <section class="card">
-      <h2>3 · 리드 파이프라인</h2>
+    <details class="card" open>
+      <summary>3 · 리드 파이프라인</summary>
       <div id="leadBody"></div>
       <div id="leadForm" style="display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
         <div class="row">
@@ -177,20 +186,20 @@
       <div class="btns"><button onclick="newLead()">＋ 리드 추가</button>
         <button class="ghost" onclick="exportLeads()">Notion으로 내보내기</button></div>
       <div class="note"><b>정본은 Notion</b>입니다. 이 목록은 로컬 임시 작업본 - 확정 리드는 “Notion으로 내보내기”로 복사해 리드 DB에 붙여넣거나 에이전트에 넘기세요. 여기 스코어는 <b>빠른 추정</b>이며, 정식 판정은 spf-target 스킬(에이전트)이 합니다.</div>
-    </section>
+    </details>
 
-    <section class="card">
-      <h2>4 · 콜드메일 작성기</h2>
+    <details class="card" open>
+      <summary>4 · 콜드메일 작성기</summary>
       <div class="row">
         <div><label>리드 선택</label><select id="mailLead"></select></div>
         <div><label>모드</label><select id="mailMode"><option>Fast</option><option>Deep</option></select></div>
       </div>
       <div class="btns"><button onclick="genMail()">메일 생성</button></div>
       <div id="mailOut"></div>
-    </section>
+    </details>
 
-    <section class="card" id="meetingsCard">
-      <h2>5 · 일정 · 미팅</h2>
+    <details class="card" open id="meetingsCard">
+      <summary>5 · 일정 · 미팅</summary>
       <div class="row">
         <div><label>리드</label><select id="mtgLead"></select></div>
         <div><label>일시</label><input id="mtgWhen" type="datetime-local"></div>
@@ -198,7 +207,7 @@
       </div>
       <div class="btns"><button onclick="addMeeting()">미팅 추가</button></div>
       <div id="mtgBody"></div>
-    </section>
+    </details>
   </div>
 
   <!-- ============ LOGISTICS BACK (뒷단) ============ -->
@@ -239,15 +248,15 @@
   <div id="detailView" style="display:none">
     <div class="grid">
       <!-- product -->
-      <section class="card">
-        <h2>1 · 상품 종류</h2>
+      <details class="card" open>
+        <summary>1 · 상품 종류</summary>
         <label>SPF 상품</label>
         <select id="product" onchange="selectProduct()"></select>
         <div class="note" id="prodNote"></div>
-      </section>
+      </details>
       <!-- band -->
-      <section class="card">
-        <h2>2 · 온도 밴드 (상품별 · 후보)</h2>
+      <details class="card" open>
+        <summary>2 · 온도 밴드 (상품별 · 후보)</summary>
         <div class="unvbanner" id="thBanner">후보값입니다. 공급사가 실제 밴드를 확인하기 전까지 판정은 <code>UNVERIFIED</code>로 표기됩니다.</div>
         <div class="row">
           <div><label>T_min °C</label><input id="tmin" type="number" step="0.1"></div>
@@ -259,12 +268,12 @@
           <div><label>MKT 상한 °C</label><input id="mktmax" type="number" step="0.1" value="22"></div>
         </div>
         <label style="margin-top:12px"><input type="checkbox" id="confirmed" style="width:auto;margin-right:8px">이 상품 밴드 공급사 확인 완료 - 실제 판정 활성화</label>
-      </section>
+      </details>
     </div>
 
     <div class="grid">
-      <section class="card">
-        <h2>3 · 배송 정보</h2>
+      <details class="card" open>
+        <summary>3 · 배송 정보</summary>
         <div class="row">
           <div><label>PO 번호</label><input id="po" value="PO-2026-0142"></div>
           <div><label>수량(MOQ 1,080 배수)</label><input id="qty" type="number" value="2160"></div>
@@ -281,16 +290,16 @@
           <div><label>채란일 (보관일수 계산)</label><input id="collect" type="date"></div>
         </div>
         <div class="note" id="moqNote"></div>
-      </section>
+      </details>
 
-      <section class="card">
-        <h2>4 · 상태머신</h2>
+      <details class="card" open>
+        <summary>4 · 상태머신</summary>
         <div class="stepper" id="stepper"></div>
-      </section>
+      </details>
     </div>
 
-    <section class="card">
-      <h2>5 · 온도 로거 CSV</h2>
+    <details class="card" open>
+      <summary>5 · 온도 로거 CSV</summary>
       <textarea id="csv" spellcheck="false"></textarea>
       <div class="btns">
         <button onclick="evaluate()">콜드체인 판정</button>
@@ -300,7 +309,7 @@
         <input id="file" type="file" accept=".csv,.txt" style="display:none">
       </div>
       <div class="note">형식 <code>Timestamp,Temperature(C)</code> · <code>#</code> 주석줄 무시 · 로컬시간 그대로 가능</div>
-    </section>
+    </details>
 
     <section class="card" id="resultCard" style="display:none">
       <h2>6 · 콜드체인 판정</h2>
@@ -310,12 +319,12 @@
       <div class="basis" id="basis"></div>
     </section>
 
-    <section class="card">
-      <h2>7 · 부화율 영향 외부요인</h2>
+    <details class="card">
+      <summary>7 · 부화율 영향 외부요인 <span class="badge" id="riskBadgeSummary">-</span></summary>
       <div class="note" style="margin-top:0">부화율은 <b>온도 이탈·보관일수</b>(확립된 요인)와 <b>출발/도착지 지상 기온·습도</b>(이탈 위험 프록시)로 추정 위험을 표시합니다. 정밀 부화율 예측이 아니라 <b>위험 신호</b>입니다.</div>
       <div id="riskBox"><div class="note">날씨 불러오는 중…</div></div>
       <div class="btns"><button class="ghost" onclick="refreshWeather()">날씨 새로고침</button></div>
-    </section>
+    </details>
 
     <div class="btns" style="margin-top:4px">
       <button onclick="saveCurrent()">이 배송 저장 / 갱신</button>
@@ -552,6 +561,8 @@ function renderRisk(){
   $('riskBox').innerHTML=`<div class="risk ${lvl}"><div class="lvl">부화율 위험: ${lvl} <span style="font-size:13px;color:var(--muted)">(${pts}점)</span></div>${wblock}
     <ul class="reasons">${reasons.map(r=>`<li>${r}</li>`).join('')}</ul>
     <div class="note">지표(indicative)입니다. 온도·보관일수는 확립된 요인, 지상기온은 이탈 위험 프록시. 정밀 부화율 예측 아님.</div></div>`;
+  const rb=$('riskBadgeSummary');
+  if(rb){rb.textContent=lvl;rb.style.color=lvl==='HIGH'?'var(--exc)':lvl==='MEDIUM'?'var(--warn)':'var(--ok)';}
 }
 
 /* ---------- persistence / list ---------- */
@@ -761,7 +772,7 @@ function genMail(){
   const body=lines.join('\n');
   const mailto=`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   const missingWarn=nums.length===0?`<div class="alert HIGH"><b>[안내]</b> 설정이 비어 있어 셀링넘버 없이 초안이 생성됐습니다.
-    <button class="ghost" style="padding:4px 8px;margin-left:6px" onclick="document.getElementById('settingsCard').scrollIntoView({behavior:'smooth'})">설정으로 이동</button></div>`:'';
+    <button class="ghost" style="padding:4px 8px;margin-left:6px" onclick="const c=document.getElementById('settingsCard');c.open=true;c.scrollIntoView({behavior:'smooth'})">설정으로 이동</button></div>`:'';
   $('mailOut').innerHTML=`${missingWarn}<textarea style="min-height:210px" readonly>${body.replace(/</g,'&lt;')}</textarea>
     <div class="btns"><a href="${mailto}" style="text-decoration:none"><button>메일 앱으로 열기</button></a>
     <button class="ghost" onclick="copyMail(this)" data-b="${encodeURIComponent(body)}">본문 복사</button></div>
@@ -801,11 +812,16 @@ function renderMeetings(){
 }
 
 /* --- settings --- */
+function updateSettingsBadge(){
+  const s=settings(), has=!!(s.price||s.ship||s.moq||s.tariff||s.sender||s.company), b=$('settingsBadge');
+  if(!b)return; b.textContent=has?'입력됨':'미입력'; b.style.color=has?'var(--ok)':'var(--muted)';
+}
 function saveSettings(){
-  localStorage.setItem(SKEY,JSON.stringify({sender:$('setSender').value.trim(),company:$('setCompany').value.trim(),price:$('setPrice').value.trim(),ship:$('setShip').value.trim(),moq:$('setMoq').value.trim(),tariff:$('setTariff').value.trim()}));
+  localStorage.setItem(SKEY,JSON.stringify({sender:$('setSender').value.trim(),company:$('setCompany').value.trim(),price:$('setPrice').value.trim(),ship:$('setShip').value.trim(),moq:$('setMoq').value.trim(),tariff:$('setTariff').value.trim(),notionUrl:$('setNotionUrl').value.trim()}));
+  updateSettingsBadge();
   alert('설정이 이 브라우저에 저장되었습니다.');
 }
-function loadSettings(){const s=settings(); if(s.sender)$('setSender').value=s.sender; if(s.company)$('setCompany').value=s.company; if(s.price)$('setPrice').value=s.price; if(s.ship)$('setShip').value=s.ship; if(s.moq)$('setMoq').value=s.moq; if(s.tariff)$('setTariff').value=s.tariff;}
+function loadSettings(){const s=settings(); if(s.sender)$('setSender').value=s.sender; if(s.company)$('setCompany').value=s.company; if(s.price)$('setPrice').value=s.price; if(s.ship)$('setShip').value=s.ship; if(s.moq)$('setMoq').value=s.moq; if(s.tariff)$('setTariff').value=s.tariff; if(s.notionUrl)$('setNotionUrl').value=s.notionUrl; updateSettingsBadge();}
 
 /* --- front→back handoff (수주 전환) --- */
 function toShipment(id,e){
@@ -824,14 +840,35 @@ function copyText(text,label){
   navigator.clipboard.writeText(text).then(()=>alert((label||'복사')+' 완료 - Notion DB에 붙여넣거나 에이전트에게 전달하세요.'),
     ()=>alert('복사 실패: 브라우저 권한을 확인하세요.'));
 }
-function exportLeads(){
+const PRODUCT_NOTION_MAP={jong_short:'종란 단기',jong_long:'종란 장기',jong_old:'종란 노령',embryo:'발육란',sample:'시료'};
+function notionPush_(url,type,data){
+  return fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({type,data})}).catch(()=>{});
+}
+async function exportLeads(){
   const arr=leads(); if(!arr.length){alert('내보낼 리드가 없습니다.');return;}
+  const s=settings();
+  if(s.notionUrl){
+    for(const l of arr){
+      const sc=scoreLead(l);
+      await notionPush_(s.notionUrl,'lead',{company:l.company,sector:l.sector,stage:l.stage,score:sc.band,urgency:l.urgency||'',source:l.source||'',decisionMaker:l.dm?'확인':'',nextAction:l.note||''});
+    }
+    alert(`리드 ${arr.length}건을 Notion 동기화 URL로 전송했습니다. 브라우저 정책상 결과 확인은 Notion에서 직접 해주세요.`);
+    return;
+  }
   const head='| 회사 | 섹터 | 스코어 | 단계 | 긴급도 | 신호 출처 | 의사결정자 | 다음 액션 |\n|---|---|---|---|---|---|---|---|';
-  const rows=arr.map(l=>{const s=scoreLead(l);return `| ${l.company} | ${l.sector} | ${s.band} | ${l.stage} | ${l.urgency||''} | ${(l.source||'').replace(/\|/g,'/')} | ${(l.dm?'확인':'')} | ${(l.note||'').replace(/\|/g,'/')} |`;});
+  const rows=arr.map(l=>{const sc=scoreLead(l);return `| ${l.company} | ${l.sector} | ${sc.band} | ${l.stage} | ${l.urgency||''} | ${(l.source||'').replace(/\|/g,'/')} | ${(l.dm?'확인':'')} | ${(l.note||'').replace(/\|/g,'/')} |`;});
   copyText([head,...rows].join('\n'),'리드 '+arr.length+'건');
 }
-function exportShipments(){
+async function exportShipments(){
   const arr=load(); if(!arr.length){alert('내보낼 배송이 없습니다.');return;}
+  const s=settings();
+  if(s.notionUrl){
+    for(const d of arr){
+      await notionPush_(s.notionUrl,'shipment',{po:d.po,sector:d.sector,product:PRODUCT_NOTION_MAP[d.productId]||'',state:d.state,verdict:d.verdict||'UNVERIFIED',qty:d.qty,logger:d.logger||''});
+    }
+    alert(`배송 ${arr.length}건을 Notion 동기화 URL로 전송했습니다. 브라우저 정책상 결과 확인은 Notion에서 직접 해주세요.`);
+    return;
+  }
   const head='| PO | 상품 | 섹터 | 수량 | 단계 | 콜드체인 | 로거 |\n|---|---|---|---|---|---|---|';
   const rows=arr.map(d=>`| ${d.po} | ${(d.productLabel||'').replace('SPF ','')} | ${d.sector} | ${d.qty} | ${d.state} | ${d.verdict||'-'} | ${d.logger||''} |`);
   copyText([head,...rows].join('\n'),'배송 '+arr.length+'건');
