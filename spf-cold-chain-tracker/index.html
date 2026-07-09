@@ -685,7 +685,8 @@ function homeJumpShipment(id){switchMode('logi');loadShipment(id);}
 
 /* --- news signal classifier --- */
 const NEWS_RULES=[
-  {re:/HPAI|조류\s*인플|조류\s*독감|고병원성|H5N1|살처분/i, sectors:['A','B'], urgency:'CRITICAL', angle:'백신 긴급 증산 대비 종란 공급 안정성·이중소싱', tag:'HPAI 발생'},
+  {re:/HPAI|조류\s*인플|조류\s*독감|고병원성|H5N1|살처분|AI\s*(확산|발생|의심|경보)/i, sectors:['A','B'], urgency:'CRITICAL', angle:'백신 긴급 증산 대비 종란 공급 안정성·이중소싱', tag:'HPAI 발생'},
+  {re:/코타바이오|Charles\s*River|Valo\s*Bio|생산시설\s*(착공|준공|가동)|공장\s*(착공|준공|설립)|무균란\s*국산화|국산화\s*(개시|착수)/i, sectors:['A','B','D'], urgency:'HIGH', angle:'경쟁사 생산능력 확대 - 포지셔닝·가격 방어 필요', tag:'경쟁사·생산시설'},
   {re:/백신|vaccine|접종|증설|생산\s*능력|수주|위탁생산|CMO/i, sectors:['A','B'], urgency:'HIGH', angle:'백신 생산능력 확대 후 종란 수요 증가', tag:'백신·증설'},
   {re:/화장품|코스메틱|원료|시험|시료|GLP|OECD|독성|CRO/i, sectors:['C'], urgency:'HIGH', angle:'시험·화장품 원료 배치 일관성과 리드타임', tag:'시험·화장품'},
   {re:/수출|계약|투자|공장|증산|MOU|라이선스/i, sectors:['A','B','D'], urgency:'WATCH', angle:'생산 확대 신호, 조기 접촉 기회', tag:'확장 신호'}
