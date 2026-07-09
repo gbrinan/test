@@ -3,6 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="SPF egg 사업의 영업 앞단(뉴스-리드-콜드메일-일정)과 물류 뒷단(발주-운송-온도로거-콜드체인 판정)을 한 화면에서 다루는 운영 콘솔." />
+<meta name="theme-color" content="#0f1720" />
+<meta property="og:title" content="SPF Ops Console" />
+<meta property="og:description" content="영업 앞단(뉴스-리드-콜드메일-일정) + 물류 뒷단(콜드체인 온도 판정) 운영 콘솔" />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f1720'/%3E%3Ccircle cx='50' cy='40' r='22' fill='none' stroke='%234f9cf7' stroke-width='7'/%3E%3Cpath d='M50 62 L50 82' stroke='%232fbf71' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E" />
 <title>SPF Ops Console</title>
 <style>
   :root{
@@ -390,6 +396,10 @@ Timestamp,Temperature(C)
 const LOCS={BKK:{lat:13.68,lon:100.75},ICN:{lat:37.46,lon:126.44}};
 const KEY="spf_shipments_v1";
 const $=id=>document.getElementById(id);
+function safeSetItem(key,value){
+  try{localStorage.setItem(key,value);return true;}
+  catch(e){alert('브라우저가 로컬 저장을 차단했습니다(시크릿 모드이거나 저장공간이 가득 찼을 수 있습니다). 이번 변경은 저장되지 않았습니다.');return false;}
+}
 let lastVerdict=null, lastMetrics=null, WEATHER=null, currentId=null;
 
 /* ---------- init ---------- */
@@ -567,7 +577,7 @@ function renderRisk(){
 
 /* ---------- persistence / list ---------- */
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
-function store(a){localStorage.setItem(KEY,JSON.stringify(a));}
+function store(a){safeSetItem(KEY,JSON.stringify(a));}
 function collectDetail(){return{id:currentId||('S'+Date.now()),po:$('po').value,productId:$('product').value,productLabel:(PRODUCTS.find(p=>p.id===$('product').value)||{}).label,sector:$('sector').value,qty:+$('qty').value,state:$('state').value,logger:$('logger').value,collect:$('collect').value,tmin:num('tmin'),tmax:num('tmax'),marg:num('marg'),emax:num('emax'),mktmax:num('mktmax'),confirmed:$('confirmed').checked,csv:$('csv').value,verdict:lastVerdict,risk:currentRiskLevel(),updatedAt:new Date().toISOString()};}
 function currentRiskLevel(){const box=$('riskBox').querySelector('.risk');return box?(box.classList.contains('HIGH')?'HIGH':box.classList.contains('MEDIUM')?'MEDIUM':'LOW'):'-';}
 function saveCurrent(){const arr=load();const d=collectDetail();currentId=d.id;const i=arr.findIndex(x=>x.id===d.id);if(i>=0)arr[i]=d;else arr.push(d);store(arr);switchView('list');}
@@ -611,7 +621,7 @@ $('collect').addEventListener('change',renderRisk);
 /* ================= SALES FRONT (앞단) ================= */
 const LKEY="spf_leads_v1", SKEY="spf_settings_v1";
 function leads(){try{return JSON.parse(localStorage.getItem(LKEY))||[]}catch(e){return[]}}
-function storeLeads(a){localStorage.setItem(LKEY,JSON.stringify(a));refreshLeadSelects();}
+function storeLeads(a){safeSetItem(LKEY,JSON.stringify(a));refreshLeadSelects();}
 function settings(){try{return JSON.parse(localStorage.getItem(SKEY))||{}}catch(e){return{}}}
 const pad=n=>String(n).padStart(2,'0');
 let lastSignal=null, editingLead=null;
@@ -817,9 +827,9 @@ function updateSettingsBadge(){
   if(!b)return; b.textContent=has?'입력됨':'미입력'; b.style.color=has?'var(--ok)':'var(--muted)';
 }
 function saveSettings(){
-  localStorage.setItem(SKEY,JSON.stringify({sender:$('setSender').value.trim(),company:$('setCompany').value.trim(),price:$('setPrice').value.trim(),ship:$('setShip').value.trim(),moq:$('setMoq').value.trim(),tariff:$('setTariff').value.trim(),notionUrl:$('setNotionUrl').value.trim()}));
+  const ok=safeSetItem(SKEY,JSON.stringify({sender:$('setSender').value.trim(),company:$('setCompany').value.trim(),price:$('setPrice').value.trim(),ship:$('setShip').value.trim(),moq:$('setMoq').value.trim(),tariff:$('setTariff').value.trim(),notionUrl:$('setNotionUrl').value.trim()}));
   updateSettingsBadge();
-  alert('설정이 이 브라우저에 저장되었습니다.');
+  if(ok)alert('설정이 이 브라우저에 저장되었습니다.');
 }
 function loadSettings(){const s=settings(); if(s.sender)$('setSender').value=s.sender; if(s.company)$('setCompany').value=s.company; if(s.price)$('setPrice').value=s.price; if(s.ship)$('setShip').value=s.ship; if(s.moq)$('setMoq').value=s.moq; if(s.tariff)$('setTariff').value=s.tariff; if(s.notionUrl)$('setNotionUrl').value=s.notionUrl; updateSettingsBadge();}
 
