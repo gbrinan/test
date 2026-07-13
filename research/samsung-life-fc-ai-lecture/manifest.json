@@ -1,0 +1,32 @@
+{
+  "project_id": "samsung-life-fc-ai-lecture",
+  "goal": "삼성생명 전국 FC 대상 'Gemini 기반 AI 활용법' 강의에서 5개 활용사례(상담 녹취록 정리·상품 요약·고객 맞춤 DM·이미지 활용·마케팅 소재)를 어떤 우선순위와 형식으로 가르칠지 결정",
+  "created": "2026-07-13",
+  "updated": "2026-07-13",
+  "phases": {
+    "phase1": {
+      "status": "done",
+      "file": "phase1-broad.md",
+      "date": "2026-07-13",
+      "note": "N=20 완료. 핵심: 3강(상품요약13·녹취록12·DM11) vs 2약(이미지3·마케팅1). 최대 장벽은 보안 아닌 '기계티'(8/20). 강의형식 실습=템플릿 동률 1위. 시니어=녹취록, 주니어=DM 편중. 2차 축: 기계티 실체 / 이미지·마케팅 저수요 재검증 / 회사도구 제약"
+    },
+    "phase2": {
+      "status": "done",
+      "file": "phase2-extended.md",
+      "date": "2026-07-13",
+      "note": "N=30 완료. 이미지·마케팅 저수요 재확인(마케팅 Q2 0표)-축소 확정. 기계티 실체=상투어/문어체/무감정 3블랙리스트(Q7 수렴). 신규 K6: 43%가 회사승인도구만 사용-개인정보 비식별+공식도구 확인이 실행 열쇠. 이미지는 주니어옵션(세대차 3.33vs2.27)"
+    },
+    "phase3": {
+      "status": "skipped",
+      "file": "phase3-focus.md",
+      "date": "2026-07-13",
+      "note": "자동 배치 대신 대화형 인터뷰 모드(/nemotron-personas-korea:persona-interviewee)로 필요 시 실행 권고 — 기계티 제거 전후 DM A/B 반응 심층 청취"
+    }
+  },
+  "summary_file": "summary.md",
+  "downstream_hints": [
+    "강의 커리큘럼 상세 설계+프롬프트 템플릿 패키지",
+    "phase3 대화형 포커스 인터뷰(persona-interviewee)",
+    "강의 현장 실측 설문과 대조(외부 데이터 통합)"
+  ]
+}
