@@ -22,8 +22,8 @@ body{background:var(--page);color:var(--ink);font-family:var(--font-pixel);line-
 @media(max-width:760px){.wrap{grid-template-columns:1fr}}
 
 header{border-bottom:2px solid var(--ink);background:var(--paper)}
-header .inner{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
-header h1{font-size:14px}
+header .inner{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+header h1{font-size:14px;white-space:nowrap;line-height:1.4}
 .badge{font-size:11px;background:var(--ink);color:var(--kraft);padding:3px 8px}
 
 .toc{border:2px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--line);align-self:start;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto}
@@ -104,9 +104,15 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .toast.show{display:block}
 
 /* ── 로그인 ── */
-.auth-box{display:flex;align-items:center;gap:8px}
+.auth-box{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .auth-box .who{font-size:10px;color:var(--kraft);opacity:.85;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.auth-btn{font-size:10px;padding:4px 10px;box-shadow:2px 2px 0 var(--line)}
+/* 헤더 컨트롤 통일: button·select 모두 같은 높이/테두리/폰트로 상하 끝선 정렬 */
+.auth-btn{font-size:10px;padding:0 10px;box-shadow:2px 2px 0 var(--line);
+  display:inline-flex;align-items:center;justify-content:center;height:28px;box-sizing:border-box;
+  border:2px solid var(--ink);background:var(--paper);color:var(--ink);
+  font-family:var(--font-pixel);line-height:1;vertical-align:middle;cursor:pointer;
+  -webkit-appearance:none;appearance:none}
+select.auth-btn{padding:0 6px}
 /* ON AIR 스타일 백라이트 — BGM 재생 중 */
 #bgm-btn.on-air{
   background:#3a1410;color:#FF6B4A;border-color:#FF6B4A;
