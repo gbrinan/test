@@ -162,12 +162,22 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .start-btn{font-size:15px;padding:14px 34px;margin:14px 0 6px;background:#C96442;border-color:#0a2547;box-shadow:3px 3px 0 rgba(0,0,0,.4)}
 .hero-hint{font-size:10px;color:#9fb3c8}
 .lesson-art{width:100%;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--line);margin-bottom:16px;display:block}
+.lesson-art.mid{margin:18px 0}
 .road-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:26px;text-align:left}
 @media(max-width:640px){.road-strip{grid-template-columns:repeat(2,1fr)}}
 .road-strip a{border:2px solid var(--ink);background:var(--paper);box-shadow:3px 3px 0 var(--line);padding:8px 10px;font-size:10.5px;color:var(--ink);text-decoration:none;cursor:pointer}
 .road-strip a:hover{background:var(--kraft)}
 .road-strip .rp{color:var(--clay-deep);font-weight:700}
 .road-strip .rt{color:var(--ink-soft);font-size:9.5px}
+/* 모바일 가독성: 본문 16px 기준 (기본 규칙보다 뒤에 있어야 override됨) */
+@media(max-width:760px){
+  .chapter .body{font-size:16px}
+  .chapter .body ul{font-size:16px}
+  .analogy{font-size:15px}
+  .ch-lead{font-size:13px}
+  .q .qt{font-size:14px}
+  .q label{font-size:13.5px}
+}
 </style>
 </head>
 <body>
@@ -1623,13 +1633,31 @@ function render(){
   if(!isUnlocked(current)){ m.innerHTML=`<div class="chapter"><p>🔒 이전 챕터의 테스트를 먼저 통과하세요.</p></div>`; return; }
   // 명시 매핑 우선, 없으면 규약(lesson-<id>.png) 시도 — 나머지 18개 도식(백로그 P1)이 추가되면 자동 노출
   const artFile=LESSON_ART[c.id]||("lesson-"+c.id+".png");
-  const art=`<img class="lesson-art" src="assets/claude-master/learning/${artFile}" alt="${c.title} 일러스트" onerror="this.remove()">`;
   m.innerHTML=`<div class="chapter">
       <div class="ch-lv">${c.lv} · ${c.part} · <b>${TIERS[c.tier].name}</b></div>
       <h2>${c.title}</h2><div class="ch-lead">${c.lead}</div>
-      ${art}<div class="body">${c.body}</div>${quizHTML(c)}</div>`;
+      <div class="body">${c.body}</div>${quizHTML(c)}</div>`;
+  insertLessonArt(m.querySelector(".body"), artFile, c.title);
   bindQuiz(c);
   if(window.mermaid){ mermaid.initialize({startOnLoad:false,theme:'neutral'}); mermaid.run({nodes:m.querySelectorAll('.mermaid')}); }
+}
+
+/* 삽화를 본문 중간(블록 절반 지점)에 배치 — 짧은 본문은 본문 위, 이미지가 없으면 onerror로 제거 */
+function insertLessonArt(body, artFile, title){
+  if(!body) return;
+  const img=document.createElement("img");
+  img.className="lesson-art";
+  img.src="assets/claude-master/learning/"+artFile;
+  img.alt=title+" 일러스트";
+  img.loading="lazy";
+  img.onerror=()=>img.remove();
+  const blocks=[...body.children];
+  if(blocks.length>=4){
+    img.classList.add("mid");
+    body.insertBefore(img, blocks[Math.ceil(blocks.length/2)]);
+  }else{
+    body.parentElement.insertBefore(img, body);
+  }
 }
 
 function quizHTML(c){
