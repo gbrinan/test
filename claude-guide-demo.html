@@ -188,6 +188,16 @@ body{word-break:keep-all;overflow-wrap:break-word}
   .ch-lead{font-size:13px}
   .q .qt{font-size:14px}
   .q label{font-size:13.5px}
+  /* 홈(히어로) 모바일 최적화: 히어로가 시선을 끌고, 로드맵 타이틀이 첫 화면 안에 함께 보이도록 */
+  #home{padding:16px 14px 40px}
+  .hero-img{width:100%;max-height:42svh;object-fit:cover}
+  #home h2{font-size:clamp(21px,6.2vw,24px);margin:14px 0 6px}
+  #home .tag{font-size:14px;margin-bottom:14px}
+  .hero-stats div{font-size:12px;padding:7px 10px}
+  .hero-stats b{font-size:15px}
+  .start-btn{width:100%;max-width:340px}
+  .road-strip a{font-size:12px}
+  .road-strip .rt{font-size:11px}
 }
 </style>
 </head>
@@ -1838,7 +1848,9 @@ function roamPickTarget(){ // 화면 어디로든 (여백을 두고), 가장자�
 const ROAM_SRC={walk:"motion-idle",idle:"motion-idle",calm:"motion-calm",read:"motion-read",sleep:"motion-sleep"};
 const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
 function roamNext(){
-  if(petStage()===0){ roam.el.style.display="none"; roam.timer=setTimeout(roamNext,4000); return; } // 알 단계: 아직 못 걸음
+  // 홈 화면에서는 마스코트로서 항상 돌아다님; 학습 화면에서만 알 단계 잠금 유지
+  const onHome = typeof homeEl!=="undefined" && homeEl && homeEl.style.display!=="none";
+  if(petStage()===0 && !onHome){ roam.el.style.display="none"; roam.timer=setTimeout(roamNext,4000); return; } // 알 단계: 아직 못 걸음
   roam.el.style.display="block";
   // 행동 추첨: 걷기 확률 높게, 가끔 딴짓(책읽기·멍때리기·낮잠)
   const r=Math.random();
