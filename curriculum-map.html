@@ -1,0 +1,120 @@
+<title>클로드 완전정복 — 교안 구조도</title>
+<style>
+:root{
+  --page:#FAF9F5; --paper:#F0EEE6; --line:#CFC7B4;
+  --ink:#1F1E1A; --ink-soft:#5C5749;
+  --clay:#D97757; --clay-deep:#B85C3E; --gold:#B99A45; --moss:#5E8D7A;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --page:#211F1B; --paper:#2A2721; --line:#4A453B;
+    --ink:#EDE9DF; --ink-soft:#A79F8E; --clay:#E08A6C; --clay-deep:#D97757; --gold:#CBB068; --moss:#7FAE9B; }
+}
+:root[data-theme="dark"]{ --page:#211F1B; --paper:#2A2721; --line:#4A453B;
+  --ink:#EDE9DF; --ink-soft:#A79F8E; --clay:#E08A6C; --clay-deep:#D97757; --gold:#CBB068; --moss:#7FAE9B; }
+:root[data-theme="light"]{ --page:#FAF9F5; --paper:#F0EEE6; --line:#CFC7B4;
+  --ink:#1F1E1A; --ink-soft:#5C5749; --clay:#D97757; --clay-deep:#B85C3E; --gold:#B99A45; --moss:#5E8D7A; }
+
+body{background:var(--page);color:var(--ink);font-family:ui-sans-serif,system-ui,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.75;margin:0;padding:40px 20px}
+.wrap{max-width:920px;margin:0 auto}
+h1{font-size:1.7rem;letter-spacing:-.01em;text-wrap:balance;margin:0 0 4px}
+.sub{color:var(--ink-soft);font-size:.92rem;margin-bottom:36px}
+h2{font-size:1.12rem;margin:44px 0 10px;color:var(--clay-deep)}
+h2 .no{font-family:ui-monospace,monospace;color:var(--gold);margin-right:8px;font-size:.85em}
+p{max-width:66ch}
+.note{font-size:.85rem;color:var(--ink-soft)}
+.card{background:var(--paper);border:1.5px solid var(--ink);box-shadow:4px 4px 0 var(--line);padding:18px 20px;margin:14px 0;overflow-x:auto}
+pre.mermaid{margin:0;background:transparent}
+table{border-collapse:collapse;width:100%;font-size:.88rem;font-variant-numeric:tabular-nums}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--paper);font-size:.8rem;letter-spacing:.04em}
+.pass{color:var(--moss);font-weight:700}
+.fixed{color:var(--clay-deep);font-weight:700}
+.kpi{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.kpi div{background:var(--paper);border:1.5px solid var(--ink);box-shadow:3px 3px 0 var(--line);padding:10px 16px;font-size:.85rem}
+.kpi b{display:block;font-size:1.3rem;color:var(--clay-deep)}
+</style>
+<div class="wrap">
+<h1>클로드 완전정복 — 교안 구조도 &amp; 검증 리포트</h1>
+<div class="sub">PDF 9종(~390p) → 코어 26챕터 + 케이스 볼트 7종 · 3단 등급 접근 · 2026-07-18 검증</div>
+
+<div class="kpi">
+  <div><b>33</b>총 스테이지</div>
+  <div><b>26 + 7</b>코어 챕터 + 케이스</div>
+  <div><b>9</b>핵심 비유 카드</div>
+  <div><b>4</b>접근 등급 (무료~고급)</div>
+  <div><b>33/33</b>교안↔데모 반영 일치</div>
+</div>
+
+<h2><span class="no">01</span>전체 커리큘럼 구조 — 등급별 구간</h2>
+<div class="card">
+<pre class="mermaid">
+flowchart TB
+  subgraph T0["🆓 무료 맛보기 · ₩0"]
+    P1["PART 1 · AI 이해 (4챕터)\n원리 51:49 · 에이전틱 전환\n서비스 지형 · 안전 수칙"]
+  end
+  subgraph T1["🥉 초급 · ₩33,000"]
+    P2["PART 2 · 대화형 기본기 (4챕터)\nRACS · 7요소 · 컨텍스트 · Gems/GPTs/Skill"]
+    P3["PART 3 · Cowork 셋업 (4챕터)\n설치 · /project init · 도구 트라이앵글 · 스케줄"]
+  end
+  subgraph T2["🥈 중급 · ₩66,000"]
+    P4["PART 4 · Skill 만들기 (3챕터)\nSKILL.md · 점진적 공개 · 스킬 체인"]
+    P5["PART 5 · 업무 에이전트화 (4챕터)\n생태계 7부품 · 업무 분해 · 첫 에이전트 · AX 기획서"]
+    P6["PART 6 · 만들기 (4챕터)\n대시보드 · Claude Design · 이미지 · 영상"]
+  end
+  subgraph T3["🥇 고급 · ₩99,000"]
+    P7["PART 7 · 자동화 시스템 (3챕터)\n파이프라인 · 조직 운영 · Claude Code 전환"]
+    CV["CASE VAULT (7케이스)\n커머스 · 콘텐츠 · 보험 · 증권\n영업 · 크리에이터 · 5트랙"]
+  end
+  P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> CV
+</pre>
+</div>
+<p class="note">상위 등급은 하위를 포함(누적). 각 챕터는 통과 테스트(전문항 정답)를 넘어야 다음이 열림.</p>
+
+<h2><span class="no">02</span>진행 게이트 — 사용자가 겪는 흐름</h2>
+<div class="card">
+<pre class="mermaid">
+flowchart LR
+  A[챕터 읽기] --> B{통과 테스트\n전부 정답?}
+  B -- 오답 --> A
+  B -- 정답 --> C{"다음 챕터의\n요구 등급 보유?"}
+  C -- 보유 --> D[다음 챕터 열림\n+20 XP · 펫 성장]
+  C -- 미보유 --> E[등급 페이월\n포트원 결제]
+  E -- 결제·서버검증 --> D
+  D --> A
+</pre>
+</div>
+
+<h2><span class="no">03</span>비유 지도 — 어떤 개념을 무엇으로 가르치나</h2>
+<div class="card">
+<pre class="mermaid">
+mindmap
+  root((9개 핵심 비유))
+    원리
+      눈덩이 대화 · 컨텍스트 윈도우
+      51:49 시계 · 할루시네이션
+    기본기
+      비즈니스 이메일 · RACS
+      거푸집 · 메타프롬프트
+      책상 · 컨텍스트 관리
+      인천공항 셔틀 · 커스터마이징 3층위
+    만들기
+      매트릭스 다운로드 · Skill
+      컨베이어 벨트 · 스킬 체인
+      건물 출입증 · 권한 4층
+    시스템
+      미슐랭 식당 · 생태계 7부품
+      운동일지 · 자기학습
+</pre>
+</div>
+
+<h2><span class="no">04</span>반영 검증 리포트 (eval-harness)</h2>
+<table>
+<tr><th>Eval</th><th>내용</th><th>결과</th></tr>
+<tr><td>R-1 챕터 반영</td><td>교안 26+7 ↔ 데모 CHAPTERS 33개 id 대조</td><td><span class="fixed">FAIL→FIX→PASS</span> — 교안에서 CH 2-3 제목 줄 누락 발견, 복구 후 33/33 일치</td></tr>
+<tr><td>R-2 비유 카드</td><td>비유 9종 키워드가 교안·데모 양쪽 존재</td><td><span class="pass">PASS</span> — 9/9 양쪽 존재</td></tr>
+<tr><td>R-3 등급 매핑</td><td>tier 분포(4/8/11/10) ↔ partTierMap 일치</td><td><span class="pass">PASS</span></td></tr>
+<tr><td>C-1 도식화</td><td>구조도·게이트 흐름·비유 지도 mermaid 렌더</td><td><span class="pass">PASS</span> — 이 문서</td></tr>
+<tr><td>C-2 연결 자연스러움</td><td>PART 경계 7곳 모델 평가(1~5점)</td><td><span class="fixed">4곳 2점→FIX</span> — 교안 PART 2~7·CV 헤더에 "연결" 문단 7개, 데모 각 PART 첫 챕터에 쿠션 문장 7개 추가</td></tr>
+</table>
+<p class="note">pass@1: 3/5 · 수정 후 pass: 5/5. 남은 알려진 한계(별도 트랙): 서버 게이트 부재(C1~C3)·TEST_MODE — 판매 전 필수.</p>
+</div>

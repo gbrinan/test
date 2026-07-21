@@ -1,0 +1,56 @@
+{
+  "_comment": "이식 전 설계용 예시. 실제 적용은 이 값들을 확정한 뒤 진행. anandara 코드에는 아직 반영하지 않음.",
+  "preset": "demo",
+
+  "presets": {
+    "demo": {
+      "enforcement": "client",
+      "contentDelivery": "inline",
+      "authAdapter": "none",
+      "entitlementStore": "localStorage",
+      "progressStore": "localStorage",
+      "paymentProvider": "portone"
+    },
+    "anandara-prod": {
+      "enforcement": "server",
+      "contentDelivery": "lazy-protected",
+      "authAdapter": "anandara-session",
+      "entitlementStore": "server-db",
+      "progressStore": "server-db",
+      "paymentProvider": "portone"
+    }
+  },
+
+  "tiers": [
+    { "level": 0, "name": "무료 맛보기", "price": 0 },
+    { "level": 1, "name": "초급",       "price": 33000 },
+    { "level": 2, "name": "중급",       "price": 66000 },
+    { "level": 3, "name": "고급",       "price": 150000 }
+  ],
+
+  "partTierMap": {
+    "PART 1": 0,
+    "PART 2": 1,
+    "PART 3": 1,
+    "PART 4": 2,
+    "PART 5": 2,
+    "PART 6": 2,
+    "PART 7": 3,
+    "CASE VAULT": 3
+  },
+
+  "portone": {
+    "storeId": "REPLACE_store-...",
+    "channelKey": "REPLACE_channel-key-...",
+    "verifyUrl": "/api/verify-payment",
+    "_secretNote": "PORTONE_API_SECRET 는 서버 환경변수로만. config/프론트에 두지 말 것."
+  },
+
+  "anandaraBinding": {
+    "entryRoute": "TBD (예: /learn)",
+    "lessonApiRoute": "TBD (예: /api/lesson/[id])",
+    "useServerActions": false,
+    "reason": "프록시가 Server Action 차단 이력 → Route Handler 사용",
+    "recheckBeforeApply": ["basePath", "Origin 허용목록", "정적 자산 경로"]
+  }
+}

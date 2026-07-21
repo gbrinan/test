@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>닥스훈트 펫 시스템 — 기본 골자</title>
+<link href="https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css" rel="stylesheet">
+<style>
+/* ── 디자인 토큰 (verbiolabs 무드 그대로) ── */
+:root{
+  --page:#FAF9F5; --paper:#F0EEE6; --kraft:#E7DFCE; --line:#CFC7B4;
+  --ink:#1F1E1A; --ink-soft:#5C5749;
+  --clay:#D97757; --clay-deep:#B85C3E; --gold:#B99A45; --moss:#5E8D7A;
+  --font-pixel:'Galmuri11',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--ink);font-family:var(--font-pixel);padding:40px 16px;min-height:200vh}
+h1{font-size:18px;margin-bottom:8px}
+p.desc{color:var(--ink-soft);font-size:12px;line-height:1.8;max-width:520px}
+.demo-actions{margin-top:24px;display:flex;gap:8px;flex-wrap:wrap}
+.demo-actions button{font-family:var(--font-pixel);font-size:12px;padding:8px 14px;background:var(--paper);border:2px solid var(--ink);cursor:pointer;box-shadow:3px 3px 0 var(--line)}
+.demo-actions button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--line)}
+
+/* ── 펫 위젯 ── */
+#dax-widget{
+  position:fixed;right:16px;bottom:16px;width:180px;
+  background:var(--paper);border:2px solid var(--ink);
+  box-shadow:4px 4px 0 var(--line);user-select:none;z-index:99;
+}
+#dax-head{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--ink);color:var(--kraft);font-size:10px;padding:4px 8px;
+}
+#dax-head .dots{letter-spacing:2px;color:var(--clay)}
+#dax-canvas{display:block;width:100%;height:96px;image-rendering:pixelated;background:var(--kraft);cursor:pointer}
+#dax-status{padding:6px 8px;font-size:10px;line-height:1.6}
+#dax-status .row{display:flex;justify-content:space-between}
+#dax-xpbar{height:8px;border:1px solid var(--ink);margin-top:4px;background:var(--page)}
+#dax-xpbar i{display:block;height:100%;background:var(--clay);width:0%;transition:width .4s}
+#dax-feed{
+  display:block;width:100%;font-family:var(--font-pixel);font-size:11px;
+  padding:6px;border:none;border-top:2px solid var(--ink);
+  background:var(--gold);color:var(--ink);cursor:pointer;
+}
+#dax-feed:disabled{background:var(--line);color:var(--ink-soft);cursor:not-allowed}
+#dax-bubble{
+  position:absolute;top:-34px;left:50%;transform:translateX(-50%);
+  background:var(--page);border:2px solid var(--ink);padding:4px 8px;
+  font-size:10px;white-space:nowrap;display:none;
+}
+#dax-bubble.show{display:block}
+@media(prefers-reduced-motion:reduce){#dax-xpbar i{transition:none}}
+</style>
+</head>
+<body>
+
+<h1>🌭 닥스훈트 펫 시스템 — 기본 골자</h1>
+<p class="desc">
+  우측 하단 위젯이 펫 본체입니다. 페이지를 스크롤하면(=챕터를 읽으면) XP가 쌓이고,
+  간식 버튼(하루 3회)으로 추가 XP를 줄 수 있습니다. XP가 차면 진화합니다:
+  아기 소시지 → 소시지 독 → 전설의 롱보이. 상태는 localStorage에 저장됩니다.
+  펫을 클릭하면 짖습니다(Web Audio 합성음).
+</p>
+<div class="demo-actions">
+  <button onclick="daxGainXP(10,'읽기 보상')">+10 XP (챕터 읽음 시뮬레이션)</button>
+  <button onclick="daxReset()">세이브 초기화</button>
+</div>
+
+<!-- ── 펫 위젯 마크업 ── -->
+<div id="dax-widget">
+  <div id="dax-bubble"></div>
+  <div id="dax-head"><span>DAX.EXE</span><span class="dots">●●●</span></div>
+  <canvas id="dax-canvas" width="130" height="72"></canvas>
+  <div id="dax-status">
+    <div class="row"><span id="dax-name">아기 소시지</span><span>LV.<b id="dax-lv">1</b></span></div>
+    <div id="dax-xpbar"><i id="dax-xpfill"></i></div>
+    <div class="row"><span id="dax-xptext">0 XP</span><span id="dax-treats">🦴×3</span></div>
+  </div>
+  <button id="dax-feed" onclick="daxFeed()">간식 주기</button>
+</div>
+
+<script>
+/* ════════════════════════════════════════════
+   닥스훈트 펫 시스템 — 기본 골자
+   구조: 상태(save) → 픽셀 스프라이트 → 렌더 루프
+        → XP/진화 → 먹이 → 효과음 → 스크롤 훅
+   ════════════════════════════════════════════ */
+
+/* ── 1. 상태 & 저장 ── */
+const DAX_KEY='dax-pet-v1';
+const STAGES=[
+  {name:'아기 소시지', minXP:0,   len:0},   // 짧은 몸통
+  {name:'소시지 독',   minXP:100, len:2},   // 몸통 +2칸
+  {name:'전설의 롱보이',minXP:300, len:5},  // 몸통 +5칸, 금색 목걸이
+];
+let save=JSON.parse(localStorage.getItem(DAX_KEY)||'null')||{xp:0,fedDate:'',fedCount:0};
+function persist(){localStorage.setItem(DAX_KEY,JSON.stringify(save));}
+
+/* ── 2. 픽셀 스프라이트 (숫자=팔레트 인덱스, 0=투명) ──
+   참조 이미지 기준: 갈색 몸통(1), 초코 외곽선(2), 진한 처진 귀(3),
+   밝은 주둥이·가슴·발(4), 검정 코·눈(5), 금색 목걸이(6)
+   닥스훈트의 핵심: 몸통 세그먼트를 진화 단계만큼 '늘려서' 그린다 */
+const PAL=[null,'#A45A2A','#4A2511','#7A3E1B','#D9915B','#1F1E1A','#B99A45'];
+// 머리(왼쪽 향함, 처진 귀 포함) 10x12
+const HEAD=[
+ [0,0,0,2,2,2,2,2,0,0],
+ [0,0,2,1,1,1,1,1,2,0],
+ [0,2,1,1,1,1,3,3,2,0],
+ [0,2,1,5,1,1,3,3,2,0],
+ [2,4,4,1,1,1,3,3,2,0],
+ [5,4,4,4,1,1,3,3,2,0],
+ [2,4,4,1,1,1,3,2,1,2],
+ [0,2,2,1,1,1,2,1,1,1],
+ [0,0,2,2,1,1,1,1,1,1],
+ [0,0,0,0,2,2,1,1,1,1],
+ [0,0,0,0,0,0,2,2,2,2],
+ [0,0,0,0,0,0,0,0,0,0],
+];
+// 몸통 1세그먼트 1x12 (반복해서 길어짐)
+const BODY=[[0],[0],[0],[0],[0],[0],[2],[1],[1],[1],[1],[2]];
+// 엉덩이+올라간 꼬리 6x12
+const TAIL=[
+ [0,0,0,0,2,2],
+ [0,0,0,2,1,2],
+ [0,0,2,1,2,0],
+ [0,2,1,2,0,0],
+ [0,2,1,2,0,0],
+ [0,2,1,2,0,0],
+ [2,2,2,2,0,0],
+ [1,1,1,2,0,0],
+ [1,1,1,2,0,0],
+ [1,1,1,2,0,0],
+ [1,1,2,0,0,0],
+ [2,2,0,0,0,0],
+];
+
+/* ── 3. 렌더 루프 ── */
+const cv=document.getElementById('dax-canvas'),cx=cv.getContext('2d');
+let tick=0;
+function stage(){for(let i=STAGES.length-1;i>=0;i--)if(save.xp>=STAGES[i].minXP)return i;return 0;}
+function drawDax(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  const s=STAGES[stage()], px=4, bob=(tick>>4)%2, y0=4+bob;
+  const bodySegs=3+s.len;                       // 진화할수록 길어지는 몸통
+  let x=6;
+  const blit=(map,w)=>{map.forEach((row,ry)=>row.forEach((c,rx)=>{
+    if(c){cx.fillStyle=PAL[c];cx.fillRect(x+rx*px,y0+ry*px,px,px);}}));x+=w*px;};
+  const headX=x;
+  blit(HEAD,10);
+  if(stage()===2){cx.fillStyle=PAL[6];cx.fillRect(x-px,y0+8*px,px,3*px);} // 금색 목걸이
+  for(let i=0;i<bodySegs;i++)blit(BODY,1);
+  blit(TAIL,6);
+  // 다리 (걷기 애니메이션: 프레임마다 엇갈림, 발끝은 밝은 색)
+  const step=(tick>>3)%2?2:0, legY=y0+12*px, legH=10;
+  [headX+px*7,headX+px*9,x-px*6,x-px*4].forEach((lx,i)=>{
+    const off=(i%2?step:-step)/2;
+    cx.fillStyle=PAL[1];cx.fillRect(lx+off,legY,px,legH);
+    cx.fillStyle=PAL[4];cx.fillRect(lx+off-1,legY+legH-4,px+1,4); // 발
+  });
+  tick++;requestAnimationFrame(drawDax);
+}
+
+/* ── 4. XP & 진화 ── */
+function daxGainXP(n,why){
+  const before=stage();
+  save.xp+=n;persist();repaint();
+  bubble('+'+n+' XP'+(why?' ('+why+')':''));
+  if(stage()>before){bubble('진화! → '+STAGES[stage()].name);sfx('evolve');}
+  else sfx('xp');
+}
+function repaint(){
+  const st=stage(),s=STAGES[st],next=STAGES[st+1];
+  document.getElementById('dax-name').textContent=s.name;
+  document.getElementById('dax-lv').textContent=st+1;
+  document.getElementById('dax-xptext').textContent=save.xp+' XP';
+  const pct=next?Math.min(100,(save.xp-s.minXP)/(next.minXP-s.minXP)*100):100;
+  document.getElementById('dax-xpfill').style.width=pct+'%';
+  const left=treatsLeft();
+  document.getElementById('dax-treats').textContent='🦴×'+left;
+  document.getElementById('dax-feed').disabled=left<=0;
+}
+
+/* ── 5. 먹이 (하루 3회 제한) ── */
+function treatsLeft(){
+  const today=new Date().toDateString();
+  if(save.fedDate!==today){save.fedDate=today;save.fedCount=0;persist();}
+  return 3-save.fedCount;
+}
+function daxFeed(){
+  if(treatsLeft()<=0)return;
+  save.fedCount++;persist();
+  daxGainXP(15,'간식');
+}
+
+/* ── 6. 말풍선 & 효과음 (Web Audio 합성) ── */
+let bubbleTimer;
+function bubble(msg){
+  const b=document.getElementById('dax-bubble');
+  b.textContent=msg;b.classList.add('show');
+  clearTimeout(bubbleTimer);
+  bubbleTimer=setTimeout(()=>b.classList.remove('show'),2000);
+}
+let actx;
+function sfx(kind){
+  actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  const o=actx.createOscillator(),g=actx.createGain();
+  o.connect(g);g.connect(actx.destination);
+  o.type='square';g.gain.value=.04;
+  const t=actx.currentTime;
+  if(kind==='bark'){o.frequency.setValueAtTime(220,t);o.frequency.setValueAtTime(180,t+.06);}
+  else if(kind==='xp'){o.frequency.setValueAtTime(660,t);o.frequency.setValueAtTime(880,t+.08);}
+  else{ [440,554,659,880].forEach((f,i)=>o.frequency.setValueAtTime(f,t+i*.1)); }
+  o.start(t);o.stop(t+(kind==='evolve'?.5:.15));
+}
+cv.addEventListener('click',()=>{bubble('멍!');sfx('bark');});
+
+/* ── 7. 읽기 진행 훅 (스크롤 75% 지점 도달 시 1회 XP) ──
+   실제 사이트에서는 IntersectionObserver로 챕터 끝 도달을 감지해
+   daxGainXP()를 호출하면 됨 */
+let scrollRewarded=false;
+window.addEventListener('scroll',()=>{
+  const p=window.scrollY/(document.body.scrollHeight-innerHeight);
+  if(p>.75&&!scrollRewarded){scrollRewarded=true;daxGainXP(20,'페이지 완독');}
+},{passive:true});
+
+/* ── 8. 초기화 ── */
+function daxReset(){localStorage.removeItem(DAX_KEY);save={xp:0,fedDate:'',fedCount:0};repaint();bubble('처음부터!');}
+repaint();drawDax();
+</script>
+</body>
+</html>
