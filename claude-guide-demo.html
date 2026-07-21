@@ -169,6 +169,11 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .road-strip a:hover{background:var(--kraft)}
 .road-strip .rp{color:var(--clay-deep);font-weight:700}
 .road-strip .rt{color:var(--ink-soft);font-size:9.5px}
+/* 한국어 조판: 어절 단위 줄바꿈으로 한 글자 orphan 방지, 넘치면 강제 개행 */
+body{word-break:keep-all;overflow-wrap:break-word}
+/* 지원 브라우저에서 마지막 줄 orphan·들쭉날쭉한 줄길이 추가 보정 */
+.chapter .body,.chapter .body ul,.ch-lead,.analogy,.q .qt,.q label,.paywall .sub,.tier-card ul{text-wrap:pretty}
+.chapter h2,.paywall h2,#home h2,.tier-card h3{text-wrap:balance}
 /* 모바일 가독성: 본문 16px 기준 (기본 규칙보다 뒤에 있어야 override됨) */
 @media(max-width:760px){
   .chapter .body{font-size:16px}
