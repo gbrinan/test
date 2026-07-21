@@ -1942,6 +1942,14 @@ const BGM_TRACKS=[
   {id:"dungeon",  name:"던전 탐험",     src:"assets/audio/tracks/dungeon-level.mp3",credit:"Kevin MacLeod"},
   {id:"polka",    name:"픽셀 폴카",     src:"assets/audio/tracks/pixel-polka.mp3",  credit:"Kevin MacLeod"},
 ];
+/* 펫 이미지 로드 실패 시 깨진 아이콘 노출 방지 — src가 수시로 교체되므로 실패하면 숨기고 성공하면 복원 */
+["pet-img","roam-img","evo-img"].forEach(id=>{
+  const el=document.getElementById(id); if(!el) return;
+  el.addEventListener("error",()=>{el.style.visibility="hidden";});
+  el.addEventListener("load",()=>{el.style.visibility="";});
+  if(el.complete&&el.naturalWidth===0) el.style.visibility="hidden";
+});
+
 let bgmTrackId=localStorage.getItem("cg-bgm-track")||"nitroman"; // 기본 BGM: Nitroman (자체 보유곡)
 function bgmTrack(){ return BGM_TRACKS.find(t=>t.id===bgmTrackId)||BGM_TRACKS[0]; }
 const BGM=new Audio(bgmTrack().src); BGM.loop=true; BGM.volume=0.35;
