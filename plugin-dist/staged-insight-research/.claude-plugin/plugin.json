@@ -1,0 +1,8 @@
+{
+  "name": "staged-insight-research",
+  "description": "Staged consumer-insight research pipeline (phase 1 broad survey → phase 2 extended validation → phase 3 focus interview) built on the GOAL→KNOWLEDGE→SEGMENT→QUESTION reverse-design framework. Every phase persists to a project directory with a manifest.json so any later session or agent can resume or consume the findings. Bundles the research-method skill and an insight-researcher sub-agent that manages project lifecycles. Phase-3 interviews run in batch mode (persona-respondent) or interactive mode (persona-interviewee, user as live interviewer); an external-data integration protocol upgrades synthetic findings when real data arrives. Pairs well with the nemotron-personas-korea plugin for synthetic Korean respondents, but works with any respondent source. Interactive mode also supports custom (non-dataset) stakeholder personas for internal-org or B2B research. Includes a recency-first desk-research pass (web/YouTube, last-12-months priority, verified-URL citations) that grounds factual Ks before persona simulation.",
+  "version": "0.4.0",
+  "author": {
+    "name": "anan"
+  }
+}

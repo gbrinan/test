@@ -1,0 +1,49 @@
+{
+  "project_id": "eugene-ax-curriculum-review",
+  "goal": "유진투자증권 AX TF가 3일짜리 'AI 핵심인재교육과정'(프롬프트엔지니어링·Cowork·자동화설계·AX 과제기획서, 핵심인재 52명, 강사 김성호) 교안을 그대로 승인할지, 어떤 부분을 보완 요청한 뒤 승인할지 결정",
+  "created": "2026-07-18",
+  "updated": "2026-07-18",
+  "phases": {
+    "phase1": {
+      "status": "skipped",
+      "file": "phase1-broad.md",
+      "date": "2026-07-18",
+      "note": "GOAL이 일반 소비자 인구통계가 아니라 유진투자증권 내부 특정 역할(AX 담당·실무참가자·보안·경영진)에 관한 것이라 Nemotron 데이터셋 인구통계 표본이 K-보유자 세그먼트로 부적합. 광범위 정량조사 대신 커스텀 이해관계자 페르소나 인터뷰(phase3)로 대체"
+    },
+    "phase2": {
+      "status": "skipped",
+      "file": "phase2-extended.md",
+      "date": "2026-07-18",
+      "note": "phase1 skip과 동일 사유"
+    },
+    "phase3": {
+      "status": "done",
+      "file": "phase3-focus.md",
+      "date": "2026-07-18",
+      "note": "커스텀 페르소나 2명(AX담당 이수진, 참가자 정민호) persona-interviewee로 인터뷰. K2(거버넌스 부재)는 양쪽 독립 확증. K1 신규: 동기부여 메시지의 역효과 위험. 보안/경영진 세그먼트는 미포함(downstream)"
+    }
+  },
+  "summary_file": "summary.md",
+  "external_data": [
+    {
+      "file": "external-source: 유진투자증권_강의안_FN.pdf (사용자 제공, C:/Users/user/Downloads)",
+      "received": "2026-07-18",
+      "scope": "교안 전문 50페이지 — 모든 K의 1차 근거 자료",
+      "integrated": true,
+      "note": "합성 데이터 아님, 실제 교안 원문. 페르소나 반응은 여전히 시뮬레이션이므로 디스클레이머 유지"
+    },
+    {
+      "file": "desk-research.md",
+      "received": "2026-07-18",
+      "scope": "K4(망분리 전면해제 2026-06-11 발표·벤더 레퍼런스), K5(타사 교육·조직 사례 — 교안 5·8페이지 최신성 검증)",
+      "integrated": true,
+      "note": "WebSearch 4건+WebFetch 검증 3건 경량 패스. 신규 보완제안 1건 추가(교안 규제 타임라인 갱신). 미검증 항목은 파일 내 표기"
+    }
+  ],
+  "downstream_hints": [
+    "강사 김성호에게 보완 요청 사항 전달",
+    "DAY 3 이후 거버넌스 프로세스 설계",
+    "실습 슬라이드 폐쇄망 고지 추가",
+    "교안 8페이지 규제 타임라인에 2026-06-11 망분리 전면해제 발표 반영 요청 (보완 4번)"
+  ]
+}
