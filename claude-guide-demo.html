@@ -126,7 +126,13 @@ button:disabled{opacity:.5;cursor:not-allowed}
 /* ── 로그인 ── */
 .auth-box{display:flex;align-items:center;gap:8px}
 .auth-box .who{font-size:10px;color:var(--kraft);opacity:.85;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.auth-btn{font-size:10px;padding:4px 10px;box-shadow:2px 2px 0 var(--line)}
+/* 헤더 컨트롤 통일: button·select 모두 같은 높이/테두리/폰트로 상하 끝선 정렬 */
+.auth-btn{font-size:10px;padding:0 10px;box-shadow:2px 2px 0 var(--line);
+  display:inline-flex;align-items:center;justify-content:center;height:28px;box-sizing:border-box;
+  border:2px solid var(--ink);background:var(--paper);color:var(--ink);
+  font-family:var(--font-pixel);line-height:1;vertical-align:middle;cursor:pointer;
+  -webkit-appearance:none;appearance:none}
+select.auth-btn{padding:0 6px}
 /* ON AIR 스타일 백라이트 — BGM 재생 중 */
 #bgm-btn.on-air{
   background:#3a1410;color:#FF6B4A;border-color:#FF6B4A;
@@ -194,6 +200,10 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .hero-hint{font-size:10px;color:#9fb3c8}
 .hero-cred{font-size:11px;color:#35D6D0;letter-spacing:1px;margin:14px 0 4px}
 .lesson-art{width:100%;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--line);margin-bottom:16px;display:block}
+.lesson-art.mid{margin:18px 0}
+/* 한국어 조판 보정: 마지막 줄 한 글자 orphan·제목 줄 균형 (지원 브라우저 한정) */
+.chapter .body,.chapter .body ul,.ch-lead,.analogy,.q .qt,.q label{text-wrap:pretty}
+.chapter h2,.paywall h2,#home h2{text-wrap:balance}
 .road-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:26px;text-align:left}
 @media(max-width:640px){.road-strip{grid-template-columns:repeat(2,1fr)}}
 .road-strip a{border:2px solid var(--ink);background:var(--paper);box-shadow:3px 3px 0 var(--line);padding:8px 10px;font-size:10.5px;color:var(--ink);text-decoration:none;cursor:pointer}
@@ -219,7 +229,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
   header .inner{flex-wrap:wrap;gap:4px;padding:8px 10px}
   .auth-box{flex-wrap:wrap;justify-content:flex-end;gap:4px}
   .auth-box .who{display:none}
-  .auth-btn{font-size:10px;padding:5px 8px}
+  .auth-btn{font-size:10px;padding:0 8px}
   #bgm-track{max-width:84px}
   .badge{font-size:10px;padding:3px 6px}
 
@@ -626,7 +636,6 @@ function render(){
   const isLast=pageIdx===pageCount-1;
   // 일러스트는 첫 페이지에만, 퀴즈는 마지막 페이지에만
   const artFile=LESSON_ART[cc.id]||("lesson-"+cc.id+".png");
-  const art=pageIdx===0?`<img class="lesson-art" src="assets/claude-master/learning/${artFile}" alt="${cc.title} 일러스트" onerror="this.remove()">`:"";
   const pager=pageCount>1?`<div class="pager">
       <button id="pg-prev" ${pageIdx===0?"disabled":""}>◀ 이전</button>
       <span class="pg">${pageIdx+1} / ${pageCount}</span>
@@ -635,7 +644,8 @@ function render(){
   m.innerHTML=`<div class="chapter">
       <div class="ch-lv">${cc.lv} · ${cc.part} · <b>${TIERS[cc.tier].name}</b></div>
       <h2>${cc.title}</h2><div class="ch-lead">${cc.lead}</div>
-      ${art}<div class="body">${pages[pageIdx]||cc.body}</div>${pager}${isLast?quizHTML(cc):""}</div>`;
+      <div class="body">${pages[pageIdx]||cc.body}</div>${pager}${isLast?quizHTML(cc):""}</div>`;
+  if(pageIdx===0) insertLessonArt(m.querySelector(".body"), artFile, cc.title); // 삽화는 첫 페이지 본문 중간에
   const pv=document.getElementById("pg-prev"), nx=document.getElementById("pg-next");
   if(pv) pv.onclick=()=>{ pageIdx--; render(); window.scrollTo(0,0); };
   if(nx) nx.onclick=()=>{ pageIdx++; render(); window.scrollTo(0,0); };
@@ -643,6 +653,23 @@ function render(){
   if(window.mermaid){ mermaid.initialize({startOnLoad:false,theme:'neutral'}); mermaid.run({nodes:m.querySelectorAll('.mermaid')}); }
 }
 let pageIdx=0, lastChapter=-1;
+/* 삽화를 본문 중간(블록 절반 지점)에 배치 — 짧은 본문은 본문 위, 이미지가 없으면 onerror로 제거 */
+function insertLessonArt(body, artFile, title){
+  if(!body) return;
+  const img=document.createElement("img");
+  img.className="lesson-art";
+  img.src="assets/claude-master/learning/"+artFile;
+  img.alt=title+" 일러스트";
+  img.loading="lazy";
+  img.onerror=()=>img.remove();
+  const blocks=[...body.children];
+  if(blocks.length>=4){
+    img.classList.add("mid");
+    body.insertBefore(img, blocks[Math.ceil(blocks.length/2)]);
+  }else{
+    body.parentElement.insertBefore(img, body);
+  }
+}
 function paginate(bodyHtml){
   const tmp=document.createElement("div"); tmp.innerHTML=bodyHtml;
   const MAX=1100;                       // 페이지당 본문 텍스트 길이 기준
@@ -848,7 +875,9 @@ function roamSetAction(st){
 }
 const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
 function roamNext(){
-  if(petStage()===0){ roam.el.style.display="none"; roam.timer=setTimeout(roamNext,4000); return; } // 알 단계(PART 0 완주 전): 아직 못 걸음
+  // 홈 화면에서는 마스코트로서 항상 돌아다님; 학습 화면에서만 알 단계 잠금 유지
+  const onHome = typeof homeEl!=="undefined" && homeEl && homeEl.style.display!=="none";
+  if(petStage()===0 && !onHome){ roam.el.style.display="none"; roam.timer=setTimeout(roamNext,4000); return; } // 알 단계(PART 0 완주 전): 아직 못 걸음
   roam.el.style.display="block";
   // 행동 추첨: 걷기 확률 높게, 가끔 딴짓(책읽기·멍때리기·낮잠)
   const r=Math.random();
@@ -887,6 +916,14 @@ function roamLoop(){
   }
   requestAnimationFrame(roamLoop);
 }
+/* 펫 이미지 로드 실패 시 깨진 아이콘 노출 방지 — src가 수시로 교체되므로 실패하면 숨기고 성공하면 복원 */
+["pet-img","roam-img","evo-img"].forEach(id=>{
+  const el=document.getElementById(id); if(!el) return;
+  el.addEventListener("error",()=>{el.style.visibility="hidden";});
+  el.addEventListener("load",()=>{el.style.visibility="";});
+  if(el.complete&&el.naturalWidth===0) el.style.visibility="hidden";
+});
+
 function roamInit(){
   roam.el=document.getElementById("roamer"); roam.img=document.getElementById("roam-img");
   if(!roam.el||reducedMotion) return;
