@@ -431,3 +431,31 @@
 ## Sources (직접 검증분)
 
 claude.com/pricing · anthropic.com/news/claude-sonnet-5 · anthropic.com/news/claude-design-anthropic-labs · support.claude.com/13345190 · code.claude.com/docs/en/changelog · github.com/modu-ai/cowork-plugins · gemini.google/subscriptions · deepmind.google/models/gemini-image · updates.midjourney.com/v8-alpha · higgsfield.ai/blog · suno.com/blog/v5-5 · techcrunch.com (GPT-5.6) · fsc.go.kr/no010101/85908 · digitaltoday.co.kr (케임브리지 보고서) · en.wikipedia.org/wiki/Claude_(AI)
+
+
+---
+
+# 부록 B — 공식 코스 갭 반영 이력 (2026-07-26)
+
+> 근거: curriculum-gap-analysis.md (Anthropic 공식 코스 21종 전수 대조). 아래 항목이 교안·사이트에 반영됨.
+
+## 신설
+- **CH 0-3 「AI와 일하는 4가지 근육 — 4D 프레임워크」** (PART 0, 무료): Delegation·Description·Discernment·Diligence 4역량 + 협업 3모드(자동화/증강/에이전시) + 자가 진단. 교안 전체를 4D 지도 위에 배치 (PART 1=분별 기초, PART 2=기술, PART 3~5=위임, 검수·안전=성실).
+  - [소스] AI Fluency: Framework & Foundations (Feller & Dakan × Anthropic)
+
+## 기존 챕터 보강
+- **CH 1-1**: "지식 컷오프" 절 추가 — 모델 지식의 시간 경계, 최신 정보 대응 2원칙(웹 검색/자료 첨부). [소스] AI Capabilities and Limitations
+- **CH 1-2**: "증강(Augmentation) 중간 지대" 절 추가 — 챗봇↔에이전트 사이의 사고 파트너 모드. [소스] AI Fluency 3모드
+- **CH 1-4**: "AI 사용 투명성" 절 추가 — 공개 판단 3원칙(판단이 달라질 상황이면 밝힌다 등). [소스] Diligence(Transparency), 6개 코스 공통
+- **CH 2-2**: XML 태그 구획화 + 예시 제공(few-shot) 기법 추가. [소스] Building with the Claude API M4 (공식 프롬프트 기법)
+- **CH 2-3**: 딥 리서치(Research)·엔터프라이즈 검색·아티팩트 기능 절 추가. [소스] Claude 101 M2·M3
+- **CH 3-3**: Claude for Microsoft 365 + Claude in Chrome(컴퓨터 사용과의 구분 원칙) 절 추가. [소스] Introduction to Claude Cowork M4
+- **CH 4-2**: allowed-tools(도구 제한), 실행 스크립트 번들(컨텍스트 절약), 스킬 미발동 3단 진단 추가. [소스] Introduction to Agent Skills L3·L6
+- **CH 5-1**: 서브에이전트 생성 개념 + 신뢰성 3패턴(보고 형식/장애물 보고/도구 제한) + 부품 선택 기준표(항상=지침·가끔=스킬·절대=훅·통째=서브에이전트). [소스] Introduction to Subagents
+- **CH 7-3**: 긴 세션 조종술 3종(플랜 모드·컴팩션·리와인드) + 공식 후속 학습 경로(Skilljar 코스 체인). [소스] Claude Code in Action M1
+
+## 미반영 (의도적 보류)
+- 개발자 트랙 본론(API 호출·RAG·프롬프트 eval·MCP 서버 구현·Bedrock/Vertex): 교안의 비개발자 포지셔닝상 범위 밖. CH 7-3의 "다음 학습 경로"로 링크만 연결.
+- 교육자·학생·비영리 버티컬 케이스: 케이스 볼트 확장 후보(CV-8~)로 보류.
+- Train-the-Trainer 워크숍 키트: 별도 상품화 검토 대상.
+- 수료증 체계: 사이트의 퀴즈 게이트가 형성평가를 대체 중. 수료 인증서 발급은 추후 검토.
