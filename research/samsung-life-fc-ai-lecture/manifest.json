@@ -17,10 +17,10 @@
       "note": "N=30 완료. 이미지·마케팅 저수요 재확인(마케팅 Q2 0표)-축소 확정. 기계티 실체=상투어/문어체/무감정 3블랙리스트(Q7 수렴). 신규 K6: 43%가 회사승인도구만 사용-개인정보 비식별+공식도구 확인이 실행 열쇠. 이미지는 주니어옵션(세대차 3.33vs2.27)"
     },
     "phase3": {
-      "status": "skipped",
+      "status": "done",
       "file": "phase3-focus.md",
       "date": "2026-07-13",
-      "note": "자동 배치 대신 대화형 인터뷰 모드(/nemotron-personas-korea:persona-interviewee)로 필요 시 실행 권고 — 기계티 제거 전후 DM A/B 반응 심층 청취"
+      "note": "대화형 모드(persona-interviewee)로 1건 실행. 신규 발견: 리마인더 니즈(5개 활용사례 밖), 상품요약 도구의 구체 스펙(A4 1장/3요소/사용시점), 승인도구 없으면 수기 유지 확증"
     }
   },
   "summary_file": "summary.md",

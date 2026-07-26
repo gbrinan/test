@@ -74,6 +74,15 @@ Two execution modes — pick per respondent, mixing is fine:
 - **Batch mode** (default for coverage): dispatch the interview guide through the `persona-respondent` sub-agent, one persona per dispatch (interview-depth work needs the strongest character fidelity — do NOT batch multiple personas per dispatch in phase 3).
 - **Interactive mode** (default when a human wants to probe live): hand the session to the `nemotron-personas-korea:persona-interviewee` skill **as-is** — Claude plays one specific persona in-character, the user interviews directly, bracketed `[...]` text is out-of-character stage direction. Use this for A/B reaction probes (e.g. showing two DM drafts and digging into which lands and why), for follow-up chains a fixed guide can't anticipate, and whenever the requester says they want to "talk to" a respondent. Afterwards, transcribe the exchange into `phase3-focus.md` (or `raw/interview-{n}.md` + a digest) so the project directory — not the chat log — remains the record.
 
+## [FREE] Custom (non-dataset) personas in interactive mode
+
+`nemotron-personas-korea:persona-interviewee` is written for dataset rows, but the same interactive mechanics work for a hand-authored stakeholder who isn't in the dataset (an internal role, a specific company employee, a B2B decision-maker). To use it that way:
+
+- Skip `uuid:`/demographic-filter parsing entirely. Instead pass a single argument that says explicitly this is a custom persona (not the dataset) and gives the full profile inline: name, age, org/role, professional background, relevant experience level, and interview context — everything the loader would normally have emitted in `=== field ===` blocks.
+- Claude treats that inline profile as the loaded persona and proceeds exactly as documented (announce, confirm setting, wait for the first question, obey the bracket convention).
+- Still append the disclaimer and still write the transcript into `phase3-focus.md` — a custom persona is not a real respondent either.
+- Use this when the GOAL is about a specific organization/role Nemotron's general Korean-adult demographics can't represent (an internal team member, a named counterpart, a niche professional). For a broad public segment, prefer a real dataset row — the point of the dataset is calibrated realism you'd otherwise have to fake by hand.
+
 ### Summary → `summary.md`
 Written so downstream work reads only this: GOAL + final recommendation, per-K findings (≤3 lines each, linked to phase files), top 5–10 quotable raw sentences, downstream suggestions.
 
@@ -83,6 +92,15 @@ Written so downstream work reads only this: GOAL + final recommendation, per-K f
 - Otherwise: design contrasting virtual personas by hand, or use real-respondent data if provided.
 - [HARD] Any synthetic-persona result must carry the disclaimer:
   `※ 본 결과는 가상 페르소나 시뮬레이션입니다. 실제 사용자 검증을 대체하지 않습니다.`
+
+## [FREE] Desk research — web/YouTube evidence, recency-first
+
+Any phase may ground its Ks in public evidence before (or alongside) persona work. When the GOAL touches a moving market (AI adoption, regulation, platform features, competitor moves), run a desk-research pass first — persona simulation can't know what changed last quarter.
+
+- **Recency priority [HARD when citing]**: prefer sources from the last 12 months; label every cited claim with its publication date. If the freshest available source is older, say so explicitly ("최신 확인 가능 자료: YYYY-MM"). Never present an undated claim as current.
+- **Sources**: WebSearch → WebFetch to verify each URL before citing (never cite an unverified URL). YouTube for practitioner talks/tutorials (fetch title·channel·upload date at minimum; transcript via page fetch when available). If a recent-content skill (e.g. `last30days`) is installed, use it for the freshest 30-day slice of Reddit/X/YouTube/HN sentiment.
+- **Storage**: findings go to `desk-research.md` in the project directory (or a `## 데스크 리서치` section inside the relevant phase file if brief), each finding tagged with the K it serves + source URL + date. Register the pass in manifest `external_data` with `"scope"` listing the Ks it grounds — desk research is external evidence, same protocol as arriving real data.
+- **Role split**: desk research grounds facts (market size, regulation timelines, feature availability); personas ground reactions (perception, adoption barriers, wording). Don't let a persona "answer" a factual K a search can settle, and don't let a search claim to know how your segment feels.
 
 ## [HARD] External data integration — when real data arrives
 
