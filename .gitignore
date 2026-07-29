@@ -1,0 +1,10 @@
+# 개인 vault — 비즈니스 저장소에 커밋 금지 (민감·개인 내용 격리)
+Personal-Wiki/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Python bytecode
+__pycache__/
+*.pyc
