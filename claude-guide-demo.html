@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>클로드 완전정복 — 인터랙티브 교안</title>
+<meta name="description" content="퀴즈를 풀며 공룡을 키우는 인터랙티브 Claude 학습 코스. PART 1 무료 — 지금 시작하세요.">
+<meta name="theme-color" content="#D97757">
+<link rel="canonical" href="https://anandara.xyz/">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:title" content="클로드 완전정복 — 인터랙티브 교안">
+<meta property="og:description" content="퀴즈를 풀며 공룡을 키우는 Claude 학습 코스. PART 1 무료.">
+<meta property="og:url" content="https://anandara.xyz/">
+<meta property="og:image" content="https://anandara.xyz/assets/claude-master/opening-forest-console.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<link href="https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css" rel="stylesheet">
+<!-- PortOne V2 브라우저 SDK -->
+<script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --page:#FAF9F5;--paper:#F0EEE6;--kraft:#E7DFCE;--line:#CFC7B4;
+  --ink:#1F1E1A;--ink-soft:#5C5749;--clay:#D97757;--clay-deep:#B85C3E;
+  --gold:#B99A45;--moss:#5E8D7A;--font-pixel:'Galmuri11',monospace;
+  --font-body:'Pretendard','Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--page);color:var(--ink);font-family:var(--font-pixel);line-height:1.8;font-size:14px}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px;display:grid;grid-template-columns:250px 1fr;gap:24px}
+@media(max-width:760px){.wrap{grid-template-columns:1fr}}
+
+header{border-bottom:2px solid var(--ink);background:var(--paper)}
+header .inner{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:14px}
+.badge{font-size:11px;background:var(--ink);color:var(--kraft);padding:3px 8px}
+
+.toc{border:2px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--line);align-self:start;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto}
+.toc h2{font-size:11px;background:var(--ink);color:var(--kraft);padding:6px 10px;position:sticky;top:0;z-index:3}
+.toc .part{font-size:10px;color:var(--clay-deep);padding:6px 10px 2px;font-weight:700;background:var(--kraft);display:flex;justify-content:space-between;gap:6px}
+.toc .part .tier{color:var(--ink-soft)}
+.toc ul{list-style:none}
+.toc li{border-top:1px solid var(--line)}
+.toc a{display:flex;justify-content:space-between;gap:6px;padding:7px 10px;font-size:11px;color:var(--ink);text-decoration:none;cursor:pointer}
+.toc a:hover{background:var(--kraft)}
+.toc a.active{background:var(--clay);color:#fff}
+.toc a.locked{color:var(--ink-soft);cursor:not-allowed;opacity:.6}
+.toc .st{font-size:10px}
+
+.chapter{border:2px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--line);padding:22px}
+.ch-lv{font-size:11px;color:var(--clay-deep);font-weight:700}
+.chapter h2{font-size:18px;margin:6px 0 4px}
+.ch-lead{color:var(--ink-soft);font-size:12px;margin-bottom:16px}
+/* 장문 본문은 가독 폰트(산세리프), 픽셀 폰트는 제목·UI에만 (DESIGN.md 타이포 원칙) */
+.chapter .body{font-size:14.5px;font-family:var(--font-body);line-height:1.85;max-width:72ch}
+.chapter .body h3{font-size:14px;margin:18px 0 6px;color:var(--clay-deep);font-family:var(--font-pixel)}
+.chapter .body ul{margin:6px 0 6px 18px;font-size:14px}
+.analogy{border-left:4px solid var(--gold);background:var(--kraft);padding:12px 14px;margin:14px 0;font-size:13.5px;font-family:var(--font-body)}
+.analogy b{color:var(--clay-deep)}
+.chapter .body pre,.chapter .body .figure,pre.mermaid{overflow-x:auto;max-width:100%}
+
+/* ── 페이지네이션 ── */
+.pager{display:flex;align-items:center;justify-content:center;gap:14px;margin:20px 0 4px}
+.pager .pg{font-size:12px;color:var(--ink-soft);min-width:52px;text-align:center;font-variant-numeric:tabular-nums}
+.pager button:disabled{visibility:hidden}
+
+
+.quiz{border:2px dashed var(--clay);padding:16px;margin-top:22px;background:var(--page)}
+.quiz h3{font-size:13px;color:var(--clay-deep);margin-bottom:10px}
+.q{margin-bottom:14px}
+.q .qt{font-size:12.5px;margin-bottom:6px}
+.q label{display:block;font-size:12px;padding:6px 8px;border:1px solid var(--line);margin-bottom:4px;cursor:pointer;background:var(--paper)}
+.q label:hover{background:var(--kraft)}
+.q input{margin-right:6px}
+.q.correct label.sel{background:#dff0e4;border-color:var(--moss)}
+.q.wrong label.sel{background:#f6ddd5;border-color:var(--clay-deep)}
+.quiz .actions{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+button{font-family:var(--font-pixel);font-size:12px;padding:8px 14px;border:2px solid var(--ink);cursor:pointer;box-shadow:3px 3px 0 var(--line);background:var(--paper);color:var(--ink)}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--line)}
+button.primary{background:var(--clay);color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+.result{font-size:12px}
+.result.ok{color:var(--moss)}
+.result.no{color:var(--clay-deep)}
+.next-btn{margin-top:18px}
+
+.status{border:2px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--line);padding:10px 12px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+#pet-img{width:56px;height:56px;object-fit:contain;background:#071B35;border:2px solid var(--ink);flex-shrink:0}
+/* 98% 정지 상태: 아쉬움을 몸짓으로 — 은은한 좌우 흔들림 + 한숨 같은 가라앉음 */
+#pet-img.pleading{animation:plead 3.2s ease-in-out infinite}
+@keyframes plead{
+  0%,100%{transform:rotate(0) translateY(0)}
+  15%{transform:rotate(-3deg) translateY(0)}
+  30%{transform:rotate(2.5deg) translateY(0)}
+  45%{transform:rotate(0) translateY(0)}
+  70%{transform:rotate(0) translateY(2px)}   /* 한숨 */
+}
+@media(prefers-reduced-motion:reduce){#pet-img.pleading{animation:none}}
+.status .meta{font-size:11px}
+.xpbar{height:8px;border:1px solid var(--ink);background:var(--page);margin-top:4px}
+.xpbar i{display:block;height:100%;background:var(--clay);width:0%}
+
+/* 등급 페이월 */
+.paywall{border:2px solid var(--clay-deep);background:var(--kraft);padding:22px}
+.paywall h2{font-size:18px;color:var(--clay-deep);text-align:center}
+.paywall .sub{font-size:12px;color:var(--ink-soft);text-align:center;margin:6px 0 16px}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:640px){.tiers{grid-template-columns:1fr}}
+.tier-card{border:2px solid var(--ink);background:var(--paper);padding:14px;display:flex;flex-direction:column}
+.tier-card.need{border-color:var(--clay-deep);box-shadow:4px 4px 0 var(--clay)}
+.tier-card.owned{opacity:.55}
+.tier-card h3{font-size:14px;color:var(--clay-deep)}
+.tier-card .price{font-size:18px;margin:6px 0}
+.tier-card ul{list-style:none;font-size:11px;color:var(--ink-soft);margin:8px 0;flex:1}
+.tier-card li::before{content:"· "}
+.tier-card .tag{font-size:10px;color:var(--moss)}
+.tier-card button{width:100%;margin-top:8px}
+.pay-note{font-size:10px;color:var(--ink-soft);margin-top:14px;text-align:center}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--kraft);padding:10px 16px;font-size:12px;border:2px solid var(--gold);display:none;z-index:99}
+.toast.show{display:block}
+
+/* ── 로그인 ── */
+.auth-box{display:flex;align-items:center;gap:8px}
+.auth-box .who{font-size:10px;color:var(--kraft);opacity:.85;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.auth-btn{font-size:10px;padding:4px 10px;box-shadow:2px 2px 0 var(--line)}
+/* ON AIR 스타일 백라이트 — BGM 재생 중 */
+#bgm-btn.on-air{
+  background:#3a1410;color:#FF6B4A;border-color:#FF6B4A;
+  text-shadow:0 0 6px rgba(255,107,74,.9);
+  box-shadow:0 0 8px 2px rgba(255,107,74,.55),0 0 20px 6px rgba(255,107,74,.25),2px 2px 0 var(--line);
+  animation:onair 1.6s ease-in-out infinite;
+}
+@keyframes onair{
+  0%,100%{box-shadow:0 0 8px 2px rgba(255,107,74,.55),0 0 20px 6px rgba(255,107,74,.25),2px 2px 0 var(--line)}
+  50%{box-shadow:0 0 12px 4px rgba(255,107,74,.85),0 0 30px 10px rgba(255,107,74,.4),2px 2px 0 var(--line)}
+}
+@media(prefers-reduced-motion:reduce){#bgm-btn.on-air{animation:none}}
+#auth-modal{position:fixed;inset:0;background:rgba(16,20,30,.55);display:none;align-items:center;justify-content:center;z-index:100}
+#auth-modal.show{display:flex}
+.auth-card{width:min(360px,92vw);background:var(--paper);border:2px solid var(--ink);box-shadow:6px 6px 0 rgba(0,0,0,.3);padding:22px}
+.auth-card h3{font-size:15px;color:var(--clay-deep);margin-bottom:6px}
+.auth-card p{font-size:11px;color:var(--ink-soft);margin-bottom:12px}
+.auth-card input{width:100%;font-family:var(--font-pixel);font-size:13px;padding:9px 10px;border:2px solid var(--ink);background:var(--page);margin-bottom:10px}
+.auth-card input:focus{outline:2px solid var(--clay)}
+.auth-card .row{display:flex;gap:8px}
+.auth-card .row button{flex:1}
+.auth-err{font-size:10px;color:var(--clay-deep);min-height:14px;margin-bottom:6px}
+.quiz .q .qt,.quiz .q label{font-family:var(--font-body)}
+
+/* ── 로밍 컴패니언 (화면 전체를 자유롭게 돌아다니는 공룡 — Codex 펫 스타일) ── */
+#roamer{position:fixed;left:0;top:0;z-index:50;pointer-events:none;will-change:transform}
+#roam-img{height:64px;width:auto;image-rendering:auto;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3))}
+#roam-emote{position:absolute;top:-26px;left:50%;transform:translateX(-50%);font-size:18px;font-family:var(--font-pixel);white-space:nowrap;opacity:0;transition:opacity .3s;text-shadow:0 1px 0 #fff}
+#roamer.emote #roam-emote{opacity:1;animation:emote-float 2.2s ease-in-out infinite}
+@keyframes emote-float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+#roamer.act-excited #roam-img{animation:pet-bounce .5s ease-in-out infinite}
+@keyframes pet-bounce{0%,100%{transform:translateY(0) scaleY(1)}40%{transform:translateY(-14px) scaleY(1.05)}60%{transform:translateY(0) scaleY(.92)}}
+#roamer.act-hungry #roam-img{animation:pet-wobble 1s ease-in-out infinite}
+@keyframes pet-wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
+#roamer.act-sleep #roam-img,#roamer.act-dream #roam-img{animation:pet-breathe 3s ease-in-out infinite}
+@keyframes pet-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04,0.97)}}
+#roamer.act-stretch #roam-img{animation:pet-stretch 1.6s ease-in-out infinite}
+@keyframes pet-stretch{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) scaleX(.94)}}
+.fb-q{margin:14px 0}
+.fb-q label{display:block;font-size:12px;margin-bottom:6px;font-weight:bold}
+.fb-q textarea,.fb-q input{width:100%;font-family:var(--font-body);font-size:13px;padding:8px 9px;border:2px solid var(--ink);background:var(--page);resize:vertical}
+.fb-scale{display:flex;gap:4px;flex-wrap:wrap}
+.fb-scale button{flex:1;min-width:28px;padding:7px 0;font-family:var(--font-pixel);font-size:12px;border:2px solid var(--ink);background:var(--paper);cursor:pointer}
+.fb-scale button.on{background:var(--clay);color:#fff}
+.fb-hint{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-soft);margin-top:3px}
+@media(prefers-reduced-motion:reduce){#roamer{display:none !important}}
+
+/* ── 진화 축하 오버레이 (WOW + 폭죽 + LV) ── */
+#evo-overlay{position:fixed;inset:0;background:rgba(7,27,53,.82);display:none;align-items:center;justify-content:center;z-index:200;text-align:center}
+#evo-overlay.show{display:flex}
+#evo-canvas{position:absolute;inset:0;width:100%;height:100%}
+.evo-card{position:relative;z-index:1}
+.evo-wow{font-size:52px;color:#F1B84B;letter-spacing:6px;text-shadow:4px 4px 0 rgba(0,0,0,.5);animation:wowpop .5s cubic-bezier(.2,2,.4,1)}
+.evo-card img{width:160px;margin:14px 0;animation:evobounce 1s ease infinite alternate}
+.evo-lv{font-size:22px;color:#35D6D0;margin-bottom:6px}
+.evo-msg{font-size:14px;color:#FFF8E8}
+@keyframes wowpop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes evobounce{from{transform:translateY(0)}to{transform:translateY(-12px)}}
+@media(prefers-reduced-motion:reduce){.evo-wow,.evo-card img{animation:none}}
+
+/* ── 홈(히어로) 화면: 심야 숲 테마(DESIGN.md) · 총 높이 2스크린 이내 ── */
+#home{background:linear-gradient(180deg,#071B35 0%,#123B5B 78%,var(--page) 100%);padding:28px 16px 48px;text-align:center}
+.home-inner{max-width:860px;margin:0 auto}
+.hero-img{width:min(560px,92%);border:2px solid #0a2547;box-shadow:0 0 0 2px #35D6D0,8px 8px 0 rgba(0,0,0,.35);background:#071B35}
+.hero-fallback{width:min(420px,80%);margin:0 auto;border:2px solid #35D6D0;background:#0a2547;padding:28px 10px;font-size:22px;letter-spacing:4px;color:#E58A6A}
+#home h2{font-size:24px;margin:18px 0 6px;color:#FFF8E8}
+#home .tag{color:#9fb3c8;font-size:13px;margin-bottom:18px}
+.hero-stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.hero-stats div{border:2px solid var(--ink);background:var(--paper);box-shadow:3px 3px 0 var(--line);padding:8px 14px;font-size:11px}
+.hero-stats b{display:block;font-size:16px;color:var(--clay-deep)}
+.start-btn{font-size:15px;padding:14px 34px;margin:14px 0 6px;background:#C96442;border-color:#0a2547;box-shadow:3px 3px 0 rgba(0,0,0,.4)}
+.hero-hint{font-size:10px;color:#9fb3c8}
+.hero-cred{font-size:11px;color:#35D6D0;letter-spacing:1px;margin:14px 0 4px}
+.lesson-art{width:100%;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--line);margin-bottom:16px;display:block}
+.road-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:26px;text-align:left}
+@media(max-width:640px){.road-strip{grid-template-columns:repeat(2,1fr)}}
+.road-strip a{border:2px solid var(--ink);background:var(--paper);box-shadow:3px 3px 0 var(--line);padding:8px 10px;font-size:10.5px;color:var(--ink);text-decoration:none;cursor:pointer}
+.road-strip a:hover{background:var(--kraft)}
+.road-strip .rp{color:var(--clay-deep);font-weight:700}
+.road-strip .rt{color:var(--ink-soft);font-size:9.5px}
+
+/* ── 모바일: 본문 기본 16px (스타일시트 최후단 — 기본 규칙을 확실히 덮음) ── */
+@media(max-width:760px){
+  html{-webkit-text-size-adjust:100%}
+  .chapter{padding:16px}
+  .chapter h2{font-size:20px}
+  .ch-lead{font-size:14px}
+  .chapter .body{font-size:16px;line-height:1.9;max-width:100%;word-break:keep-all;overflow-wrap:break-word}
+  .chapter .body ul{font-size:16px}
+  .analogy{font-size:15px;line-height:1.85}
+  .q .qt{font-size:15px}
+  .q label{font-size:15px;padding:11px 12px}   /* 터치 타깃 44px 근접 */
+  button{font-size:13px;padding:11px 16px}
+  .quiz{padding:12px}
+
+  /* 모바일 헤더: 1~2줄로 압축 (who 숨김·컨트롤 축소) */
+  header .inner{flex-wrap:wrap;gap:4px;padding:8px 10px}
+  .auth-box{flex-wrap:wrap;justify-content:flex-end;gap:4px}
+  .auth-box .who{display:none}
+  .auth-btn{font-size:10px;padding:5px 8px}
+  #bgm-track{max-width:84px}
+  .badge{font-size:10px;padding:3px 6px}
+
+  /* 모바일 목차: 기본 접힘 아코디언 — 본문이 첫 화면에 오도록 */
+  .toc{position:static;max-height:none}
+  .toc h2{cursor:pointer}
+  .toc h2::after{content:" ▾ 열기";font-weight:400;opacity:.8}
+  .toc.open h2::after{content:" ▴ 접기"}
+  .toc:not(.open) .part,.toc:not(.open) ul{display:none}
+  .toc.open .part{display:flex}
+  .toc.open ul{display:block}
+}
+</style>
+</head>
+<body>
+<header><div class="inner">
+  <h1 id="logo" style="cursor:pointer" title="홈으로">🤖 CLAUDE 완전정복</h1>
+  <div class="auth-box">
+    <button class="auth-btn" id="fb-btn" title="설문·피드백 남기기">📝 설문</button>
+    <button class="auth-btn" id="bug-btn" title="버그·이슈 제보">🐞</button>
+    <select class="auth-btn" id="bgm-track" title="BGM 곡 선택" style="max-width:110px"></select>
+    <button class="auth-btn" id="bgm-btn" title="배경음악">♪ OFF</button>
+    <span class="who" id="auth-who"></span>
+    <button class="auth-btn" id="admin-btn" title="회원 등급 관리" style="display:none">⚙ 등급관리</button>
+    <button class="auth-btn" id="auth-btn">로그인</button>
+    <select id="lang-sel" title="Language" style="height:28px"></select>
+    <span class="badge" id="hdr-badge">무료 맛보기 · 0/33</span>
+  </div>
+</div></header>
+
+<!-- ── 로그인 모달 (이메일 OTP) ── -->
+<div id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+  <div class="auth-card">
+    <h3 id="auth-title">이메일로 로그인</h3>
+    <div id="auth-step-email">
+      <p>비밀번호 없이, 이메일로 받은 인증 코드로 로그인합니다.</p>
+      <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
+      <div class="auth-err" id="auth-err1"></div>
+      <div class="row"><button class="primary" id="auth-send">인증 코드 받기</button><button id="auth-cancel1">닫기</button></div>
+      <div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:12px">
+        <p style="font-size:12px" data-i18n="promo.hint">🎟 프로모션 코드가 있나요? (기간 한정 체험)</p>
+        <input type="text" id="promo-code" placeholder="CG-RAPTOR-XXXX" autocomplete="off" style="text-transform:uppercase">
+        <div class="auth-err" id="promo-err"></div>
+        <div class="row"><button id="promo-apply" data-i18n="promo.apply">코드 사용</button></div>
+      </div>
+    </div>
+    <div id="auth-step-code" style="display:none">
+      <p><b id="auth-sent-to"></b> 로 보낸 인증 코드를 입력하세요.</p>
+      <input type="text" id="auth-code" inputmode="numeric" maxlength="10" placeholder="메일로 받은 숫자 코드" autocomplete="one-time-code">
+      <div class="auth-err" id="auth-err2"></div>
+      <div class="row"><button class="primary" id="auth-verify">로그인</button><button id="auth-cancel2">닫기</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 홈(히어로) ── -->
+<section id="home"><div class="home-inner">
+  <img class="hero-img" src="assets/claude-master/design/opening-forest-console.png" alt="CLAUDE 완전정복 — 심야 숲의 게임 콘솔"
+       onerror="this.outerHTML='&lt;div class=&quot;hero-fallback&quot;&gt;▛▚ CLAUDE ▞▜&lt;br&gt;&lt;span style=&quot;font-size:11px;letter-spacing:1px&quot;&gt;PRESS START TO LEARN&lt;/span&gt;&lt;/div&gt;'">
+  <div class="hero-cred" data-i18n="home.cred">한국 대기업 AX 전환 전문가가 알려드리는</div>
+  <h2 data-i18n="home.headline">게임처럼 클리어하는 Claude 로드맵</h2>
+  <div class="tag" data-i18n="home.tagline">AI 원리부터 업무 자동화까지 — 챕터마다 테스트를 통과하면 다음이 열립니다.</div>
+  <div class="hero-stats">
+    <div><b>36</b>스테이지</div>
+    <div><b>28+7</b>코어+실전 케이스</div>
+    <div><b id="home-done">0</b>클리어</div>
+    <div><b>🌭</b>펫 진화</div>
+  </div>
+  <button class="primary start-btn" id="start-btn">▶ START</button>
+  <div class="hero-hint">LV.0~PART 1 무료 · 진행은 이 브라우저에 저장됩니다<br>♪ BGM: Nu poet "Nitroman" · CodeManu (opengameart.org) · Kevin MacLeod (incompetech.com, CC-BY)</div>
+  <div class="road-strip" id="road-strip"></div>
+</div></section>
+
+<div class="wrap" style="display:none">
+  <nav>
+    <div class="status">
+      <img id="pet-img" src="assets/claude-master/pet/pet-stage-0.png" alt="학습 컴패니언" title="컴패니언 · 챕터를 클리어하면 성장합니다">
+      <div class="meta">
+        <div id="pet-name">알 (부화 대기)</div>
+        <div class="xpbar"><i id="xpfill"></i></div>
+        <div id="xp-text">0 XP</div>
+        <div id="pet-seal" style="font-size:9px;color:var(--clay-deep);margin-top:2px"></div>
+      </div>
+    </div>
+    <div class="toc">
+      <h2>학습 로드맵</h2>
+      <div id="toc-list"></div>
+    </div>
+  </nav>
+  <main id="main"></main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ── 로밍 공룡 (부화 후 상시 표시) ── -->
+<div id="roamer" style="display:none"><span id="roam-emote"></span><img id="roam-img" src="assets/claude-master/pet/troam/pet-stage-1.png" alt="돌아다니는 컴패니언" title="컴패니언"></div>
+
+<!-- ── 관리자: 회원 등급 설정 모달 ── -->
+<div id="admin-modal" role="dialog" aria-modal="true" style="position:fixed;inset:0;background:rgba(16,20,30,.55);display:none;align-items:center;justify-content:center;z-index:100">
+  <div class="auth-card">
+    <h3>⚙ 회원 등급 설정 (관리자)</h3>
+    <p style="font-size:12px">대상 회원의 이메일과 부여할 등급을 선택하세요. 강등도 가능합니다.</p>
+    <input type="email" id="admin-email" placeholder="member@example.com" autocomplete="off">
+    <select id="admin-tier" style="width:100%;margin-top:8px;height:34px"></select>
+    <div class="auth-err" id="admin-err"></div>
+    <div class="row"><button class="primary" id="admin-apply">등급 적용</button><button id="admin-close">닫기</button></div>
+  </div>
+</div>
+
+<!-- ── 버그·이슈 제보 모달 ── -->
+<div id="bug-modal" role="dialog" aria-modal="true" aria-labelledby="bug-title" style="position:fixed;inset:0;background:rgba(16,20,30,.55);display:none;align-items:center;justify-content:center;z-index:100">
+  <div class="auth-card">
+    <h3 id="bug-title">🐞 버그·이슈 제보</h3>
+    <p>겪으신 문제를 적어주시면 개발자 메일로 바로 보내드립니다. 현재 챕터·등급 정보가 자동으로 첨부됩니다.</p>
+    <textarea id="bug-text" rows="5" placeholder="예: 3-2 챕터에서 퀴즈 채점 버튼이 눌리지 않아요" style="width:100%;font-family:var(--font-body);font-size:13px;padding:9px 10px;border:2px solid var(--ink);background:var(--page);margin-bottom:10px;resize:vertical"></textarea>
+    <div class="row" style="display:flex;gap:8px">
+      <button class="primary" id="bug-send" style="flex:1">📧 메일로 보내기</button>
+      <button id="bug-copy">내용 복사</button>
+      <button id="bug-cancel">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 설문·피드백 모달 ── -->
+<div id="fb-modal" role="dialog" aria-modal="true" aria-labelledby="fb-title" style="position:fixed;inset:0;background:rgba(16,20,30,.55);display:none;align-items:center;justify-content:center;z-index:100;overflow:auto;padding:20px 0">
+  <div class="auth-card" style="max-height:none">
+    <h3 id="fb-title">📝 사용 후기를 들려주세요</h3>
+    <p style="font-size:12px">체험해 주셔서 감사합니다. 답변은 교안 개선에 그대로 반영됩니다. <b>한 문항만 답해도 제출</b>됩니다.</p>
+
+    <div class="fb-q"><label>1. 전반적으로 얼마나 만족하셨나요?</label>
+      <div class="fb-scale" id="fb-rating" data-min="1" data-max="5"></div>
+      <div class="fb-hint"><span>아쉬움</span><span>훌륭함</span></div></div>
+
+    <div class="fb-q"><label>2. 난이도는 어땠나요?</label>
+      <div class="fb-scale" id="fb-ease" data-min="1" data-max="5"></div>
+      <div class="fb-hint"><span>너무 어려움</span><span>너무 쉬움</span></div></div>
+
+    <div class="fb-q"><label>3. 동료에게 추천할 의향은? (0~10)</label>
+      <div class="fb-scale" id="fb-nps" data-min="0" data-max="10"></div>
+      <div class="fb-hint"><span>전혀 아님</span><span>매우 그럼</span></div></div>
+
+    <div class="fb-q"><label>4. 가장 좋았던 점은?</label>
+      <textarea id="fb-best" rows="2" placeholder="예: 공룡이 자라는 재미로 계속하게 됐어요"></textarea></div>
+
+    <div class="fb-q"><label>5. 가장 아쉬웠거나 막혔던 곳은?</label>
+      <textarea id="fb-worst" rows="2" placeholder="예: 3-2 챕터 설명이 어려웠어요"></textarea></div>
+
+    <div class="fb-q"><label>6. 추가되면 좋겠는 것은?</label>
+      <textarea id="fb-wish" rows="2" placeholder="예: 엑셀 자동화 실전 사례"></textarea></div>
+
+    <div class="fb-q"><label>7. 회신받을 이메일 (선택)</label>
+      <input type="email" id="fb-email" placeholder="답변이 필요하면 남겨주세요"></div>
+
+    <div class="auth-err" id="fb-err"></div>
+    <div class="row" style="display:flex;gap:8px">
+      <button class="primary" id="fb-send" style="flex:1">제출하기</button>
+      <button id="fb-cancel">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 진화 축하 오버레이 ── -->
+<div id="evo-overlay" aria-live="polite">
+  <canvas id="evo-canvas"></canvas>
+  <div class="evo-card">
+    <div class="evo-wow">WOW!</div>
+    <img id="evo-img" src="assets/claude-master/pet/pet-stage-1.png" alt="">
+    <div class="evo-lv" id="evo-lv">LV.1</div>
+    <div class="evo-msg" id="evo-msg">축하합니다! 공룡이 깨어났습니다.</div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   CLAUDE 완전정복 — 등급별 접근 + 포트원 결제
+   등급(누적): 0 무료 < 1 초급 < 2 중급 < 3 고급
+   구매한 등급 이하의 챕터만 열림 + 직전 챕터 테스트 통과 필요
+   ══════════════════════════════════════════════════════════ */
+
+/* ── 등급/가격 정의 (⚠ 가격은 예시) ── */
+const TIERS = [
+  { level:0, name:"무료 맛보기", price:0,     blurb:"PART 1 · AI 이해",
+    perks:["AI 원리·안전 수칙 맛보기"] },
+  { level:1, name:"도전자",     price:33000, blurb:"기본기 + Cowork 셋업",
+    perks:["PART 2 대화형 기본기","PART 3 Cowork 설치·프로젝트·스킬 개념"] },
+  { level:2, name:"중급자",     price:66000, blurb:"스킬·에이전트 만들기",
+    perks:["PART 4 Skill 만들기","PART 5 내 업무를 에이전트로","PART 6 문서·디자인·미디어 만들기"] },
+  { level:3, name:"상급자",     price:150000, blurb:"업무 자동화 + 실전",
+    perks:["PART 7 자동화 시스템","케이스 볼트 7종(직무·업종별)","펫 진화 완주"] },
+];
+
+/* ── 결제 설정 (⚠ 실제 값으로 교체) ── */
+const PAY = {
+  STORE_ID:   "store-XXXXXXXX-0000-0000-0000-XXXXXXXXXXXX",
+  CHANNEL_KEY:"channel-key-XXXXXXXX-0000-0000-0000-XXXXXXXXXXXX",
+  VERIFY_URL: "/api/verify-payment",
+  TEST_MODE:  true
+};
+
+/* ── 챕터 데이터 (tier = 필요 등급) ── */
+const CHAPTERS = [
+{"id":"0-1","part":"PART 0 · 준비운동","lv":"LV.0","tier":0,"title":"시작 전 3분 — 얼마 들고, 어떻게 깔고, 뭐부터 누르나","lead":"요금제 한눈에 · Windows/Mac 설치 · 기본 메뉴 지도","body":"<p>본격적으로 배우기 전에, 가장 많이 받는 질문 세 가지부터 해결하고 갑시다. <b>\"얼마예요?\" \"어떻게 설치해요?\" \"설치했는데 뭘 눌러야 해요?\"</b> — 이 챕터 하나면 끝납니다.</p>\n      <h3>1. 얼마 들까? — 요금제 지도</h3>\n      <p>클로드는 웹(claude.ai)에서 <b>무료로 시작</b>할 수 있습니다. 다만 무료는 사용량이 적어 맛보기용입니다. 유료 요금제는 세 단계입니다. <b>(⚠ 가격은 변동될 수 있으니 최신 정보는 claude.com/pricing 에서 확인하세요)</b></p>\n      <p><b>Pro — 월 $20 (약 3만 원)</b>: 가장 기본이 되는 유료 요금제입니다. 웹 클로드를 넉넉히 쓰고, 이 교안에서 배울 <b>클로드 코드(Claude Code)도 포함</b>됩니다. 다만 5시간 단위 사용량 한도가 있어, 집중해서 쓰면 금방 차는 \"체험판\" 성격입니다.</p>\n      <p><b>Max 5x — 월 $100</b>: Pro의 5배 사용량. 클로드 코드를 업무에 본격적으로 쓰는 사람들의 표준 선택입니다. <b>Max 20x — 월 $200</b>: Pro의 20배. 하루 종일 돌리는 헤비유저용입니다.</p>\n      <p>추천 경로는 간단합니다: <b>무료 → Pro로 감 잡기 → 진심이 되면 Max $100</b>. 이 교안의 PART 1~3은 무료 웹 클로드만으로도 충분히 따라올 수 있습니다.</p>\n      <h3>2. 어떻게 설치할까? — Windows / Mac</h3>\n      <p>두 갈래가 있습니다. <b>입문자는 데스크톱 앱</b>, 이 교안 후반(자동화)까지 갈 분은 <b>터미널 설치</b>를 권합니다.</p>\n      <p><b>① 데스크톱 앱 (쉬운 길)</b>: claude.ai/download 에서 Windows용(.exe) 또는 Mac용(.dmg)을 내려받아 설치하고, 클로드 계정으로 로그인하면 끝. 채팅·파일 첨부·클로드 코드 탭까지 클릭만으로 씁니다.</p>\n      <p><b>② 터미널 설치 (강한 길)</b> — 명령어 한 줄을 복사해 붙여넣고 Enter만 누르면 됩니다:</p>\n      <p><b>Mac</b>: Cmd+Space → \"terminal\" 검색 → 아래 입력<br><code>curl -fsSL https://claude.ai/install.sh | bash</code></p>\n      <p><b>Windows</b>: Win+R → \"powershell\" 입력 → 아래 입력<br><code>irm https://claude.ai/install.ps1 | iex</code><br>(Windows는 Git for Windows가 필요할 수 있고, 모든 기능을 쓰려면 WSL 설치를 권장합니다)</p>\n      <p>설치 후 터미널에 <code>claude</code>라고 입력하면 브라우저 로그인 창이 열리고, 계정으로 로그인하면 인증 완료. <code>claude --version</code>으로 버전이 나오면 성공입니다. 문제가 있으면 <code>claude doctor</code>가 상태를 진단해 줍니다.</p>\n      <h3>3. 기본 메뉴 지도 — 설치했는데 뭘 누르지?</h3>\n      <p>웹/앱 화면은 단순합니다: <b>새 채팅</b>(대화 시작), <b>프로젝트</b>(자료를 모아두고 반복 작업), <b>모델 선택</b>(빠른 모델 vs 똑똑한 모델), <b>아티팩트</b>(클로드가 만든 결과물 미리보기). 이것만 알면 헤맬 일이 없습니다.</p>\n      <p>클로드 코드(터미널)에서는 슬래시(/) 명령어가 메뉴 역할을 합니다. 처음엔 이 여섯 개만 기억하세요:</p>\n      <p><b>/help</b> 전체 명령어 보기 · <b>/clear</b> 대화 초기화(토큰 절약의 핵심!) · <b>/model</b> 모델 바꾸기 · <b>/usage</b> 내 사용량 확인 · <b>/login</b> 재로그인 · <b>/quit</b> 종료</p>\n      <p>그리고 하나 더 — 작업 폴더에 <b>CLAUDE.md</b> 파일을 만들어 \"내 규칙\"을 적어두면 클로드가 매번 물어보지 않고 기억합니다. 이건 PART 5에서 제대로 다룹니다.</p>\n      <p>준비 끝. 이제 AI가 어떻게 생각하는지부터 파헤쳐 봅시다.</p>","quiz":[{"q":"클로드 코드를 본격적으로(멀티세션 등) 쓰려는 사람에게 표준으로 권장되는 요금제는?","opts":["무료 플랜","Pro ($20)","Max 5x ($100)","Team 플랜"],"a":2},{"q":"터미널 대화 중 이전 맥락을 지워 토큰을 절약하는 명령어는?","opts":["/quit","/clear","/login","/usage"],"a":1},{"q":"Windows에서 PowerShell로 설치하는 공식 명령은?","opts":["npm install claude","irm https://claude.ai/install.ps1 | iex","apt-get install claude","claude.exe /setup"],"a":1}]},
+{"id":"0-2","part":"PART 0 · 준비운동","lv":"LV.0","tier":0,"title":"치트키 장전 — 명령어 모음·플러그인·첫 세팅 15분","lead":"슬래시 명령어 사전 · /plugin 마켓 · CLAUDE.md와 권한 세팅","body":"<p>설치가 끝났다면, 이제 <b>손에 익혀야 할 치트키</b>들을 장전할 차례입니다. 이 챕터는 사전처럼 쓰세요 — 다 외울 필요 없이, 필요할 때 돌아와서 찾으면 됩니다.</p>\n      <h3>1. 명령어 모음 — 상황별 치트시트</h3>\n      <p><b>매일 쓰는 것</b>: <code>/clear</code> 대화 초기화(작업 바뀔 때마다!) · <code>/compact</code> 대화를 요약해 압축 · <code>/model</code> 모델 전환 · <code>/usage</code> 사용량 확인 · <code>/help</code> 전체 목록</p>\n      <p><b>세션 관리</b>: <code>claude</code> 새 세션 시작 · <code>claude -c</code> 직전 대화 이어하기 · <code>claude -r</code> 과거 세션 골라서 복귀 · <code>/quit</code>(또는 Ctrl+D) 종료</p>\n      <p><b>환경·문제해결</b>: <code>claude --version</code> 버전 확인 · <code>claude doctor</code> 설치 진단 · <code>claude update</code> 수동 업데이트 · <code>/login</code> 재로그인 · <code>/permissions</code> 권한 설정 보기</p>\n      <p><b>한 방 실행(파이프)</b>: <code>claude -p \"질문\"</code> — 대화 모드 없이 답만 받기. 예: <code>cat 에러로그.txt | claude -p \"원인 분석해줘\"</code></p>\n      <p>키보드 팁: 입력 중 <b>Shift+Tab</b>을 누르면 자동 승인 모드 전환, <b>Esc</b>는 진행 중인 작업 중단입니다.</p>\n      <h3>2. 플러그인 설치 — 남이 만든 무기 가져오기</h3>\n      <p>플러그인은 <b>명령어·에이전트·스킬을 묶은 확장팩</b>입니다. 세션 안에서 <code>/plugin</code>을 입력하면 마켓플레이스 탐색 화면이 열립니다. 흐름은 앱스토어와 같습니다:</p>\n      <p><b>① 마켓 등록</b>: <code>/plugin marketplace add 주소</code> (GitHub 저장소 주소 등) → <b>② 설치</b>: <code>/plugin install 플러그인이름</code> → <b>③ 사용</b>: 플러그인이 제공하는 <code>/명령어</code>가 바로 생깁니다.</p>\n      <p>처음엔 공식 마켓(anthropics/claude-code 등록 기본 제공)에서 인기 플러그인을 구경하는 것만으로 충분합니다. 어떤 플러그인이 무슨 권한을 요구하는지 확인하는 습관만 챙기세요 — <b>출처가 불분명한 플러그인은 설치하지 않는 것</b>이 원칙입니다.</p>\n      <h3>3. 기본 세팅 — 처음 15분 투자로 평생 편해지기</h3>\n      <p><b>① CLAUDE.md 만들기</b>: 작업 폴더에서 <code>/init</code>을 입력하면 클로드가 폴더를 분석해 CLAUDE.md 초안을 만들어 줍니다. 여기에 \"답변은 한국어로\", \"파일 지우기 전에 물어봐\" 같은 <b>내 규칙</b>을 적어두면 매 세션 자동 적용됩니다.</p>\n      <p><b>② 권한(permissions) 이해</b>: 클로드 코드는 파일 수정·명령 실행 전에 <b>허락을 구합니다</b>. 같은 종류의 작업을 반복 허용하려면 물어볼 때 \"항상 허용\"을 선택하거나 <code>/permissions</code>에서 관리하세요. 원칙: <b>읽기는 넓게, 쓰기·삭제는 좁게.</b></p>\n      <p><b>③ 설정 파일 위치</b>: 개인 전역 설정은 <code>~/.claude/settings.json</code>, 프로젝트 설정은 <code>프로젝트/.claude/settings.json</code>. 직접 편집할 필요는 거의 없고, \"설정 파일에 ~을 추가해줘\"라고 클로드에게 시키면 됩니다.</p>\n      <p><b>④ 모델 기본값</b>: 평소엔 빠르고 저렴한 모델(Sonnet), 어려운 설계·디버깅만 상위 모델로 — <code>/model</code>로 그때그때 바꾸는 습관이 비용을 아낍니다.</p>\n      <p>여기까지 하면 준비운동 끝. 남은 교안 전체가 이 토대 위에서 진행됩니다.</p>","quiz":[{"q":"작업 주제가 바뀔 때 토큰 낭비를 막기 위해 먼저 실행하면 좋은 명령어는?","opts":["/model","/clear","/login","/plugin"],"a":1},{"q":"플러그인을 설치하는 올바른 순서는?","opts":["설치 → 마켓 등록 → 사용","마켓 등록 → 설치 → 사용","사용 → 설치 → 마켓 등록","권한 해제 → 설치 → 재부팅"],"a":1},{"q":"작업 폴더를 분석해 CLAUDE.md 초안을 자동으로 만들어 주는 명령어는?","opts":["/init","/compact","/usage","/doctor"],"a":0}]},
+{"id":"0-3","part":"PART 0 · 준비운동","lv":"LV.0","tier":0,"title":"AI와 일하는 4가지 근육 — 앤트로픽 공식 4D 프레임워크","lead":"위임·기술·분별·성실 · 자동화 vs 증강 · 나의 약한 근육 찾기","body":"<p>본격적인 학습에 앞서, 이 교안 전체를 지탱하는 <b>상위 지도</b> 하나를 머리에 넣고 갑시다. 앤트로픽이 대학 교수진과 공동 개발한 <b>4D 프레임워크</b> — \"AI를 잘 쓰는 사람\"의 역량을 4개의 근육으로 나눈 공식 모델입니다.</p>\n      <h3>4개의 근육</h3>\n      <p><b>① 위임(Delegation)</b> — \"이 일의 어느 부분을 AI에 맡기고, 어느 부분을 내가 지킬 것인가?\" 무작정 다 시키는 게 아니라, 내 강점·약점까지 고려해 역할을 나누는 판단력입니다.</p>\n      <p><b>② 기술(Description)</b> — \"원하는 것을 얼마나 잘 설명하는가?\" 산출물(무엇을)뿐 아니라 과정(어떻게)과 <b>행동방식(어떤 태도로 — 간결하게, 반박하며, 단계마다 확인하며)</b>까지 지시하는 소통 역량입니다. 이 교안의 프롬프트 기법(PART 2)이 이 근육을 단련합니다.</p>\n      <p><b>③ 분별(Discernment)</b> — \"결과물을 비판적으로 평가할 수 있는가?\" 답변만 보지 말고 <b>추론 과정에 비약이 없는지, 협업 태도가 적절한지</b>까지 보는 눈입니다. 평가한 것을 다시 지시에 반영하는 <b>기술↔분별 반복 루프</b>가 품질 관리의 핵심 사이클입니다.</p>\n      <p><b>④ 성실(Diligence)</b> — \"내 사용에 책임지는가?\" 안전한 데이터 취급, 그리고 <b>결과물에 AI가 쓰였음을 언제·어떻게 밝힐지(투명성)</b>까지 포함하는 책임 근육입니다. 최종 책임은 언제나 사람에게 있습니다.</p>\n      <h3>협업의 3가지 모드 — 자동화만이 답이 아니다</h3>\n      <p>AI와 일하는 방식은 세 가지입니다. <b>자동화(Automation)</b>: AI가 나 대신 작업을 수행. <b>증강(Augmentation)</b>: AI를 <b>사고 파트너</b>로 삼아 함께 브레인스토밍·기획·검토. <b>에이전시(Agency)</b>: AI에게 독립적으로 움직일 권한을 주고 결과를 감독. 초보자가 흔히 놓치는 것이 가운데 <b>증강</b> 모드입니다 — 산출물을 시키기 전에 \"이 문제를 어떻게 접근하면 좋을까?\"라고 <b>함께 생각하는 용법</b>부터 익히면, 자동화 단계(PART 3~)의 품질이 완전히 달라집니다.</p>\n      <h3>자가 진단 — 나의 약한 근육은?</h3>\n      <p>\"AI가 자꾸 엉뚱한 걸 준다\" → ② 기술 부족. \"그럴듯해서 그냥 믿게 된다\" → ③ 분별 부족. \"뭘 시켜야 할지 모르겠다\" → ① 위임 부족. \"찜찜한데 일단 제출했다\" → ④ 성실 부족. 앞으로 각 PART를 배울 때마다 \"지금 어떤 근육을 단련 중인가\"를 떠올리면 학습이 지도 위에서 진행됩니다: PART 1(분별의 기초) → PART 2(기술) → PART 3~5(위임) → 검수·안전(성실).</p>","quiz":[{"q":"4D 프레임워크에서 '결과물과 추론 과정을 비판적으로 평가하는 역량'은?","opts":["위임(Delegation)","기술(Description)","분별(Discernment)","성실(Diligence)"],"a":2},{"q":"AI를 '사고 파트너'로 삼아 함께 기획·검토하는 협업 모드는?","opts":["자동화(Automation)","증강(Augmentation)","에이전시(Agency)","격리(Isolation)"],"a":1},{"q":"'결과물에 AI가 쓰였음을 언제 어떻게 밝힐지'는 어느 근육에 속하나?","opts":["위임","기술","분별","성실"],"a":3}]},
+{"id":"1-1","part":"PART 1 · AI 이해","lv":"LV.0","tier":0,"title":"AI는 왜 자신만만하게 틀릴까","lead":"자동완성의 진실 · 51:49 · 까먹는 이유","body":"<p style=\"border:1px dashed var(--line);background:var(--paper);padding:8px 12px;font-size:13px\">🏋️ <b>이 파트가 단련하는 근육</b> — <b>분별(Discernment)</b>의 기초 체력. AI의 원리와 한계를 알아야 결과물을 의심할 줄 알게 됩니다. <span style=\"color:var(--ink-soft)\">(0-3장 4D 지도)</span></p>\n      <p>\"AI가 그럴듯하게 말해서 믿었는데, 알고 보니 틀렸다.\" 누구나 한 번쯤 겪는 순간입니다. 이 배신감의 정체를 알면, AI를 두려워하지 않고 <b>제대로 부리는 법</b>이 보입니다.</p>\n      <p>AI는 \"다음에 올 가장 그럴듯한 단어\"를 이어 붙이는 <b>자동완성 엔진</b>입니다. 스마트폰 키보드의 추천 단어가 수천억 배 정교해진 것이라고 생각하면 됩니다. 그래서 핵심 공식이 나옵니다: <b>그럴듯함 ≠ 정확함</b>. AI는 \"정답을 아는 기계\"가 아니라 \"가장 자연스러운 문장을 만드는 기계\"이기 때문에, 모르는 것도 막힘없이 자신만만하게 말합니다.</p>\n      <h3>51:49의 시계 — 왜 검증 습관이 필요한가</h3>\n      <p>어떤 답이 맞을 확률 51%, 틀릴 확률 49%라면 어떨까요? 대체로 맞지만 가끔 틀립니다. 문제는 AI가 틀릴 때도 <b>맞을 때와 똑같은 말투</b>로 말한다는 것. \"늘 11시를 가리키는 고장난 시계\"처럼, 항상 그럴듯하게 내놓기 때문에 하루 두 번 정확히 맞는 순간과 나머지 틀린 순간을 겉모습만으로는 구분할 수 없습니다. 이것이 <b>할루시네이션(환각)</b>이고, 없앨 수는 없지만 <b>검증 습관</b>으로 관리할 수는 있습니다.</p>\n      <div class=\"analogy\"><b>[핵심 비유] 컨텍스트 윈도우 — 눈덩이처럼 불어나는 대화</b><br>AI는 매 턴 \"지금까지 오간 대화 전체\"를 다시 읽습니다. Turn 1에서 2토큰이던 대화가 Turn 2에 4토큰, Turn 3에 6토큰… 눈덩이처럼 커지고, 정해진 그릇(200k~1M 토큰)을 넘으면 가위로 자르듯 앞부분이 잘려 \"까먹습니다\". \"분명 아까 말했는데 왜 잊었지?\"의 정체가 바로 이 잘림입니다. → 주제가 바뀌면 새 대화로 리셋하고, 중요한 맥락은 메모리에 고정하세요.</div>\n      <div class=\"figure\">📊 [도식 제안] Turn 1→2→3 토큰 누적 다이어그램 — 대화가 쌓일수록 입력이 눈덩이처럼 커지고, 하단 점선(컨텍스트 윈도우 한계)을 넘는 순간 앞부분이 가위(✂)로 잘리는 그림</div>\n      <h3>실무에서 이렇게 나타납니다</h3>\n      <ul>\n        <li><b>커머스 셀러 사례</b>: \"우리 상품 리뷰 5,000건 요약해줘\"를 한 대화에서 계속 이어가면, 뒤로 갈수록 처음 올린 리뷰 조건을 잊고 엉뚱한 요약이 나옵니다. → 리뷰 분석은 한 대화, 상세페이지 작성은 새 대화로 분리하세요.</li>\n        <li><b>직장인 사례</b>: \"경쟁사 매출이 작년 대비 몇 % 늘었어?\"라고 물으면 AI는 그럴듯한 숫자를 만들어낼 수 있습니다. → \"출처 URL과 함께 알려줘. 모르면 모른다고 답해\"라고 검증 조건을 프롬프트에 넣으세요.</li>\n      </ul>\n      <h3>심화 예시 — 학원 강사의 경우</h3>\n      <p>학원 강사가 \"이 개념이 나온 최근 수능 기출 연도를 알려줘\"라고 물었더니, AI가 존재하지 않는 연도와 문항 번호를 자신만만하게 답했습니다. 자동완성 관점에서 보면 당연합니다 — \"기출 연도\"라는 질문 뒤에는 통계적으로 연도 숫자가 오는 것이 가장 자연스럽기 때문에, 모르는 경우에도 <b>가장 그럴듯한 숫자</b>를 채워 넣는 것입니다. 대응책도 같습니다: 기출 원문 PDF를 함께 올려 \"이 파일 안에서만 찾아줘\"라고 근거를 제한하면, 51:49의 시계가 근거 있는 시계로 바뀝니다.</p>\n      <h3>자주 묻는 질문</h3>\n      <p><b>Q. 할루시네이션은 언젠가 완전히 없어지나요?</b><br>A. \"다음 단어 예측\"이라는 작동 원리 자체에서 나오는 현상이라 완전히 사라지기는 어렵습니다. 모델이 좋아질수록 빈도는 줄지만, 그래서 더 위험해집니다 — 틀리는 일이 드물수록 검증 습관이 느슨해지기 때문입니다. 빈도와 무관하게 \"숫자·출처는 확인한다\"는 루틴을 유지하는 것이 정답입니다.</p>\n      <p><b>Q. 대화가 얼마나 길어지면 새 대화로 리셋해야 하나요?</b><br>A. 토큰 수를 셀 필요는 없습니다. 실용적인 신호 두 가지만 보세요: ① 주제가 바뀔 때(리뷰 분석 → 상세페이지 작성), ② AI가 앞서 말한 조건을 되묻거나 어길 때. 둘 중 하나가 보이면 새 대화를 열고, 필요한 맥락만 요약해서 가져가는 것이 품질을 지키는 가장 쉬운 방법입니다.</p>\n      <h3>이런 실수를 조심</h3>\n      <ul>\n        <li>AI가 제시한 통계·날짜·인명을 <b>그대로 보고서에 복사</b>하는 것 — 숫자는 반드시 원출처를 클릭해 재확인.</li>\n        <li>하나의 대화에서 <b>기획→분석→작성→번역</b>을 전부 이어가는 것 — 눈덩이가 커져 품질이 떨어집니다.</li>\n        <li>\"AI가 자신 있게 말하니 맞겠지\"라는 판단 — 자신감은 정확도의 신호가 아닙니다.</li>\n      </ul>\n      <p><b>💡 실전 팁 한 스푼:</b> 오늘부터 AI에게 숫자·통계를 물을 때는 문장 끝에 \"출처 URL을 함께 알려주고, 모르면 모른다고 답해\"를 붙이세요. 이 한 줄이 51:49의 시계를 근거 있는 시계로 바꾸는 가장 싼 보험입니다.</p>\n      <p><b>❗ 흔한 오해:</b> \"AI가 길고 자세하게 답하면 그만큼 정확한 것이다\" → 사실은 길이와 정확도는 무관합니다. 자동완성 엔진은 모르는 내용일수록 오히려 더 매끄럽고 길게 채워 넣을 수 있으므로, 판단 기준은 분량이 아니라 출처입니다.</p>\n      <p><b>이 챕터 한 줄 요약:</b> AI는 정답 기계가 아니라 그럴듯함 기계이므로, 자신감 대신 출처를 믿고 주제가 바뀌면 대화를 리셋하라.</p>\n      <p style=\"color:var(--ink-soft)\">▶ 다음 챕터 예고: 검증 습관을 갖췄다면 이제 역할을 바꿀 차례 — 묻고 받아 적는 챗봇 시대를 끝내고, 일을 통째로 맡기는 에이전트의 세계로 넘어갑니다.</p>\n      <h3>하나 더 — AI의 지식에는 '유통기한'이 있다</h3>\n      <p>모델은 특정 시점까지의 데이터로 학습됩니다. 이 경계를 <b>지식 컷오프(knowledge cutoff)</b>라고 부릅니다. 컷오프 이후의 신제품·가격·사건은 모델이 <b>모르면서도 그럴듯하게</b> 답할 수 있습니다 — 51:49 문제가 가장 심해지는 지점이죠. 그래서 최신 정보가 걸린 질문에는 ① 웹 검색 기능을 켜거나 ② 최신 자료를 직접 첨부하고, 날짜가 중요한 답변은 반드시 출처를 확인하는 습관이 필요합니다.</p>","quiz":[{"q":"'51:49 비유'가 강조하는 것은?","opts":["AI는 항상 정답을 낸다","그럴듯하지만 가끔 틀리므로 검증이 필요하다","AI는 51%만 대답한다"],"a":1},{"q":"대화가 길어지면 앞 내용을 잊는 이유는?","opts":["일부러 잊는다","컨텍스트 윈도우를 넘으면 오래된 부분이 잘려서","인터넷이 끊겨서"],"a":1},{"q":"AI가 틀린 답을 낼 때의 특징은?","opts":["말투가 흔들려서 티가 난다","맞을 때와 똑같이 자신만만하게 말한다","답을 거부한다"],"a":1}]},
+{"id":"1-2","part":"PART 1 · AI 이해","lv":"LV.0","tier":0,"title":"챗봇 시대는 끝났다: 에이전트","lead":"묻고 답하기에서, 맡기고 받기로","body":"<p>\"AI한테 물어보면 답은 잘하는데, 결국 일은 내가 다 하잖아?\" — 이 답답함을 느꼈다면 당신은 이미 <b>챗봇의 한계</b>에 도달한 것입니다. 다음 단계가 에이전트입니다.</p>\n      <p>챗봇은 \"질문→답변\"에서 끝나지만, 에이전트는 <b>목표→계획→실행→검증</b>의 고리를 스스로 돕니다. 차이는 한 문장으로 요약됩니다: 챗봇에게는 <b>물어보고</b>, 에이전트에게는 <b>맡깁니다</b>.</p>\n      <div class=\"analogy\"><b>[비유] 상담원 vs 능력 있는 인턴</b><br>챗봇은 안내 데스크 상담원 — 물으면 친절히 답하지만, 자리에서 일어나 일을 처리해 주지는 않습니다. 에이전트(Cowork)는 능력 있는 인턴 — \"이거 처리해줘\" 한마디에 파일을 열고, 단계를 밟고, 결과물을 만들어 옵니다.</div>\n      <h3>실무 장면으로 비교해 봅시다</h3>\n      <ul>\n        <li><b>챗봇 방식(직장인)</b>: \"주간 보고서 양식 알려줘\" → 답변을 복사 → 엑셀 열어 데이터 붙이기 → 워드에 정리. AI가 답한 뒤의 <b>손작업이 전부 내 몫</b>.</li>\n        <li><b>에이전트 방식(직장인)</b>: \"이 폴더의 매출 CSV로 주간 보고서 DOCX 만들어줘\" → 에이전트가 파일을 읽고, 집계하고, 문서로 저장. 나는 <b>최종 검토만</b>.</li>\n        <li><b>커머스 사례</b>: 챗봇에게는 \"리뷰 분석 방법\"을 묻지만, 에이전트에게는 \"리뷰 파일을 읽고 불만 TOP5를 뽑아 개선안 표로 정리해줘\"라고 통째로 맡깁니다.</li>\n      </ul>\n      <h3>하네스 5요소 — 인턴에게 일을 맡기는 안전장치</h3>\n      <p>능력 있는 인턴도 지침 없이 풀어두면 사고를 칩니다. 에이전트가 폭주하지 않게 잡는 뼈대가 <b>하네스</b>이고, 5가지 요소로 구성됩니다: <b>컨텍스트</b>(무슨 일인지 알려주기) · <b>권한</b>(어디까지 손대도 되는지) · <b>계획</b>(실행 전 단계 확인) · <b>검증</b>(결과 점검) · <b>중단/재개</b>(이상하면 멈추고 다시).</p>\n      <div class=\"figure\">📊 [도식 제안] 챗봇(질문→답변 일직선) vs 에이전트(목표→계획→실행→검증 순환 루프) 비교 다이어그램 — 루프 바깥을 하네스 5요소가 울타리처럼 감싼 그림</div>\n      <h3>심화 예시 — 프리랜서 디자이너의 경우</h3>\n      <p>프리랜서 디자이너는 매월 말 클라이언트별 작업 내역을 정리해 청구서를 보냅니다. 챗봇 방식이라면 \"청구서 양식 추천해줘\"를 묻고 나머지는 손으로 채우지만, 에이전트 방식은 \"이 폴더의 작업 로그를 읽고 클라이언트별 청구서 PDF를 만들어줘. 단가표는 rates.xlsx를 참조해\"라고 맡깁니다. 이때 하네스가 작동하는 지점을 보세요 — 단가표 파일을 지정한 것이 <b>컨텍스트</b>, 해당 폴더만 접근하게 한 것이 <b>권한</b>, 발송 전 본인이 금액을 확인하는 것이 <b>검증</b>입니다. 하네스는 이론이 아니라, 일을 맡기는 문장 안에 자연스럽게 녹아드는 습관입니다.</p>\n      <h3>자주 묻는 질문</h3>\n      <p><b>Q. 에이전트가 알아서 다 해준다면, 사람은 뭘 하나요?</b><br>A. 역할이 \"실행자\"에서 \"발주자 겸 검수자\"로 바뀝니다. 무엇을 만들지 정의하고(목표), 어디까지 허용할지 정하고(권한), 결과물을 판정하는(검증) 일은 여전히 사람 몫이며, 오히려 이 능력의 가치가 올라갑니다.</p>\n      <p><b>Q. 챗봇으로도 충분한 일까지 굳이 에이전트에 맡겨야 하나요?</b><br>A. 아닙니다. 일회성 질문·아이디어 브레인스토밍은 챗봇이 더 빠릅니다. 에이전트가 빛나는 것은 \"파일이 오가고, 단계가 여러 개이고, 매번 반복되는\" 일입니다. 3분 실습에서 두 문장을 써 보는 이유가 바로 이 구분을 몸에 익히기 위해서입니다.</p>\n      <h3>3분 실습</h3>\n      <p>지금 하는 반복 업무 하나를 골라 두 문장으로 적어 보세요. ① 챗봇용: \"~하는 방법 알려줘\" ② 에이전트용: \"~파일을 읽고 ~형식으로 결과물을 만들어줘\". 두 문장의 차이가 곧 챗봇과 에이전트의 차이입니다. ②가 자연스럽게 써진다면, 그 업무는 PART 3의 Cowork 자동화 1순위 후보입니다.</p>\n      <p><b>💡 실전 팁 한 스푼:</b> 오늘 반복 업무 하나를 골라 \"~파일을 읽고 ~형식의 결과물을 만들어줘\" 한 문장으로 적어 메모장에 저장해 두세요. 이 문장이 그대로 PART 3에서 Cowork에 던질 첫 지시문이 됩니다.</p>\n      <p><b>❗ 흔한 오해:</b> \"에이전트는 알아서 다 하니까 지켜볼 필요가 없다\" → 사실은 반대입니다. 맡기는 범위가 커질수록 하네스 5요소(특히 권한과 검증)가 더 중요해지며, 발주자 겸 검수자로서의 사람 역할은 없어지는 게 아니라 무거워집니다.</p>\n      <p><b>이 챕터 한 줄 요약:</b> 챗봇에게는 묻고 에이전트에게는 맡기되, 하네스 5요소(컨텍스트·권한·계획·검증·중단/재개)로 안전하게 맡겨라.</p>\n      <p style=\"color:var(--ink-soft)\">▶ 다음 챕터 예고: 맡길 준비가 됐다면 이제 누구에게 맡길지 정할 차례 — ChatGPT·Claude·Gemini 3사 지형도에서 안 망하는 선택 기준을 배웁니다.</p>\n      <p>챗봇과 에이전트, 이 교과서적 구분 사이에는 실전에서 가장 많이 쓰게 될 중간 지대가 하나 있습니다.</p>\n      <h3>챗봇과 에이전트 사이 — '증강'이라는 중간 지대</h3>\n      <p>챗봇(묻고 답하기)에서 에이전트(맡기고 감독하기)로 단번에 건너뛸 필요는 없습니다. 그 사이에 <b>증강(Augmentation)</b> — AI를 사고 파트너로 쓰는 모드가 있습니다(0-3장의 3모드). 기획 초안을 함께 두드리고, 내 논리의 허점을 반박시켜 보고, 선택지를 비교시키는 용법입니다. 에이전트에게 일을 '잘 맡기는' 사람은 예외 없이 이 증강 단계에서 문제를 명확히 다듬는 습관이 있는 사람입니다.</p>","quiz":[{"q":"에이전트가 챗봇과 다른 핵심은?","opts":["더 빠르게 타이핑","목표→계획→실행→검증을 스스로 수행","말투가 다름"],"a":1},{"q":"'하네스'의 역할은?","opts":["더 창의적으로 만든다","폭주하지 않게 잡아주는 뼈대(권한·검증 등)","결제 담당"],"a":1},{"q":"하네스 5요소에 포함되지 않는 것은?","opts":["권한","검증","매출"],"a":2}]},
+{"id":"1-3","part":"PART 1 · AI 이해","lv":"LV.0","tier":0,"title":"AI 3사, 뭘 골라야 안 망할까","lead":"3대 모델 지형도 · Chat/Cowork/Code 스펙트럼","body":"<p>\"ChatGPT? Claude? Gemini? 다 비슷해 보이는데 뭘 써야 하지?\" — 이 질문에 답하려면 회사 이름이 아니라 <b>두 개의 축</b>을 봐야 합니다: ① 어느 진영(회사)인가 ② 같은 진영 안에서 <b>어느 제품 층위</b>인가.</p>\n      <h3>축 1 — 3대 프런티어 진영 (2026-07 기준)</h3>\n      <ul>\n        <li><b>Anthropic — Claude</b> (Fable 5 / Sonnet 5 / Opus 4.8): 에이전트·코딩 강점. 문서 작업과 자동화에 특히 강함.</li>\n        <li><b>OpenAI — GPT-5.6 패밀리</b> (Sol·Terra·Luna): 가장 큰 사용자층과 생태계(GPTs).</li>\n        <li><b>Google — Gemini 3.5 Flash / 3.1 Pro</b>: 멀티모달·가성비, Workspace(문서·시트) 연동 강점.</li>\n      </ul>\n      <div class=\"figure\">📊 [도식 제안] 3사 모델 비교표 — 행: Anthropic/OpenAI/Google, 열: 최신 모델명·강점·컨텍스트·에이전트 역량·대표 요금제(Pro $20 등). 하단에 \"검증일 2026-07\" 스탬프</div>\n      <h3>축 2 — 같은 회사 안의 제품 스펙트럼</h3>\n      <p>더 중요한 축입니다. 같은 Claude라도 <b>Chat(대화) ↔ Cowork(비개발자 에이전트) ↔ Code/Codex(개발자 에이전트)</b>로 용도가 갈립니다. 회사를 고르는 것보다, 내 일에 맞는 <b>층위</b>를 고르는 것이 실패를 막습니다.</p>\n      <div class=\"analogy\"><b>[비유]</b> 같은 자동차 회사에도 세단·SUV·트럭이 있듯, 같은 AI 회사에도 \"수다용·업무용·개발용\"이 따로 있습니다. 짐을 옮기며 세단이 좁다고 불평하는 것 — 그것이 Chat으로 자동화를 시도하는 모습입니다.</div>\n      <h3>실무 선택 시나리오</h3>\n      <ul>\n        <li><b>직장인 A</b>: \"회의록 요약, 이메일 초안\" 수준 → 어느 진영이든 <b>Chat 층위</b>면 충분. 회사가 이미 쓰는 생태계(Workspace면 Gemini)를 따르는 게 효율적.</li>\n        <li><b>커머스 셀러 B</b>: \"리뷰 CSV 분석→상세페이지→광고 카피를 매주 반복\" → 파일을 다루는 <b>에이전트 층위(Cowork)</b>가 필요. 에이전트 강점이 있는 진영이 유리.</li>\n      </ul>\n      <h3>심화 예시 — 병원 행정팀장의 경우</h3>\n      <p>병원 행정팀장 C는 \"환자 안내문 초안, 공지문 톤 다듬기\"가 주 업무라 처음엔 가장 유명한 서비스의 최상위 요금제를 결제했습니다. 그러나 두 축으로 다시 보면: ① 업무가 문서 중심이고 원내에서 Workspace를 쓰므로 생태계 연동이 중요하고, ② 파일 자동화까지는 아직 필요 없으므로 <b>Chat 층위</b>면 충분합니다. 결론은 \"제일 유명한 것\"이 아니라 \"우리 환경의 Chat 층위\"였고, 요금은 절반이 됐습니다. 반대로 매주 수십 건의 진료 통계 엑셀을 집계해야 하는 시점이 오면, 그때가 에이전트 층위로 올라갈 타이밍입니다 — 층위 선택은 한 번이 아니라 업무가 바뀔 때마다 다시 하는 것입니다.</p>\n      <h3>자주 묻는 질문</h3>\n      <p><b>Q. 3사 중 하나만 골라 정착해야 하나요?</b><br>A. 아닙니다. 층위가 기준입니다. 가벼운 질문은 무료 Chat, 반복 자동화는 강점 있는 진영의 에이전트 층위 — 이렇게 용도별로 나눠 쓰는 것이 오히려 일반적입니다. 다만 커스텀 지침·메모리 같은 축적 자산이 쌓이는 곳은 한 곳으로 모으는 편이 관리에 유리합니다.</p>\n      <p><b>Q. 모델명이 계속 바뀌는데 이 비교표를 언제까지 믿어야 하나요?</b><br>A. 표의 유효기간은 몇 달입니다. 그래서 표에 \"검증일\" 스탬프를 박는 것이고, 결정 전에는 반드시 공식 요금 페이지를 다시 확인해야 합니다. 다만 <b>두 개의 축이라는 판단 틀 자체</b>는 모델명이 바뀌어도 그대로 유효합니다 — 외울 것은 이름이 아니라 틀입니다.</p>\n      <h3>이런 실수를 조심</h3>\n      <ul>\n        <li>유튜브에서 본 순위만 믿고 갈아타기 — 모델명·요금은 몇 달 단위로 바뀝니다. <b>항상 공식 페이지에서 최신 확인</b>이 원칙.</li>\n        <li>무료 플랜으로 에이전트 기능을 기대하기 — 에이전트 층위는 대부분 유료 플랜 전제입니다.</li>\n        <li>\"제일 비싼 게 제일 좋다\" — 요약·번역 같은 가벼운 일엔 상위 모델이 오히려 낭비입니다.</li>\n      </ul>\n      <p><b>💡 실전 팁 한 스푼:</b> 지금 쓰는 AI 요금제를 열고 \"내 주 업무가 Chat 층위인가, 에이전트 층위인가\"를 한 줄로 적어 보세요. 층위와 요금제가 안 맞으면 그 자리에서 조정하는 것만으로 월 구독료 절반이 절약되거나, 반대로 막혀 있던 자동화가 풀립니다.</p>\n      <p><b>❗ 흔한 오해:</b> \"제일 유명하고 비싼 모델을 쓰면 무조건 결과가 좋다\" → 사실은 업무와 층위의 궁합이 우선입니다. 요약·번역 같은 가벼운 일엔 상위 모델이 낭비이고, 파일 자동화가 필요한 일엔 아무리 좋은 Chat도 층위가 틀린 선택입니다.</p>\n      <p><b>이 챕터 한 줄 요약:</b> 회사 이름이 아니라 \"진영 × 제품 층위\" 두 축으로 고르되, 내 업무에 맞는 층위(Chat/Cowork/Code)를 찾는 것이 실패를 막는다.</p>\n      <p style=\"color:var(--ink-soft)\">▶ 다음 챕터 예고: 도구를 골랐다면 사고부터 예방할 차례 — AI 쓰다 되돌리기 어려운 사고가 나는 4가지 순간과 그 예방 습관을 배웁니다.</p>","quiz":[{"q":"'Chat / Cowork / Code'가 나뉘는 기준은?","opts":["가격만 다르다","대화형↔비개발자 에이전트↔개발자 에이전트로 용도가 다르다","회사가 다르다"],"a":1},{"q":"Claude의 상대적 강점으로 자료가 꼽은 것은?","opts":["에이전트·코딩","무료 사용량","이미지 생성"],"a":0},{"q":"AI 서비스를 고를 때 가장 먼저 볼 것은?","opts":["회사 인지도","내 일에 맞는 제품 층위(용도)","광고 모델"],"a":1}]},
+{"id":"1-4","part":"PART 1 · AI 이해","lv":"LV.0","tier":0,"title":"AI 쓰다 사고 나는 4가지 순간","lead":"입력 금지 · HITL · 검증 · 법적 책임","body":"<p>AI를 잘 쓰는 사람과 AI로 사고 치는 사람의 차이는 실력이 아니라 <b>습관</b>입니다. 시작 단계에서 4가지만 몸에 붙이면, 나중에 되돌리기 어려운 사고를 거의 다 막을 수 있습니다.</p>\n      <h3>안전 수칙 4가지</h3>\n      <ul>\n        <li><b>① 입력 금지 데이터</b>: 개인정보(주민번호·연락처)·API 키·내부 기밀은 입력창에 넣지 않습니다. 한 번 입력한 데이터는 회수할 수 없다고 생각하세요.</li>\n        <li><b>② HITL 원칙</b>: Human-In-The-Loop — \"초안은 AI, 최종 검토는 인간\". 발송·게시·제출 버튼은 반드시 사람이 누릅니다.</li>\n        <li><b>③ 결과 검증</b>: 출처 링크를 실제로 클릭하고, 숫자는 원문과 대조합니다. 1-1의 51:49 시계를 기억하세요.</li>\n        <li><b>④ 법적 지위</b>: AI 생성물도 광고 심의·저작권의 대상입니다. \"AI가 만들었으니 책임이 없다\"는 성립하지 않습니다(업종 상세는 케이스 볼트).</li>\n      </ul>\n      <div class=\"analogy\">삼성생명 자료의 \"Fact-check 3\": ① 할루시네이션 통계엔 법적 책임이 따른다 ② 약관 용어를 무단 변형하지 않는다 ③ AI 생성물도 광고 심의 대상이다. — 규제 업종이 아니어도 이 세 가지는 그대로 통하는 원칙입니다.</div>\n      <h3>실무에서 이렇게 사고가 납니다</h3>\n      <ul>\n        <li><b>커머스 사례</b>: AI가 써준 상세페이지에 \"최고\", \"100% 효과\" 같은 표현이 섞여 표시광고법 위반 소지가 생김. → 발행 전 사람이 금지어를 점검(HITL)해야 합니다.</li>\n        <li><b>직장인 사례</b>: 편하다는 이유로 고객 명단 엑셀을 통째로 업로드해 개인정보를 유출. → 이름·연락처 열을 지우거나 \"고객A\" 식으로 가명 처리 후 업로드.</li>\n        <li><b>보고서 사례</b>: AI가 만들어낸 \"시장 성장률 55%\"를 임원 보고에 그대로 인용 — 출처를 클릭해 봤다면 존재하지 않는 통계임을 알았을 것.</li>\n      </ul>\n      <div class=\"figure\">📊 [도식 제안] \"업로드 전 3초 체크\" 흐름도 — 개인정보 있나? → 기밀인가? → 출처 검증 계획 있나? → 통과 시에만 입력창으로 향하는 게이트 그림</div>\n      <h3>심화 예시 — 세무사 사무실 직원의 경우</h3>\n      <p>세무사 사무실 직원 D는 고객 절세 상담 답변 초안을 AI로 쓰기 시작했습니다. 4수칙이 전부 걸리는 상황입니다: ① 고객의 소득·사업자번호가 담긴 원본을 그대로 올리면 안 되므로 \"개인사업자, 연매출 O억대\" 수준으로 <b>익명화</b>해 입력하고, ② 답변은 초안일 뿐 발송 버튼은 세무사가 검토 후 누르며(HITL), ③ AI가 인용한 세법 조항·공제 한도는 국세청 원문과 대조하고(검증), ④ 잘못된 세무 안내는 사무실이 법적 책임을 지므로 \"AI가 쓴 초안\"이라는 변명이 통하지 않음을 전제로 일합니다(법적 지위). 규제 업종일수록 4수칙은 선택이 아니라 업무 절차 그 자체가 됩니다.</p>\n      <h3>자주 묻는 질문</h3>\n      <p><b>Q. 회사 유료 계정이면 기밀을 넣어도 되지 않나요?</b><br>A. 요금제가 아니라 <b>회사의 데이터 정책과 서비스의 학습 활용 설정</b>이 기준입니다. 기업용 플랜은 대개 입력 데이터를 학습에 쓰지 않지만, 그래도 사내 보안 규정이 허용하는 범위가 우선입니다. 확실하지 않으면 \"익명화 후 입력\"을 기본값으로 삼는 것이 안전합니다.</p>\n      <p><b>Q. HITL 검토는 구체적으로 뭘 보면 되나요?</b><br>A. 세 가지만 고정 루틴으로: ① 숫자·날짜·이름(원출처 대조), ② 금지 표현(과장 광고·단정적 표현), ③ 수신자·공개 범위(엉뚱한 곳으로 나가지 않는지). 이 3종 점검 후에 버튼을 누르는 습관이면 사고의 대부분이 걸러집니다.</p>\n      <h3>3분 실습</h3>\n      <p>최근 AI에 넣었던 파일이나 텍스트 하나를 떠올리고 점검하세요: ① 개인정보·기밀이 섞여 있었나? ② 결과물을 검증 없이 어딘가에 제출했나? ③ 그 결과물이 외부 공개됐다면 법적 문제는 없나? 하나라도 \"찔린다\"면, 오늘부터 위 4수칙을 업로드 전 루틴으로 만드세요.</p>\n      <p><b>💡 실전 팁 한 스푼:</b> 오늘부터 업로드 직전 3초만 멈추고 \"개인정보? 기밀? 검증 계획?\"을 소리 내어 자문하세요. 포스트잇에 세 단어를 적어 모니터에 붙여 두면, 4수칙 중 가장 사고가 잦은 ①번(입력 금지 데이터)이 습관으로 막힙니다.</p>\n      <p><b>❗ 흔한 오해:</b> \"유료 계정이니까 뭘 넣어도 안전하다\" → 사실은 요금제가 아니라 회사의 데이터 정책과 서비스의 학습 활용 설정이 기준이며, 사내 보안 규정이 항상 우선입니다. 확실하지 않으면 익명화 후 입력이 기본값입니다.</p>\n      <p><b>이 챕터 한 줄 요약:</b> 넣기 전에 개인정보·기밀을 거르고, 내보내기 전에 사람이 검증하며, 생성물의 법적 책임은 결국 사람에게 있다.</p>\n      <p style=\"color:var(--ink-soft)\">▶ 다음 챕터 예고: 안전벨트를 맸으니 이제 실력을 올릴 차례 — 같은 질문으로 10배 다른 결과를 꺼내는 RACS 4요소, 잘 묻는 기술의 최소 단위를 배웁니다.</p>\n      <p>지금까지의 수칙이 사고를 막는 쪽이었다면, 마지막 하나는 신뢰를 쌓는 쪽입니다.</p>\n      <h3>마지막 수칙 — 숨기지 말고 밝히기 (AI 사용 투명성)</h3>\n      <p>규제를 지키는 것과 별개로, <b>\"이 결과물에 AI가 쓰였다\"를 언제·어떻게 밝힐 것인가</b>는 신뢰의 문제입니다. 원칙은 간단합니다: ① 상대가 알았다면 판단이 달라졌을 상황(보고서의 데이터 분석, 고객 응대문, 채용 서류 검토 등)에서는 밝힌다. ② 조직에 AI 사용 규정이 있으면 따르고, 없으면 팀과 기준을 먼저 합의한다. ③ 밝히는 방식은 겸손하게 — \"AI 초안을 제가 검토·수정했습니다\"면 충분합니다. 숨겼다 들통나는 순간 잃는 것은 그 문서 하나가 아니라 <b>당신의 모든 산출물에 대한 신뢰</b>입니다.</p>","quiz":[{"q":"HITL 원칙을 한마디로?","opts":["전부 자동화","초안은 AI, 최종 검토는 인간","인간은 손대지 않음"],"a":1},{"q":"AI에 넣으면 안 되는 것은?","opts":["공개된 뉴스","개인정보·API 키·내부 기밀","일반 상식 질문"],"a":1},{"q":"AI 생성물의 법적 지위로 옳은 것은?","opts":["AI가 만들면 책임이 면제된다","광고 심의·저작권의 대상이 된다","법과 무관하다"],"a":1}]},
+{"id":"2-1","part":"PART 2 · 대화형 기본기","lv":"LV.1","tier":1,"title":"같은 질문, 결과가 10배 갈린다","lead":"RACS 4요소 — 잘 묻는 기술의 최소 단위","body":"","quiz":[],"remote":true},
+{"id":"2-2","part":"PART 2 · 대화형 기본기","lv":"LV.1","tier":1,"title":"프롬프트를 찍어내는 기계 만들기","lead":"7요소 확장 · 메타프롬프트 = 거푸집","body":"","quiz":[],"remote":true},
+{"id":"2-3","part":"PART 2 · 대화형 기본기","lv":"LV.1","tier":1,"title":"AI가 자꾸 까먹는다면 이 챕터","lead":"4대 기능 · 책상 메타포 · 메모리 4분류","body":"","quiz":[],"remote":true},
+{"id":"2-4","part":"PART 2 · 대화형 기본기","lv":"LV.1","tier":1,"title":"나만 아는 맥락, AI에 심는 법","lead":"Gems·GPTs·Skill — 세 진영의 '내 챗봇 만들기'","body":"","quiz":[],"remote":true},
+{"id":"3-1","part":"PART 3 · Cowork 셋업","lv":"LV.2","tier":1,"title":"복붙 지옥 탈출: 첫 AI 동료 들이기","lead":"Cowork 설치부터 5분 데모까지, 대화 없이 일이 돌아가는 첫 경험","body":"","quiz":[],"remote":true},
+{"id":"3-2","part":"PART 3 · Cowork 셋업","lv":"LV.2","tier":1,"title":"폴더 하나가 사무실이 된다","lead":"/project init 인터뷰와 CLAUDE.md, 그리고 출입증 4층의 비밀","body":"","quiz":[],"remote":true},
+{"id":"3-3","part":"PART 3 · Cowork 셋업","lv":"LV.2","tier":1,"title":"장비빨 세우기: 도구 3종+1","lead":"스킬·플러그인·MCP 커넥터, 그리고 조심스럽게 쥐어주는 마우스","body":"","quiz":[],"remote":true},
+{"id":"3-4","part":"PART 3 · Cowork 셋업","lv":"LV.2","tier":1,"title":"내가 자는 동안 일하는 비서","lead":"'예정됨'으로 반복 업무를 시간표에 올리는 법","body":"","quiz":[],"remote":true},
+{"id":"4-1","part":"PART 4 · Skill 만들기","lv":"LV.3","tier":2,"title":"같은 지시 그만: 노하우 파일화","lead":"SKILL.md 한 장으로 반복 지시를 능력으로 박제하기","body":"","quiz":[],"remote":true},
+{"id":"4-2","part":"PART 4 · Skill 만들기","lv":"LV.3","tier":2,"title":"고수의 스킬은 접혀 있다","lead":"점진적 공개 설계와 남의 스킬 리버스 엔지니어링","body":"","quiz":[],"remote":true},
+{"id":"4-3","part":"PART 4 · Skill 만들기","lv":"LV.3","tier":2,"title":"스킬을 이어 붙이면 공장이 된다","lead":"체인 순서·품질 게이트·갭 디텍션으로 라인 설계하기","body":"","quiz":[],"remote":true},
+{"id":"5-1","part":"PART 5 · 업무 에이전트화","lv":"LV.4","tier":2,"title":"식당 하나로 끝내는 에이전트 세계","lead":"MCP·Agent·Skill·Hook·Plugin·Harness — 7부품 한 방 정리","body":"","quiz":[],"remote":true},
+{"id":"5-2","part":"PART 5 · 업무 에이전트화","lv":"LV.4","tier":2,"title":"내 야근을 해부하면 자동화가 보인다","lead":"트리거·조건·입력·출력 — 업무 분해 캔버스","body":"","quiz":[],"remote":true},
+{"id":"5-3","part":"PART 5 · 업무 에이전트화","lv":"LV.4","tier":2,"title":"부품 셋이면 에이전트가 걸어다닌다","lead":"스킬 1개 + 트리거 + 산출물 형식 = 최소 에이전트","body":"","quiz":[],"remote":true},
+{"id":"5-4","part":"PART 5 · 업무 에이전트화","lv":"LV.4","tier":2,"title":"자동화, 아무거나 시키면 망한다","lead":"AX 과제 기획서 — STEP 0~6 · CAN/CANNOT · 유형 A~D","body":"","quiz":[],"remote":true},
+{"id":"6-1","part":"PART 6 · 만들기","lv":"LV.5","tier":2,"title":"첨부파일 없이 열리는 한 장 보고서","lead":"제로 의존성 HTML · 임원 1Pager · 오피스 5포맷","body":"","quiz":[],"remote":true},
+{"id":"6-2","part":"PART 6 · 만들기","lv":"LV.5","tier":2,"title":"디자이너 없이 시안이 나오는 법","lead":"Claude Design — 브리프 5요소 · 핸드오프 6경로","body":"","quiz":[],"remote":true},
+{"id":"6-3","part":"PART 6 · 만들기","lv":"LV.5","tier":2,"title":"글자 컷과 감성 컷, 모델이 다르다","lead":"모델 라우팅 · 메타프롬프트 7섹션 · 채널 규격","body":"","quiz":[],"remote":true},
+{"id":"6-4","part":"PART 6 · 만들기","lv":"LV.5","tier":2,"title":"영상은 가챠다, 싸게 뽑고 골라라","lead":"기획50:제작50 · 10단계 · 2단계 비용 전략","body":"","quiz":[],"remote":true},
+{"id":"7-1","part":"PART 7 · 자동화 시스템","lv":"LV.6","tier":3,"title":"내가 없어도 돌아가는 벨트","lead":"누적 파이프라인 설계 · 품질 게이트 배치의 기술","body":"","quiz":[],"remote":true},
+{"id":"7-2","part":"PART 7 · 자동화 시스템","lv":"LV.6","tier":3,"title":"AI가 스스로 나아지는 구조","lead":"다중 에이전트 · 자기학습 루프 · 팀 공용 자산화","body":"","quiz":[],"remote":true},
+{"id":"7-3","part":"PART 7 · 자동화 시스템","lv":"LV.7","tier":3,"title":"Cowork 졸업, Code 입학","lead":"넘어갈 타이밍 5가지 · CLAUDE.md는 그대로 이사","body":"","quiz":[],"remote":true},
+{"id":"CV-1","part":"CASE VAULT · 실전 케이스","lv":"CASE","tier":3,"title":"리뷰 5,399건이 전략이 되기까지","lead":"커머스 7단 체인 · 아뜨랑스·미니웰·케어밀·KMF 실전","body":"","quiz":[],"remote":true},
+{"id":"CV-2","part":"CASE VAULT · 실전 케이스","lv":"CASE","tier":3,"title":"외주 0원, 하루에 6종 콘텐츠","lead":"디자인 시스템에서 카드뉴스까지 · 13단계 감정 여정","body":"","quiz":[],"remote":true},
+{"id":"CV-3","part":"CASE VAULT · 실전 케이스","lv":"CASE","tier":3,"title":"규제 안에서 개인화하는 법","lead":"보험·금융 콘텐츠 · Fact-check 3과 배포 전 체크","body":"","quiz":[],"remote":true},
+{"id":"CV-4","part":"CASE VAULT · 실전 케이스","lv":"CASE","tier":3,"title":"폐쇄망에서도 AI는 굴러간다","lead":"증권사 망분리 실전 · CAN/CANNOT 수요표 · AX 기획서","body":"","quiz":[],"remote":true},
+{"id":"CV-5","part":"CASE VAULT · 실전 케이스","lv":"CASE","tier":3,"title":"POS 숫자에서 제안서가 나온다","lead":"판매공백·재고일수 분석 → 판촉 → 채널 제안 → 대시보드","body":"","quiz":[],"remote":true},
+{"id":"CV-6","part":"CASE VAULT · 실전 케이스","lv":"CASE","tier":3,"title":"16일 중 8일은 촬영이 아니다","lead":"AI 영상 10단계 풀코스 · 기획 8일의 이유","body":"","quiz":[],"remote":true},
+{"id":"CV-7","part":"CASE VAULT · 실전 케이스","lv":"CASE","tier":3,"title":"내 직군의 합격선은 무엇인가","lead":"5트랙 워크숍 · 트랙별 완성 기준으로 셀프 검증","body":"","quiz":[],"remote":true}
+];
+
+/* ── 진행 상태 (localStorage, 로그인 시 사용자별 분리) ── */
+const KEY_BASE="cg-progress-v2";
+let AUTH_USER=null;                       // Supabase user 객체 (비로그인 null = 게스트)
+const storeKey=()=>AUTH_USER?KEY_BASE+":"+AUTH_USER.id:KEY_BASE;
+const loadState=()=>JSON.parse(localStorage.getItem(storeKey())||"null")||{passed:[],tier:0,xp:0};
+let S=loadState();
+const save=()=>localStorage.setItem(storeKey(),JSON.stringify(S));
+const priceOf=(lvl)=>TIERS[lvl].price;
+
+/* 잠금 규칙: 직전 챕터 통과 + 내 등급(S.tier) >= 챕터 요구 등급(tier) */
+function isUnlocked(i){
+  if(i>0 && !S.passed.includes(CHAPTERS[i-1].id)) return false;
+  return CHAPTERS[i].tier <= S.tier;
+}
+/* 티저: 유료 파트의 첫 챕터 — 강의는 잠겨도 퀴즈는 무료 도전 가능 */
+function isTeaserCh(c){ return !!c.remote && CHAPTERS.findIndex(x=>x.part===c.part)===CHAPTERS.indexOf(c); }
+function openPaywall(tier){ const m=document.getElementById("main"); m.innerHTML=paywallHTML(tier); bindPay(); window.scrollTo(0,0); }
+/* 등급이 모자라 결제가 필요한가 (직전까지는 통과한 상태) */
+function needsPay(i){
+  const prevOk = (i===0) || S.passed.includes(CHAPTERS[i-1].id);
+  return prevOk && CHAPTERS[i].tier > S.tier;
+}
+
+/* ── 학습 컴패니언 (PR#1 verdant 공룡 · PART 완주로 진화) ──
+   설계: PART 1 완주 = 부화. 이후 PART 하나를 완주할 때마다 1단계 진화.
+   벽: 최종 진화(전설의 수호룡)는 고급 등급 + PART 7·케이스 볼트 완주에만 봉인 해제.
+       중급까지는 6단계(헌신의 메달)가 상한 — 봉인 실루엣으로 표시. */
+const PET=[
+  ["","알 (부화 대기)"],          // 0: 시작
+  ["","갓 깨어난 아기 공룡"],      // 1: PART 1 완주 = 부화
+  ["","아장아장 탐험가"],          // 2: PART 2
+  ["","배낭 멘 탐험가"],           // 3: PART 3
+  ["","학습하는 탐험가"],          // 4: PART 4
+  ["","빛나는 탐험가"],            // 5: PART 5
+  ["","헌신의 메달 탐험가"],       // 6: PART 6 — 중급의 정점 (벽)
+  ["","전설의 수호룡"],            // 7: 고급 + PART 7 + CASE VAULT 완주
+];
+const PET_DIR="assets/claude-master/pet/";
+const PART_ORDER=[...new Set(CHAPTERS.map(c=>c.part))]; // P1..P7, CASE VAULT
+function partDone(p){ return CHAPTERS.filter(c=>c.part===p).every(c=>S.passed.includes(c.id)); }
+function partProgress(p){ const cs=CHAPTERS.filter(c=>c.part===p); return cs.filter(c=>S.passed.includes(c.id)).length/cs.length; }
+
+/* ══ 공룡 성장 규칙 (명시) ══
+   0단계(알) → PART 0 완주 = 부화 🎁무료 보상 1
+   1단계     → PART 1 완주 = 2단계 🎁무료 보상 2
+   이후 구간을 돌파할 때마다 계속 성장:
+   PART 2(도전자)→3단계 · PART 3→4단계 · PART 4+5(중급자)→5단계 · PART 6→6단계 · PART 7+케이스볼트(상급자)→7단계(최종)
+   벽: 파트 퀴즈를 다 깼는데 등급이 없으면 게이지 98%에서 대기 (다마고치식 소프트 유도).
+   티저: 각 유료 파트의 첫 챕터는 퀴즈만 무료 — 풀면 게이지가 차오르며 다음 성장을 예고한다. */
+const EVO_STEPS=[
+  {parts:[0], needTier:0},   // 0→1: PART 0 완주 = 부화 (무료)
+  {parts:[1], needTier:0},   // 1→2: PART 1 완주 (무료)
+  {parts:[2], needTier:1},   // 2→3: PART 2 + 도전자
+  {parts:[3], needTier:1},   // 3→4: PART 3 — 초급 구간 끝
+  {parts:[4,5], needTier:2}, // 4→5: PART 4+5 + 중급자
+  {parts:[6], needTier:2},   // 5→6: PART 6 — 중급의 정점
+  {parts:[7,8], needTier:3}, // 6→7: PART 7 + 케이스 볼트 + 상급자 = 최종 진화
+];
+function stepDone(st){ return st.parts.every(i=>partDone(PART_ORDER[i])); }
+function petStage(){
+  let s=0;
+  for(const st of EVO_STEPS){ if(stepDone(st)&&S.tier>=st.needTier) s++; else break; }
+  return s;
+}
+function evoGauge(){ // 다음 진화까지의 게이지 %
+  const st=EVO_STEPS[petStage()];
+  if(!st) return 100; // 최종 단계
+  const prog=st.parts.reduce((a,i)=>a+partProgress(PART_ORDER[i]),0)/st.parts.length*100;
+  return (prog>=100 && S.tier<st.needTier) ? 98 : Math.round(prog);
+}
+function evoBlocked(){ // 퀴즈는 다 풀었지만 등급이 없어 98%에 멈춘 상태
+  const st=EVO_STEPS[petStage()];
+  return !!st && stepDone(st) && S.tier<st.needTier;
+}
+function evoNextTierName(){ const st=EVO_STEPS[petStage()]; return st?TIERS[st.needTier].name:""; }
+let celebrateTimer=null;
+function petCelebrate(){
+  const img=document.getElementById("pet-img"); if(!img) return;
+  img.src=PET_DIR+"pet-celebrate.png";
+  clearTimeout(celebrateTimer);
+  celebrateTimer=setTimeout(()=>{celebrateTimer=null;img.src=PET_DIR+"pet-stage-"+petStage()+".png";},2000);
+}
+
+function renderStatus(){
+  const st=petStage(),done=S.passed.length,total=CHAPTERS.length;
+  const blocked=evoBlocked(), gauge=evoGauge();
+  document.getElementById("pet-name").textContent=PET[st][1]+(blocked?" …":"");
+  const seal=document.getElementById("pet-seal");
+  if(seal) seal.textContent = blocked
+    ? "진화 게이지 98% — "+evoNextTierName()+"의 여정이 열리길 기다리고 있어요"
+    : (st<7 ? "진화 게이지 "+gauge+"%" : "최종 진화 완료 ⭐");
+  const pimg=document.getElementById("pet-img");
+  if(pimg && !celebrateTimer){
+    // 98% 정지 상태: 아쉬운 표정(눈 감은 프레임) + 살짝 흔들리는 모션 (다마고치식 소프트 유도)
+    pimg.src = blocked ? PET_DIR+"motion-calm.png" : PET_DIR+"pet-stage-"+st+".png";
+    pimg.classList.toggle("pleading", blocked);
+    pimg.onclick = blocked ? ()=>{
+      // 노골적 결제 유도 금지 — 가격 언급 없이 다음 여정만 암시
+      pimg.src=PET_DIR+(st>=5?"pet-stage-7-sealed.png":"pet-stage-"+(st+1)+".png");
+      setTimeout(()=>{ if(!celebrateTimer) renderStatus(); },1500);
+      toast("💭 조금만 더… "+evoNextTierName()+"의 여정이 열리면 진화할 수 있어요");
+    } : null;
+    pimg.style.cursor = blocked ? "pointer" : "default";
+  }
+  document.getElementById("xp-text").textContent=S.xp+" XP · "+done+"/"+total+" 클리어";
+  document.getElementById("xpfill").style.width=gauge+"%"; // 게이지 바 = 다음 진화 진행률
+  document.getElementById("hdr-badge").textContent=TIERS[S.tier].name+" · "+done+"/"+total;
+}
+
+/* PART별 요구 등급 (그룹 첫 챕터 기준) */
+function partTier(part){ return CHAPTERS.find(c=>c.part===part).tier; }
+/* 결제 정보 노출 규칙: 유료 파트는 '도달'(직전 챕터 통과) 전까지 등급명·자물쇠를 숨긴다 — 초반 이탈 방지 */
+function partReached(part){
+  const first=CHAPTERS.findIndex(c=>c.part===part);
+  return first===0 || S.passed.includes(CHAPTERS[first-1].id) || CHAPTERS.some(c=>c.part===part&&S.passed.includes(c.id));
+}
+function partBadge(t,part){
+  if(t===0) return TIERS[0].name;                     // 무료 표시는 항상 (안심 신호)
+  if(S.tier>=t) return TIERS[t].name;                  // 보유 등급은 뱃지로
+  return partReached(part) ? TIERS[t].name+" 🔒" : ""; // 도달 전엔 아무것도
+}
+
+let current=0;
+function renderTOC(){
+  const box=document.getElementById("toc-list");box.innerHTML="";
+  let lastPart=null, ul=null;
+  CHAPTERS.forEach((c,i)=>{
+    if(c.part!==lastPart){
+      const t=partTier(c.part), owned=S.tier>=t;
+      const p=document.createElement("div");p.className="part";
+      p.innerHTML=`<span>${c.part}</span><span class="tier">${partBadge(t,c.part)}</span>`;
+      box.appendChild(p);
+      ul=document.createElement("ul");box.appendChild(ul);lastPart=c.part;
+    }
+    const li=document.createElement("li"), a=document.createElement("a");
+    const openable=isUnlocked(i)||needsPay(i), passed=S.passed.includes(c.id);
+    a.className=(i===current?"active ":"")+(openable?"":"locked");
+    const icon = passed?"✅":(isUnlocked(i)?"▶":(needsPay(i)?(isTeaserCh(CHAPTERS[i])?"🎯":"🔒$"):"🔒"));
+    a.innerHTML=`<span>${c.lv} ${c.title}</span><span class="st">${icon}</span>`;
+    if(openable) a.onclick=()=>{current=i;render();window.scrollTo(0,0);
+      if(innerWidth<=760) document.querySelector(".toc").classList.remove("open");}; // 모바일: 선택 후 목차 자동 접기
+    li.appendChild(a);ul.appendChild(li);
+  });
+}
+
+/* ── 프리미엄 본문 원격 로드 (lazy-protected) ──
+   프리미엄 챕터의 body/quiz 는 HTML에 없고, /api/lesson 이 로그인 토큰의
+   서버 등급(entitlements)을 확인한 뒤에만 전송한다. 소스 보기로는 읽을 수 없음. */
+const REMOTE_CACHE={};
+const PROMO=(()=>{ try{ const p=JSON.parse(localStorage.getItem("cg-promo")||"null");
+  return (p&&new Date(p.expires_at)>new Date())?p:null; }catch(e){ return null; } })();
+async function applyPromo(code){
+  const r=await fetch("/api/promo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code})});
+  const j=await r.json().catch(()=>({}));
+  if(!j.ok) throw j.reason||"error";
+  localStorage.setItem("cg-promo",JSON.stringify({code:code.toUpperCase(),...j}));
+  return j;
+}
+async function loadRemote(c){
+  if(REMOTE_CACHE[c.id]) return REMOTE_CACHE[c.id];
+  const headers={"Content-Type":"application/json"};
+  if(sb&&AUTH_USER){ const {data}=await sb.auth.getSession();
+    if(data.session?.access_token) headers["Authorization"]="Bearer "+data.session.access_token; }
+  const body={id:c.id}; if(!AUTH_USER&&PROMO) body.promo=PROMO.code;
+  const r=await fetch("/api/lesson",{method:"POST",headers,body:JSON.stringify(body)});
+  let j=await r.json().catch(()=>({}));
+  if(!r.ok) throw j.reason||("http_"+r.status);
+  if(j.teaser){
+    j={...j, body:`<div class="paywall" style="text-align:center;margin-bottom:14px">
+      <img src="assets/claude-master/states/icons/icon-lock.png" alt="" style="width:44px" onerror="this.remove()">
+      <p style="font-size:13px"><b>강의 본문은 ${TIERS[c.tier].name} 구간</b>이지만, <b>이 챕터의 테스트는 무료</b>입니다.<br>
+      먼저 도전해 보세요 — 통과하면 공룡 성장 게이지가 차오릅니다. 🦖</p>
+      <button class="primary" onclick="openPaywall(${c.tier})" style="margin-top:6px">📖 전체 강의 열기</button>
+    </div>`};
+  }
+  REMOTE_CACHE[c.id]=j; return j;
+}
+function lockedHTML(c,reason){
+  const msg = reason==="login_required"
+    ? "이 챕터의 본문은 로그인 후 열람할 수 있습니다."
+    : reason==="tier_required"
+    ? TIERS[c.tier].name+" 등급 결제가 확인된 계정만 열람할 수 있습니다. (데모 테스트 결제는 서버 확인을 통과하지 않습니다)"
+    : "본문을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요. ("+reason+")";
+  return `<div class="chapter"><div class="ch-lv">${c.lv} · ${c.part}</div>
+    <h2>${c.title}</h2><div class="ch-lead">${c.lead}</div>
+    <div class="paywall" style="text-align:center">
+      <img src="assets/claude-master/states/icons/icon-lock.png" alt="" style="width:56px;margin-bottom:8px" onerror="this.remove()">
+      <p style="font-size:13px">${msg}</p>
+    </div></div>`;
+}
+function render(){
+  renderStatus();renderTOC();
+  const c=CHAPTERS[current], m=document.getElementById("main");
+  if(needsPay(current) && !isTeaserCh(c)){ m.innerHTML=paywallHTML(c.tier); bindPay(); return; }
+  if(needsPay(current) && isTeaserCh(c) && !REMOTE_CACHE[c.id]){ /* 티저: 아래 원격 로딩 경로로 진행 */ }
+  if(!isUnlocked(current) && !(needsPay(current)&&isTeaserCh(c))){ m.innerHTML=`<div class="chapter"><p>🔒 이전 챕터의 테스트를 먼저 통과하세요.</p></div>`; return; }
+  // 원격 챕터: 캐시 없으면 로딩 표시 후 가져와 재렌더
+  let cc=c;
+  if(c.remote){
+    const cached=REMOTE_CACHE[c.id];
+    if(!cached){
+      m.innerHTML=`<div class="chapter"><div class="ch-lv">${c.lv} · ${c.part}</div>
+        <h2>${c.title}</h2><div class="ch-lead">${c.lead}</div>
+        <p style="font-size:13px;color:var(--ink-soft)">본문 확인 중…</p></div>`;
+      const cur=current;
+      loadRemote(c).then(()=>{ if(current===cur) render(); })
+                   .catch(reason=>{ if(current===cur) m.innerHTML=lockedHTML(c,String(reason)); });
+      return;
+    }
+    cc={...c, body:cached.body, quiz:cached.quiz};
+  }
+  // ── 페이지네이션: 최상위 요소 단위로 ~1,100자씩 분할 (비유 카드·도식은 통째로 유지) ──
+  if(lastChapter!==current){ pageIdx=0; lastChapter=current; }
+  const pages=paginate(cc.body);
+  const pageCount=Math.max(1,pages.length);
+  pageIdx=Math.min(pageIdx,pageCount-1);
+  const isLast=pageIdx===pageCount-1;
+  // 일러스트는 첫 페이지에만, 퀴즈는 마지막 페이지에만
+  const artFile=LESSON_ART[cc.id]||("lesson-"+cc.id+".png");
+  const art=pageIdx===0?`<img class="lesson-art" src="assets/claude-master/learning/${artFile}" alt="${cc.title} 일러스트" onerror="this.remove()">`:"";
+  const pager=pageCount>1?`<div class="pager">
+      <button id="pg-prev" ${pageIdx===0?"disabled":""}>◀ 이전</button>
+      <span class="pg">${pageIdx+1} / ${pageCount}</span>
+      <button id="pg-next" ${isLast?"disabled":""}>다음 ▶</button>
+    </div>`:"";
+  m.innerHTML=`<div class="chapter">
+      <div class="ch-lv">${cc.lv} · ${cc.part} · <b>${TIERS[cc.tier].name}</b></div>
+      <h2>${cc.title}</h2><div class="ch-lead">${cc.lead}</div>
+      ${art}<div class="body">${pages[pageIdx]||cc.body}</div>${pager}${isLast?quizHTML(cc):""}</div>`;
+  const pv=document.getElementById("pg-prev"), nx=document.getElementById("pg-next");
+  if(pv) pv.onclick=()=>{ pageIdx--; render(); window.scrollTo(0,0); };
+  if(nx) nx.onclick=()=>{ pageIdx++; render(); window.scrollTo(0,0); };
+  if(isLast) bindQuiz(cc);
+  if(window.mermaid){ mermaid.initialize({startOnLoad:false,theme:'neutral'}); mermaid.run({nodes:m.querySelectorAll('.mermaid')}); }
+}
+let pageIdx=0, lastChapter=-1;
+function paginate(bodyHtml){
+  const tmp=document.createElement("div"); tmp.innerHTML=bodyHtml;
+  const MAX=1100;                       // 페이지당 본문 텍스트 길이 기준
+  const pages=[]; let cur=[], len=0;
+  [...tmp.children].forEach(el=>{
+    const t=(el.textContent||"").length;
+    if(cur.length && len+t>MAX){ pages.push(cur.join("")); cur=[]; len=0; }
+    cur.push(el.outerHTML); len+=t;
+  });
+  if(cur.length) pages.push(cur.join(""));
+  return pages;
+}
+
+function quizHTML(c){
+  const passed=S.passed.includes(c.id);
+  return `<div class="quiz" id="quiz"><h3>📝 통과 테스트 — 모두 맞히면 다음 챕터가 열립니다</h3>
+    ${passed?`<p style="font-size:12px;color:var(--moss);margin-bottom:10px">✅ 이미 통과한 챕터입니다 — 복습으로 다시 풀 수 있어요</p>`:""}
+    ${c.quiz.map((q,qi)=>`<div class="q" id="q${qi}"><div class="qt">${qi+1}. ${q.q}</div>
+      ${q.opts.map((o,oi)=>`<label><input type="radio" name="q${qi}" value="${oi}">${o}</label>`).join("")}</div>`).join("")}
+    <div class="actions"><button class="primary" id="grade">채점하기</button><span class="result" id="result"></span></div>
+    ${passed?nextBtnHTML():""}</div>`;
+}
+function nextBtnHTML(){
+  const hasNext=current<CHAPTERS.length-1;
+  return `<div class="next-btn">${hasNext?`<button class="primary" id="next">다음 챕터로 ▶</button>`:`<button disabled>🏁 마지막 스테이지 클리어!</button>`}</div>`;
+}
+function bindQuiz(c){
+  const gb=document.getElementById("grade");
+  if(gb) gb.onclick=()=>{
+    let allOk=true;
+    c.quiz.forEach((q,qi)=>{
+      const box=document.getElementById("q"+qi), sel=box.querySelector('input:checked');
+      box.classList.remove("correct","wrong");
+      box.querySelectorAll("label").forEach(l=>l.classList.remove("sel"));
+      box.querySelector(".unanswered")?.remove();
+      if(!sel){ allOk=false; box.classList.add("wrong");
+        box.querySelector(".qt").insertAdjacentHTML("beforeend",' <span class="unanswered" style="color:var(--clay-deep);font-size:11px">← 미응답</span>');
+        return; }
+      sel.parentElement.classList.add("sel");
+      if(+sel.value===q.a) box.classList.add("correct"); else{box.classList.add("wrong");allOk=false;}
+    });
+    const r=document.getElementById("result");
+    if(allOk){
+      r.className="result ok";r.textContent="✅ 전부 정답! 통과했습니다.";
+      if(!S.passed.includes(c.id)){
+        const stBefore=petStage();
+        S.passed.push(c.id);S.xp+=20;save();
+        const stAfter=petStage();
+        if(stAfter>stBefore) celebrateEvolution(stAfter, stBefore===0);   // WOW+폭죽+LV 오버레이
+        else if(evoBlocked()) toast("💭 진화 게이지 98% — 공룡이 다음 여정을 기다려요");
+        else { toast("+20 XP · 챕터 클리어!"); playSfx("event"); }
+        petCelebrate(); roamNext&&roamNext();
+      }
+      render();
+    }else{ r.className="result no";r.textContent="❌ 틀린 문항이 있습니다. 다시 시도하세요."; }
+  };
+  const nb=document.getElementById("next");
+  if(nb) nb.onclick=()=>{ if(current<CHAPTERS.length-1){current++;render();window.scrollTo(0,0);} };
+}
+
+/* ── 등급 페이월 (needTier = 이 챕터가 요구하는 등급) ── */
+function paywallHTML(needTier){
+  const cards = TIERS.filter(t=>t.level>=1).map(t=>{
+    const owned=S.tier>=t.level, isNeed=t.level===needTier;
+    return `<div class="tier-card ${isNeed?'need':''} ${owned?'owned':''}">
+      <h3>${t.name}</h3>
+      <div class="price">₩${t.price.toLocaleString()}</div>
+      <div class="tag">${owned?"✔ 이용 중":(isNeed?"이 챕터에 필요":"상위 포함")}</div>
+      <ul>${t.perks.map(p=>`<li>${p}</li>`).join("")}</ul>
+      ${owned?`<button disabled>보유함</button>`:`<button class="primary" data-tier="${t.level}">이 등급 구매</button>`}
+    </div>`;
+  }).join("");
+  return `<div class="chapter"><div class="paywall">
+    <img src="assets/claude-master/states/icons/icon-lock.png" alt="" style="width:64px;display:block;margin:0 auto 8px" onerror="this.remove()">
+    <h2>${TIERS[needTier].name} 이상 구간입니다</h2>
+    <div class="sub">상위 등급은 하위 구간을 모두 포함합니다. (누적)</div>
+    <div class="tiers">${cards}</div>
+    <div class="pay-note">${PAY.TEST_MODE?"⚠ 테스트 모드: 실제 결제 없이 시뮬레이션됩니다.":"안전한 결제(PortOne V2). 카드/간편결제 지원."}</div>
+  </div></div>`;
+}
+function bindPay(){
+  document.querySelectorAll('.tier-card button[data-tier]').forEach(b=>{
+    b.onclick=()=>startPayment(+b.dataset.tier);
+  });
+}
+async function startPayment(level){
+  const amount=priceOf(level);
+  if(PAY.TEST_MODE){ toast(TIERS[level].name+" 테스트 결제 성공"); grantTier(level); return; }
+  if(typeof PortOne==="undefined"){toast("결제 SDK 로드 실패");return;}
+  const paymentId="payment-"+crypto.randomUUID();
+  let res;
+  try{
+    res=await PortOne.requestPayment({
+      storeId:PAY.STORE_ID, channelKey:PAY.CHANNEL_KEY, paymentId,
+      orderName:"클로드 완전정복 — "+TIERS[level].name, totalAmount:amount,
+      currency:"CURRENCY_KRW", payMethod:"CARD",
+    });
+  }catch(e){toast("결제창 오류: "+e.message);return;}
+  if(res.code!==undefined){ toast("결제 실패: "+res.message); return; }
+  try{
+    // 로그인 상태면 세션 토큰을 첨부 → 서버가 계정(entitlements)에 등급을 기록
+    const headers={"Content-Type":"application/json"};
+    if(sb&&AUTH_USER){ const {data}=await sb.auth.getSession();
+      if(data.session?.access_token) headers["Authorization"]="Bearer "+data.session.access_token; }
+    const v=await fetch(PAY.VERIFY_URL,{method:"POST",headers,
+      body:JSON.stringify({paymentId, expectedAmount:amount})}).then(r=>r.json());
+    if(v.ok){ grantTier(v.tier!=null?v.tier:level); }  // 서버가 금액→등급을 되돌려주면 그 값을 신뢰
+    else toast("검증 실패: "+(v.reason||"불일치"));
+  }catch(e){ toast("검증 서버 오류: "+e.message); }
+}
+/* 등급은 누적: 더 높은 등급을 사면 아래는 자동 포함 */
+function grantTier(level){
+  const stBefore=petStage();
+  S.tier=Math.max(S.tier,level);save();
+  toast("🎉 "+TIERS[S.tier].name+" 잠금 해제!");playSfx("event");
+  const stAfter=petStage();
+  if(stAfter>stBefore){ // 98%에 멈춰 있던 게이지가 결제로 100% → 즉시 진화
+    setTimeout(()=>celebrateEvolution(stAfter, stBefore===0),600);
+    petCelebrate();
+  }
+  render();
+}
+
+let tt;
+function toast(msg){
+  const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* ── 레슨 일러스트 매핑 (PR#1 비주얼 에셋, PART 1~2) ── */
+const LESSON_ART={
+  "1-1":"lesson-01-context-window.png",
+  "1-2":"lesson-02-chatbot-agent.png",
+  "1-3":"lesson-03-ai-choice.png",
+  "1-4":"lesson-04-upload-safety.png",
+  "2-1":"lesson-05-racs.png",
+  "2-2":"lesson-06-meta-prompt.png",
+  "2-3":"lesson-07-memory-desks.png",
+  "2-4":"lesson-08-custom-context.png",
+};
+
+/* ── 홈 ↔ 학습 뷰 전환 ── */
+const homeEl=document.getElementById('home'), wrapEl=document.querySelector('.wrap');
+function showHome(){
+  homeEl.style.display='block'; wrapEl.style.display='none';
+  document.getElementById('home-done').textContent=S.passed.length;
+  const strip=document.getElementById('road-strip'); strip.innerHTML='';
+  const parts=[...new Set(CHAPTERS.map(c=>c.part))];
+  parts.forEach(p=>{
+    const t=partTier(p), first=CHAPTERS.findIndex(c=>c.part===p);
+    const done=CHAPTERS.filter(c=>c.part===p&&S.passed.includes(c.id)).length;
+    const total=CHAPTERS.filter(c=>c.part===p).length;
+    const a=document.createElement('a');
+    const bdg=partBadge(t,p); a.innerHTML=`<span class="rp">${p.split('·')[0].trim()}</span> ${p.split('·')[1]||''}<br><span class="rt">${bdg?bdg+' · ':''}${done}/${total}</span>`;
+    a.onclick=()=>{current=first;showLearn();};
+    strip.appendChild(a);
+  });
+  document.getElementById('start-btn').textContent = S.passed.length? '▶ 이어하기' : '▶ START';
+  window.scrollTo(0,0);
+}
+function showLearn(){
+  homeEl.style.display='none'; wrapEl.style.display='grid';
+  render(); window.scrollTo(0,0);
+}
+document.getElementById('start-btn').onclick=()=>{
+  // 이어하기: 마지막 통과 다음 챕터로
+  if(S.passed.length){
+    const last=CHAPTERS.findIndex(c=>c.id===S.passed[S.passed.length-1]);
+    current=Math.min(last+1, CHAPTERS.length-1);
+  } else current=0;
+  showLearn();
+};
+document.getElementById('logo').onclick=showHome;
+
+/* ══ 로밍 컴패니언 — 부화 후 화면 하단을 돌아다니며 가끔 딴짓 ══ */
+const roam={el:null,img:null,x:40,y:0,dir:1,tx:240,ty:0,state:"idle",timer:null,tick:0,exit:0};
+function roamPickTarget(){ // 화면 전체를 자유 배회, 12% 확률로 화면 밖 퇴장 후 반대편 재등장
+  const pad=8;
+  if(Math.random()<0.12){ // 퇴장: 좌우 화면 밖으로 걸어나감
+    roam.exit = roam.x < innerWidth/2 ? -1 : 1;
+    roam.tx = roam.exit<0 ? -140 : innerWidth+140;
+    roam.ty = pad+Math.random()*Math.max(120,innerHeight-pad*2);
+    return;
+  }
+  roam.exit=0;
+  roam.tx=pad+Math.random()*Math.max(120,innerWidth-pad*2);
+  roam.ty=pad+Math.random()*Math.max(120,innerHeight-pad*2);
+}
+const TROAM="assets/claude-master/pet/troam/"; // 투명·트리밍 버전 (로밍 전용)
+function roamBase(){ return TROAM+"pet-stage-"+Math.max(1,petStage())+".png"; }
+/* 상태 전용 스프라이트가 제작된 조합 (states-raw/PROMPT-PACK.md · 없는 조합은 기본+이모트 폴백) */
+const STATE_SPRITES={read:[1,2,3],sleep:[1,2,3,7],calm:[1,2,3],stretch:[1,2,3],hungry:[1,2,3],excited:[1,2,3,7],dream:[1,2,3,7]};
+function roamSprite(st){
+  const stage=Math.max(1,petStage());
+  const key=st==="dream"?"sleep":st; // 꿈 = 잠 이미지 + 💭
+  if(STATE_SPRITES[key]&&STATE_SPRITES[key].includes(stage))
+    return TROAM+"states/state-"+key+"-stage-"+stage+".png";
+  if(st==="excited") return TROAM+"pet-celebrate.png";
+  return roamBase();
+}
+const ROAM_EMOTE={sleep:"Zzz",doze:"z z…",dream:()=>"💭"+["🍖","⭐","🦋","🏆","🌈"][Math.floor(Math.random()*5)],hungry:"🍖❗",excited:"⭐!",stretch:"~",read:"📖",calm:"😌"};
+function roamSetAction(st){
+  roam.state=st;
+  roam.img.src=roamSprite(st);
+  // 상태 클래스 갈아끼우기
+  roam.el.className=roam.el.className.split(" ").filter(c=>!c.startsWith("act-")&&c!=="emote").join(" ");
+  roam.el.classList.add("act-"+st);
+  const em=ROAM_EMOTE[st];
+  const emEl=document.getElementById("roam-emote");
+  if(em){ emEl.textContent=typeof em==="function"?em():em; roam.el.classList.add("emote"); }
+  else emEl.textContent="";
+  if(st==="hungry"){ playSfx("hungry"); toast("🍖 꼬르륵… 배고파요! 챕터를 클리어하면 힘이 나요"); }
+  if(st==="excited"&&Math.random()<0.5){ playSfx("event"); }
+}
+const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function roamNext(){
+  if(petStage()===0){ roam.el.style.display="none"; roam.timer=setTimeout(roamNext,4000); return; } // 알 단계(PART 0 완주 전): 아직 못 걸음
+  roam.el.style.display="block";
+  roam.img.style.height=(52+petStage()*5)+"px"; // 성장할수록 커진다
+  // 행동 추첨: 걷기 확률 높게, 가끔 딴짓(책읽기·멍때리기·낮잠)
+  const r=Math.random();
+  let st,dur;
+  if(r<0.40){ st="walk"; roamPickTarget(); dur=5000+Math.random()*5000; }
+  else if(r<0.53){ st="idle"; dur=2000+Math.random()*3000; }
+  else if(r<0.64){ st="read"; dur=3500+Math.random()*4000; }    // 딴짓: 태블릿 읽기
+  else if(r<0.72){ st="calm"; dur=2500+Math.random()*3000; }    // 눈 감고 휴식
+  else if(r<0.79){ st="doze"; dur=3000+Math.random()*3000; }    // 꾸벅꾸벅 졸기
+  else if(r<0.85){ st="sleep"; dur=5000+Math.random()*6000; }   // 낮잠 Zzz
+  else if(r<0.90){ st="dream"; dur=5000+Math.random()*4000; }   // 꿈꾸기 💭
+  else if(r<0.94){ st="stretch"; dur=2200; }                    // 기지개
+  else if(r<0.97){ st="excited"; dur=2600; }                    // 신남!
+  else { st="hungry"; dur=3500; }                               // 배고픔: 학습 유도
+  roamSetAction(st);
+  clearTimeout(roam.timer); roam.timer=setTimeout(roamNext,dur);
+}
+function roamLoop(){
+  roam.tick++;
+  if(roam.el && roam.el.style.display!=="none"){
+    if(roam.state==="walk"){
+      const dx=roam.tx-roam.x, dy=roam.ty-roam.y, dist=Math.hypot(dx,dy);
+      if(dist>3){
+        roam.dir=dx>0?1:-1;
+        roam.x+=dx/dist*1.2; roam.y+=dy/dist*1.2;   // 목적지를 향해 2D 이동
+      } else if(roam.exit){ // 화면 밖 도착 → 반대편에서 입장
+        roam.x = roam.exit<0 ? innerWidth+120 : -120;
+        roam.y = 8+Math.random()*Math.max(120,innerHeight-16);
+        roam.exit=0; roamPickTarget(); // 새 목적지로 걸어 들어옴
+      } else { roamSetAction("idle"); }
+    }
+    // 떠다니는 느낌: 걷는 중엔 총총, 서 있을 땐 잔잔한 부유
+    const bob=roam.state==="walk" ? (roam.tick>>3)%2*2 : Math.sin(roam.tick/40)*2;
+    roam.el.style.transform="translate("+roam.x+"px,"+(roam.y-bob)+"px)";
+    roam.img.style.transform="scaleX("+(roam.dir<0?-1:1)+")";
+  }
+  requestAnimationFrame(roamLoop);
+}
+function roamInit(){
+  roam.el=document.getElementById("roamer"); roam.img=document.getElementById("roam-img");
+  roam.img.onerror=()=>{ if(roam.img.src.includes("/states/")) roam.img.src=roamBase(); };
+  if(!roam.el||reducedMotion) return;
+  roam.img.onclick=()=>{ toast(["🦕 반가워요!","📚 방금 뭔가 배웠어요","💤 …깜빡 졸았네요","⭐ 다음 챕터도 같이 가요!"][Math.random()*4|0]); };
+  roam.x=Math.max(60,innerWidth-220); roam.y=Math.max(60,innerHeight-260); // 시작 위치: 우하단 근처
+  addEventListener("resize",()=>{
+    roam.x=Math.min(roam.x,Math.max(60,innerWidth-120));
+    roam.y=Math.min(roam.y,Math.max(60,innerHeight-140));
+  });
+  roamNext(); roamLoop();
+}
+
+/* ══ 진화 축하 — WOW + 폭죽 + LV 안내 ══ */
+function fireworks(canvas,dur){
+  const cx=canvas.getContext("2d");
+  canvas.width=innerWidth; canvas.height=innerHeight;
+  const COLORS=["#F1B84B","#E58A6A","#35D6D0","#6477E8","#39C982","#FFF8E8"];
+  let parts=[],running=true;
+  function burst(){ const bx=innerWidth*(0.15+Math.random()*0.7), by=innerHeight*(0.12+Math.random()*0.45);
+    for(let i=0;i<46;i++){ const a=Math.PI*2*i/46, sp=2+Math.random()*3.6;
+      parts.push({x:bx,y:by,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,c:COLORS[Math.random()*COLORS.length|0]}); } }
+  const bursts=setInterval(burst,420); burst();
+  (function frame(){ if(!running) return;
+    cx.clearRect(0,0,canvas.width,canvas.height);
+    parts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.life-=0.014;
+      cx.globalAlpha=Math.max(p.life,0); cx.fillStyle=p.c; cx.fillRect(p.x,p.y,4,4); });
+    parts=parts.filter(p=>p.life>0);
+    requestAnimationFrame(frame); })();
+  setTimeout(()=>{ running=false; clearInterval(bursts); cx.clearRect(0,0,canvas.width,canvas.height); },dur);
+}
+let evoTimer=null;
+function celebrateEvolution(stage,hatch){
+  const ov=document.getElementById("evo-overlay");
+  document.getElementById("evo-img").src=PET_DIR+"pet-stage-"+stage+".png";
+  document.getElementById("evo-lv").textContent="LV."+stage;
+  document.getElementById("evo-msg").textContent = hatch
+    ? "축하합니다! 공룡이 깨어났습니다 — "+PET[stage][1]
+    : "축하합니다! LV."+stage+" "+PET[stage][1]+"(으)로 진화했습니다.";
+  ov.classList.add("show");
+  if(!reducedMotion) fireworks(document.getElementById("evo-canvas"),3600);
+  if(SFX.applause) playSfx("applause"); else try{ sfxFanfare(); }catch(e){}
+  clearTimeout(evoTimer);
+  evoTimer=setTimeout(()=>ov.classList.remove("show"),4000);
+  ov.onclick=()=>{ clearTimeout(evoTimer); ov.classList.remove("show"); };
+}
+function sfxFanfare(){
+  const a=new (window.AudioContext||window.webkitAudioContext)();
+  [523,659,784,1047].forEach((f,i)=>{ const o=a.createOscillator(),g=a.createGain();
+    o.connect(g); g.connect(a.destination); o.type="square"; g.gain.value=.05;
+    o.frequency.value=f; o.start(a.currentTime+i*.12); o.stop(a.currentTime+i*.12+.22); });
+}
+
+/* ══ 효과음 (업로드된 wav) ══
+   applause = 진화·부화 축하 / event = 챕터 클리어·등급 해제 / hungry = 공룡 배고픔 */
+const SFX={};
+["applause","event","hungry"].forEach(k=>{
+  SFX[k]=new Audio("assets/audio/sfx/"+k+".wav"); SFX[k].volume=0.5;
+  SFX[k].addEventListener("error",()=>{ SFX[k]=null; });
+});
+function playSfx(k){ const a=SFX[k]; if(!a) return; try{ a.currentTime=0; a.play().catch(()=>{}); }catch(e){} }
+
+/* ══ 배경음악 (트랙 선택형) ══
+   전곡 CC-BY 라이선스 — 저작자 표기 필수(홈 하단 크레딧 + assets/audio/README.txt)
+   브라우저 정책상 소리 있는 자동재생은 첫 사용자 제스처 이후에만 허용됨. */
+const BGM_TRACKS=[
+  {id:"nitroman", name:"Nitroman",      src:"assets/audio/tracks/nitroman.mp3",     credit:"Nu poet (자체 보유곡)"},
+  {id:"action",   name:"레트로 액션",   src:"assets/audio/bgm.mp3",                 credit:"CodeManu"},
+  {id:"menu",     name:"차분한 메뉴",   src:"assets/audio/tracks/menu.mp3",         credit:"CodeManu"},
+  {id:"bitquest", name:"코지 어드벤처", src:"assets/audio/tracks/bit-quest.mp3",    credit:"Kevin MacLeod"},
+  {id:"dungeon",  name:"던전 탐험",     src:"assets/audio/tracks/dungeon-level.mp3",credit:"Kevin MacLeod"},
+  {id:"polka",    name:"픽셀 폴카",     src:"assets/audio/tracks/pixel-polka.mp3",  credit:"Kevin MacLeod"},
+];
+let bgmTrackId=localStorage.getItem("cg-bgm-track")||"nitroman"; // 기본 BGM: Nitroman (자체 보유곡)
+function bgmTrack(){ return BGM_TRACKS.find(t=>t.id===bgmTrackId)||BGM_TRACKS[0]; }
+const BGM=new Audio(bgmTrack().src); BGM.loop=true; BGM.volume=0.35;
+const trackSel=document.getElementById("bgm-track");
+BGM_TRACKS.forEach(t=>{ const o=document.createElement("option"); o.value=t.id; o.textContent="♫ "+t.name; trackSel.appendChild(o); });
+trackSel.value=bgmTrackId;
+trackSel.onchange=()=>{
+  bgmTrackId=trackSel.value; localStorage.setItem("cg-bgm-track",bgmTrackId);
+  const wasPlaying=!BGM.paused;
+  BGM.src=bgmTrack().src;
+  if(wasPlaying||bgmOn) BGM.play().catch(()=>{});
+  toast("♫ "+bgmTrack().name+" — "+bgmTrack().credit);
+};
+let bgmAvailable=true, bgmOn;
+// 첫 방문에만 자동 재생(첫 클릭 시 시작), 이후 방문은 기본 꺼짐 — ♪ 버튼으로 언제든 다시 켤 수 있음
+if(localStorage.getItem("cg-bgm-visited")===null){
+  bgmOn=true;
+  localStorage.setItem("cg-bgm-visited","1");
+  localStorage.setItem("cg-bgm","off");        // 다음 방문 기본값: 꺼짐
+}else{
+  bgmOn=localStorage.getItem("cg-bgm")==="on"; // 사용자가 직접 켠 경우만 유지
+}
+BGM.addEventListener("error",()=>{ bgmAvailable=false; renderBgm(); });
+function renderBgm(){
+  const b=document.getElementById("bgm-btn");
+  if(!bgmAvailable){ b.textContent="♪ 없음"; b.title="BGM 파일이 없습니다"; b.disabled=true; b.classList.remove("on-air"); return; }
+  b.textContent=bgmOn?"♪ ON AIR":"♪ OFF";
+  // ON AIR 백라이트: 실제 재생 중일 때만 점등
+  b.classList.toggle("on-air", bgmOn && !BGM.paused);
+}
+BGM.addEventListener("play",renderBgm);
+BGM.addEventListener("pause",renderBgm);
+function bgmApply(){ if(!bgmAvailable) return; if(bgmOn) BGM.play().catch(()=>{}); else BGM.pause(); renderBgm(); }
+document.getElementById("bgm-btn").onclick=()=>{ bgmOn=!bgmOn; localStorage.setItem("cg-bgm",bgmOn?"on":"off"); bgmApply(); };
+// 자동재생 시도: 켜둔 상태였다면 첫 제스처(START 등)에서 곧바로 재생
+document.addEventListener("pointerdown",function once(){ bgmApply(); },{once:true});
+
+/* ══ 간단 로그인 (Supabase Auth · 이메일 OTP) ══
+   ⚠ 실제 값으로 교체하면 활성화됩니다. 미설정 시 게스트 모드로만 동작.
+   키는 publishable(anon) 키만 사용 — service_role 키는 절대 프론트에 두지 말 것. */
+const AUTH={
+  SUPABASE_URL:"https://menfdmsmixasfkywydut.supabase.co",
+  SUPABASE_ANON_KEY:"sb_publishable_GpBf-BQ4CIgKnFvo2W5cpQ_pdqUCaLQ",
+  get ENABLED(){ return !this.SUPABASE_URL.includes("REPLACE") && !!window.supabase; }
+};
+let sb=null;
+if(AUTH.ENABLED) sb=window.supabase.createClient(AUTH.SUPABASE_URL,AUTH.SUPABASE_ANON_KEY);
+
+function renderAuth(){
+  const who=document.getElementById("auth-who"), btn=document.getElementById("auth-btn");
+  who.textContent=AUTH_USER?(AUTH_USER.email||"로그인됨"):"";
+  btn.textContent=AUTH_USER?"로그아웃":"로그인";
+  const ab=document.getElementById("admin-btn");
+  if(ab) ab.style.display=(AUTH_USER&&IS_ADMIN)?"inline-block":"none";
+}
+let IS_ADMIN=false;
+async function fetchServerTier(){
+  // 로그인 사용자의 등급은 서버(entitlements, RLS: 본인 조회만)가 권위 소스
+  if(!sb||!AUTH_USER) return null;
+  try{
+    const {data,error}=await sb.from("entitlements").select("tier,is_admin").maybeSingle();
+    if(error) return null;
+    IS_ADMIN=!!(data&&data.is_admin);
+    renderAuth();
+    return data?data.tier:0;
+  }catch(e){ return null; }
+}
+function setUser(u){
+  const wasGuest=!AUTH_USER;
+  AUTH_USER=u;
+  if(u&&wasGuest){
+    // 게스트 진행(학습 기록)을 계정 저장소로 1회 병합 — 진행 유실 방지
+    const guest=JSON.parse(localStorage.getItem(KEY_BASE)||"null");
+    S=loadState();
+    if(guest){
+      S.passed=[...new Set([...(S.passed||[]),...(guest.passed||[])])];
+      S.xp=Math.max(S.xp||0,guest.xp||0);
+      save();
+    }
+    // 등급은 서버 값으로 동기화 (결제 자산 — localStorage를 신뢰하지 않음)
+    fetchServerTier().then(t=>{
+      if(t!=null){ const before=petStage(); S.tier=t; save();
+        if(petStage()>before) celebrateEvolution(petStage(), before===0);
+        render(); }
+    });
+  }else{
+    S=loadState();
+  }
+  renderAuth(); render();
+}
+if(PROMO){ S.tier=Math.max(S.tier,PROMO.tier);
+  const nm=(I18N.lang==="en"?PROMO.dino_name_en:PROMO.dino_name)||PROMO.dino_name;
+  setTimeout(()=>toast("🎟 "+nm+" 체험권 적용 중 · "+new Date(PROMO.expires_at).toLocaleDateString()+" 까지"),1200); }
+document.getElementById("promo-apply").onclick=async()=>{
+  const code=(document.getElementById("promo-code").value||"").trim();
+  const err=document.getElementById("promo-err"); err.textContent="";
+  if(!code){ err.textContent="코드를 입력하세요"; return; }
+  try{
+    const j=await applyPromo(code);
+    S.tier=Math.max(S.tier,j.tier);
+    document.getElementById("auth-modal").classList.remove("show");
+    toast("🎟 "+j.dino_name+" 체험권 적용! "+new Date(j.expires_at).toLocaleDateString()+" 까지 전 챕터 열람");
+    playSfx("event"); render();
+  }catch(e){
+    err.textContent = e==="expired"?"만료된 코드입니다":e==="not_found"?"존재하지 않는 코드입니다":"코드 확인 실패 ("+e+")";
+  }
+};
+/* 관리자 등급 설정 */
+(function(){
+  const am=document.getElementById("admin-modal");
+  const sel=document.getElementById("admin-tier");
+  TIERS.forEach(t=>{ const o=document.createElement("option"); o.value=t.level; o.textContent=t.level+" · "+t.name+(t.price?" (₩"+t.price.toLocaleString()+")":""); sel.appendChild(o); });
+  document.getElementById("admin-btn").onclick=()=>{ am.style.display="flex"; document.getElementById("admin-err").textContent=""; };
+  document.getElementById("admin-close").onclick=()=>{ am.style.display="none"; };
+  document.getElementById("admin-apply").onclick=async()=>{
+    const email=document.getElementById("admin-email").value.trim();
+    const tier=Number(sel.value);
+    const err=document.getElementById("admin-err"); err.textContent="";
+    if(!email){ err.textContent="이메일을 입력하세요"; return; }
+    try{
+      const {data}=await sb.auth.getSession();
+      const token=data.session&&data.session.access_token;
+      const r=await fetch("/api/admin-set-tier",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({email,tier})});
+      const j=await r.json();
+      if(!j.ok){ err.textContent={admin_required:"관리자 권한이 없습니다",user_not_found:"해당 이메일의 가입자가 없습니다",invalid_input:"입력값을 확인하세요"}[j.reason]||("실패: "+j.reason); return; }
+      toast("⚙ "+email+" → "+TIERS[tier].name+" 등급 적용 완료");
+      am.style.display="none";
+    }catch(e){ err.textContent="요청 실패 — 잠시 후 다시 시도"; }
+  };
+})();
+const modal=document.getElementById("auth-modal");
+const stepEmail=document.getElementById("auth-step-email"), stepCode=document.getElementById("auth-step-code");
+function openAuth(){ stepEmail.style.display="block"; stepCode.style.display="none";
+  document.getElementById("auth-err1").textContent=""; document.getElementById("auth-err2").textContent="";
+  modal.classList.add("show"); document.getElementById("auth-email").focus(); }
+function closeAuth(){ modal.classList.remove("show"); }
+document.getElementById("auth-cancel1").onclick=closeAuth;
+document.getElementById("auth-cancel2").onclick=closeAuth;
+modal.addEventListener("click",e=>{ if(e.target===modal) closeAuth(); });
+
+document.getElementById("auth-btn").onclick=async()=>{
+  if(AUTH_USER){ if(sb) await sb.auth.signOut(); setUser(null); toast("로그아웃되었습니다"); return; }
+  if(!AUTH.ENABLED){ toast("로그인 백엔드 미설정 — Supabase URL/키를 AUTH 에 넣으면 활성화됩니다"); return; }
+  openAuth();
+};
+let pendingEmail="";
+document.getElementById("auth-send").onclick=async()=>{
+  const email=document.getElementById("auth-email").value.trim();
+  const err=document.getElementById("auth-err1"); err.textContent="";
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ err.textContent="이메일 형식을 확인해 주세요."; return; }
+  const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
+  if(error){ err.textContent="전송 실패: "+error.message; return; }
+  pendingEmail=email;
+  document.getElementById("auth-sent-to").textContent=email;
+  stepEmail.style.display="none"; stepCode.style.display="block";
+  document.getElementById("auth-code").focus();
+};
+document.getElementById("auth-verify").onclick=async()=>{
+  const code=document.getElementById("auth-code").value.trim();
+  const err=document.getElementById("auth-err2"); err.textContent="";
+  if(!/^\d{6}$/.test(code)){ err.textContent="6자리 숫자 코드를 입력해 주세요."; return; }
+  const {data,error}=await sb.auth.verifyOtp({email:pendingEmail,token:code,type:"email"});
+  if(error){ err.textContent="인증 실패: "+error.message; return; }
+  closeAuth(); setUser(data.user); toast("🎉 로그인 완료: "+(data.user?.email||""));
+};
+async function authInit(){
+  renderAuth();
+  if(!sb) return;
+  const {data}=await sb.auth.getSession();
+  if(data.session?.user) setUser(data.session.user);
+  sb.auth.onAuthStateChange((_e,sess)=>{ if(!!sess?.user!==!!AUTH_USER) setUser(sess?.user||null); });
+}
+
+/* ══ 버그·이슈 제보 — gbrielkim@gmail.com 으로 메일 ══ */
+const BUG_EMAIL="gbrielkim@gmail.com";
+function bugContext(){
+  const c=CHAPTERS[current];
+  return "\n\n---\n[자동 첨부 정보]\n"
+    +"챕터: "+(c?c.id+" "+c.title:"홈")+"\n"
+    +"등급: "+TIERS[S.tier].name+" / 클리어 "+S.passed.length+"/"+CHAPTERS.length+"\n"
+    +"로그인: "+(AUTH_USER?AUTH_USER.email:"게스트")+"\n"
+    +"브라우저: "+navigator.userAgent.slice(0,80);
+}
+/* 설문·피드백 */
+(function(){
+  const fm=document.getElementById("fb-modal");
+  const picked={rating:null,ease:null,nps:null};
+  ["rating","ease","nps"].forEach(key=>{
+    const box=document.getElementById("fb-"+key);
+    const min=+box.dataset.min, max=+box.dataset.max;
+    for(let v=min;v<=max;v++){
+      const b=document.createElement("button"); b.textContent=v; b.type="button";
+      b.onclick=()=>{ picked[key]=v; [...box.children].forEach(c=>c.classList.toggle("on",+c.textContent===v)); };
+      box.appendChild(b);
+    }
+  });
+  document.getElementById("fb-btn").onclick=()=>{ fm.style.display="flex"; document.getElementById("fb-err").textContent=""; };
+  document.getElementById("fb-cancel").onclick=()=>{ fm.style.display="none"; };
+  fm.addEventListener("click",e=>{ if(e.target===fm) fm.style.display="none"; });
+  document.getElementById("fb-send").onclick=async()=>{
+    const err=document.getElementById("fb-err"); err.textContent="";
+    const c=CHAPTERS[current];
+    const payload={...picked,
+      best:document.getElementById("fb-best").value,
+      worst:document.getElementById("fb-worst").value,
+      wish:document.getElementById("fb-wish").value,
+      email:document.getElementById("fb-email").value,
+      chapter_ctx:c?(c.id+" "+c.title):"",
+      progress_ctx:"등급 "+TIERS[S.tier].name+" · 클리어 "+S.passed.length+"/"+CHAPTERS.length+" · LV."+petStage()};
+    if(picked.rating==null&&picked.nps==null&&!payload.best.trim()&&!payload.worst.trim()&&!payload.wish.trim()){
+      err.textContent="한 문항 이상 답변해 주세요"; return; }
+    try{
+      const headers={"Content-Type":"application/json"};
+      if(sb&&AUTH_USER){ const {data}=await sb.auth.getSession();
+        if(data.session&&data.session.access_token) headers.Authorization="Bearer "+data.session.access_token; }
+      const r=await fetch("/api/feedback",{method:"POST",headers,body:JSON.stringify(payload)});
+      const j=await r.json();
+      if(!j.ok){ err.textContent="제출 실패 ("+j.reason+") — 잠시 후 다시 시도해 주세요"; return; }
+      fm.style.display="none"; playSfx("event");
+      toast("🙏 소중한 의견 감사합니다! 교안 개선에 반영하겠습니다");
+    }catch(e){ err.textContent="네트워크 오류 — 잠시 후 다시 시도해 주세요"; }
+  };
+})();
+const bugModal=document.getElementById("bug-modal");
+document.getElementById("bug-btn").onclick=()=>{ bugModal.style.display="flex"; document.getElementById("bug-text").focus(); };
+document.getElementById("bug-cancel").onclick=()=>{ bugModal.style.display="none"; };
+bugModal.addEventListener("click",e=>{ if(e.target===bugModal) bugModal.style.display="none"; });
+document.getElementById("bug-send").onclick=()=>{
+  const body=(document.getElementById("bug-text").value.trim()||"(내용 없음)")+bugContext();
+  const subject="[클로드 완전정복] 버그·이슈 제보";
+  location.href="mailto:"+BUG_EMAIL+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
+  toast("메일 앱이 열립니다 — 전송 버튼까지 눌러주세요");
+};
+document.getElementById("bug-copy").onclick=async()=>{
+  const body=(document.getElementById("bug-text").value.trim()||"(내용 없음)")+bugContext();
+  try{ await navigator.clipboard.writeText("받는사람: "+BUG_EMAIL+"\n제목: [클로드 완전정복] 버그·이슈 제보\n\n"+body);
+    toast("복사되었습니다 — 메일에 붙여넣어 주세요"); }
+  catch(e){ toast("복사 실패 — 내용을 직접 선택해 주세요"); }
+};
+
+/* ══ i18n 엔진 — 언어 레지스트리 방식 (새 언어 = LANGS 한 줄 + i18n/<code>.json 파일) ══ */
+const LANGS=[
+  {code:"ko", label:"한국어"},
+  {code:"en", label:"English"},
+  // 추가 예: {code:"ja", label:"日本語"}, {code:"zh", label:"中文"}
+];
+const I18N={ lang:(new URLSearchParams(location.search).get("lang")||localStorage.getItem("cg-lang")||"ko"), dict:null };
+if(!LANGS.some(l=>l.code===I18N.lang)) I18N.lang="ko";
+function t(key,fallback){ return (I18N.dict&&I18N.dict[key])||fallback||key; }
+function applyI18n(){
+  if(I18N.lang==="ko"||!I18N.dict) return; // 기본 언어: 코드 내 한국어 원문
+  document.documentElement.lang=I18N.lang;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{
+    const v=I18N.dict[el.dataset.i18n]; if(v) el.textContent=v;
+  });
+  const ti=I18N.dict["app.title"]; if(ti) document.title=ti;
+}
+function setLang(code){
+  localStorage.setItem("cg-lang",code);
+  const u=new URL(location.href); u.searchParams.delete("lang"); location.href=u.toString(); // 저장 후 새로고침
+}
+async function i18nInit(){
+  // 언어 선택 UI
+  const sel=document.getElementById("lang-sel");
+  if(sel){ sel.innerHTML=LANGS.map(l=>`<option value="${l.code}"${l.code===I18N.lang?" selected":""}>${l.label}</option>`).join("");
+    sel.onchange=e=>setLang(e.target.value); }
+  if(I18N.lang==="ko") return;
+  try{
+    I18N.dict=await fetch("i18n/"+I18N.lang+".json").then(r=>r.ok?r.json():null);
+    if(I18N.dict){ localStorage.setItem("cg-lang",I18N.lang); applyI18n(); }
+  }catch(e){ I18N.dict=null; }
+}
+i18nInit();
+
+// 모바일 목차 아코디언 토글
+document.querySelector(".toc h2").onclick=()=>{ if(innerWidth<=760) document.querySelector(".toc").classList.toggle("open"); };
+
+render();      // 상태 계산용 초기 렌더
+showHome();    // 첫 진입은 홈(히어로)
+authInit();    // 세션 복원(로그인 백엔드 설정 시)
+roamInit();    // 로밍 공룡 (부화 후 표시, reduced-motion 시 비활성)
+renderBgm();   // BGM 버튼 상태
+</script>
+<script>if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))}</script>
+</body>
+</html>
