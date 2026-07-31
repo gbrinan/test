@@ -126,13 +126,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 /* ── 로그인 ── */
 .auth-box{display:flex;align-items:center;gap:8px}
 .auth-box .who{font-size:10px;color:var(--kraft);opacity:.85;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* 헤더 컨트롤 통일: button·select 모두 같은 높이/테두리/폰트로 상하 끝선 정렬 */
-.auth-btn{font-size:10px;padding:0 10px;box-shadow:2px 2px 0 var(--line);
-  display:inline-flex;align-items:center;justify-content:center;height:28px;box-sizing:border-box;
-  border:2px solid var(--ink);background:var(--paper);color:var(--ink);
-  font-family:var(--font-pixel);line-height:1;vertical-align:middle;cursor:pointer;
-  -webkit-appearance:none;appearance:none}
-select.auth-btn{padding:0 6px}
+.auth-btn{font-size:10px;padding:4px 10px;box-shadow:2px 2px 0 var(--line)}
 /* ON AIR 스타일 백라이트 — BGM 재생 중 */
 #bgm-btn.on-air{
   background:#3a1410;color:#FF6B4A;border-color:#FF6B4A;
@@ -159,7 +153,7 @@ select.auth-btn{padding:0 6px}
 
 /* ── 로밍 컴패니언 (화면 전체를 자유롭게 돌아다니는 공룡 — Codex 펫 스타일) ── */
 #roamer{position:fixed;left:0;top:0;z-index:50;pointer-events:none;will-change:transform}
-#roam-img{width:64px;image-rendering:auto;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3))}
+#roam-img{height:64px;width:auto;image-rendering:auto;pointer-events:auto;cursor:pointer;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3))}
 #roam-emote{position:absolute;top:-26px;left:50%;transform:translateX(-50%);font-size:18px;font-family:var(--font-pixel);white-space:nowrap;opacity:0;transition:opacity .3s;text-shadow:0 1px 0 #fff}
 #roamer.emote #roam-emote{opacity:1;animation:emote-float 2.2s ease-in-out infinite}
 @keyframes emote-float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
@@ -171,6 +165,13 @@ select.auth-btn{padding:0 6px}
 @keyframes pet-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04,0.97)}}
 #roamer.act-stretch #roam-img{animation:pet-stretch 1.6s ease-in-out infinite}
 @keyframes pet-stretch{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) scaleX(.94)}}
+.fb-q{margin:14px 0}
+.fb-q label{display:block;font-size:12px;margin-bottom:6px;font-weight:bold}
+.fb-q textarea,.fb-q input{width:100%;font-family:var(--font-body);font-size:13px;padding:8px 9px;border:2px solid var(--ink);background:var(--page);resize:vertical}
+.fb-scale{display:flex;gap:4px;flex-wrap:wrap}
+.fb-scale button{flex:1;min-width:28px;padding:7px 0;font-family:var(--font-pixel);font-size:12px;border:2px solid var(--ink);background:var(--paper);cursor:pointer}
+.fb-scale button.on{background:var(--clay);color:#fff}
+.fb-hint{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-soft);margin-top:3px}
 @media(prefers-reduced-motion:reduce){#roamer{display:none !important}}
 
 /* ── 진화 축하 오버레이 (WOW + 폭죽 + LV) ── */
@@ -200,10 +201,6 @@ select.auth-btn{padding:0 6px}
 .hero-hint{font-size:10px;color:#9fb3c8}
 .hero-cred{font-size:11px;color:#35D6D0;letter-spacing:1px;margin:14px 0 4px}
 .lesson-art{width:100%;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--line);margin-bottom:16px;display:block}
-.lesson-art.mid{margin:18px 0}
-/* 한국어 조판 보정: 마지막 줄 한 글자 orphan·제목 줄 균형 (지원 브라우저 한정) */
-.chapter .body,.chapter .body ul,.ch-lead,.analogy,.q .qt,.q label{text-wrap:pretty}
-.chapter h2,.paywall h2,#home h2{text-wrap:balance}
 .road-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:26px;text-align:left}
 @media(max-width:640px){.road-strip{grid-template-columns:repeat(2,1fr)}}
 .road-strip a{border:2px solid var(--ink);background:var(--paper);box-shadow:3px 3px 0 var(--line);padding:8px 10px;font-size:10.5px;color:var(--ink);text-decoration:none;cursor:pointer}
@@ -229,7 +226,7 @@ select.auth-btn{padding:0 6px}
   header .inner{flex-wrap:wrap;gap:4px;padding:8px 10px}
   .auth-box{flex-wrap:wrap;justify-content:flex-end;gap:4px}
   .auth-box .who{display:none}
-  .auth-btn{font-size:10px;padding:0 8px}
+  .auth-btn{font-size:10px;padding:5px 8px}
   #bgm-track{max-width:84px}
   .badge{font-size:10px;padding:3px 6px}
 
@@ -248,10 +245,12 @@ select.auth-btn{padding:0 6px}
 <header><div class="inner">
   <h1 id="logo" style="cursor:pointer" title="홈으로">🤖 CLAUDE 완전정복</h1>
   <div class="auth-box">
+    <button class="auth-btn" id="fb-btn" title="설문·피드백 남기기">📝 설문</button>
     <button class="auth-btn" id="bug-btn" title="버그·이슈 제보">🐞</button>
     <select class="auth-btn" id="bgm-track" title="BGM 곡 선택" style="max-width:110px"></select>
     <button class="auth-btn" id="bgm-btn" title="배경음악">♪ OFF</button>
     <span class="who" id="auth-who"></span>
+    <button class="auth-btn" id="admin-btn" title="회원 등급 관리" style="display:none">⚙ 등급관리</button>
     <button class="auth-btn" id="auth-btn">로그인</button>
     <select id="lang-sel" title="Language" style="height:28px"></select>
     <span class="badge" id="hdr-badge">무료 맛보기 · 0/33</span>
@@ -263,7 +262,7 @@ select.auth-btn{padding:0 6px}
   <div class="auth-card">
     <h3 id="auth-title">이메일로 로그인</h3>
     <div id="auth-step-email">
-      <p>비밀번호 없이, 이메일로 받은 6자리 코드로 로그인합니다.</p>
+      <p>비밀번호 없이, 이메일로 받은 인증 코드로 로그인합니다.</p>
       <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
       <div class="auth-err" id="auth-err1"></div>
       <div class="row"><button class="primary" id="auth-send">인증 코드 받기</button><button id="auth-cancel1">닫기</button></div>
@@ -276,7 +275,7 @@ select.auth-btn{padding:0 6px}
     </div>
     <div id="auth-step-code" style="display:none">
       <p><b id="auth-sent-to"></b> 로 보낸 인증 코드를 입력하세요.</p>
-      <input type="text" id="auth-code" inputmode="numeric" maxlength="10" placeholder="인증 코드" autocomplete="one-time-code">
+      <input type="text" id="auth-code" inputmode="numeric" maxlength="10" placeholder="메일로 받은 숫자 코드" autocomplete="one-time-code">
       <div class="auth-err" id="auth-err2"></div>
       <div class="row"><button class="primary" id="auth-verify">로그인</button><button id="auth-cancel2">닫기</button></div>
     </div>
@@ -323,7 +322,19 @@ select.auth-btn{padding:0 6px}
 <div class="toast" id="toast"></div>
 
 <!-- ── 로밍 공룡 (부화 후 상시 표시) ── -->
-<div id="roamer" style="display:none"><span id="roam-emote"></span><img id="roam-img" src="assets/claude-master/pet/motion-idle.png" alt="돌아다니는 컴패니언" title="컴패니언"></div>
+<div id="roamer" style="display:none"><span id="roam-emote"></span><img id="roam-img" src="assets/claude-master/pet/troam/pet-stage-1.png" alt="돌아다니는 컴패니언" title="컴패니언"></div>
+
+<!-- ── 관리자: 회원 등급 설정 모달 ── -->
+<div id="admin-modal" role="dialog" aria-modal="true" style="position:fixed;inset:0;background:rgba(16,20,30,.55);display:none;align-items:center;justify-content:center;z-index:100">
+  <div class="auth-card">
+    <h3>⚙ 회원 등급 설정 (관리자)</h3>
+    <p style="font-size:12px">대상 회원의 이메일과 부여할 등급을 선택하세요. 강등도 가능합니다.</p>
+    <input type="email" id="admin-email" placeholder="member@example.com" autocomplete="off">
+    <select id="admin-tier" style="width:100%;margin-top:8px;height:34px"></select>
+    <div class="auth-err" id="admin-err"></div>
+    <div class="row"><button class="primary" id="admin-apply">등급 적용</button><button id="admin-close">닫기</button></div>
+  </div>
+</div>
 
 <!-- ── 버그·이슈 제보 모달 ── -->
 <div id="bug-modal" role="dialog" aria-modal="true" aria-labelledby="bug-title" style="position:fixed;inset:0;background:rgba(16,20,30,.55);display:none;align-items:center;justify-content:center;z-index:100">
@@ -335,6 +346,44 @@ select.auth-btn{padding:0 6px}
       <button class="primary" id="bug-send" style="flex:1">📧 메일로 보내기</button>
       <button id="bug-copy">내용 복사</button>
       <button id="bug-cancel">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 설문·피드백 모달 ── -->
+<div id="fb-modal" role="dialog" aria-modal="true" aria-labelledby="fb-title" style="position:fixed;inset:0;background:rgba(16,20,30,.55);display:none;align-items:center;justify-content:center;z-index:100;overflow:auto;padding:20px 0">
+  <div class="auth-card" style="max-height:none">
+    <h3 id="fb-title">📝 사용 후기를 들려주세요</h3>
+    <p style="font-size:12px">체험해 주셔서 감사합니다. 답변은 교안 개선에 그대로 반영됩니다. <b>한 문항만 답해도 제출</b>됩니다.</p>
+
+    <div class="fb-q"><label>1. 전반적으로 얼마나 만족하셨나요?</label>
+      <div class="fb-scale" id="fb-rating" data-min="1" data-max="5"></div>
+      <div class="fb-hint"><span>아쉬움</span><span>훌륭함</span></div></div>
+
+    <div class="fb-q"><label>2. 난이도는 어땠나요?</label>
+      <div class="fb-scale" id="fb-ease" data-min="1" data-max="5"></div>
+      <div class="fb-hint"><span>너무 어려움</span><span>너무 쉬움</span></div></div>
+
+    <div class="fb-q"><label>3. 동료에게 추천할 의향은? (0~10)</label>
+      <div class="fb-scale" id="fb-nps" data-min="0" data-max="10"></div>
+      <div class="fb-hint"><span>전혀 아님</span><span>매우 그럼</span></div></div>
+
+    <div class="fb-q"><label>4. 가장 좋았던 점은?</label>
+      <textarea id="fb-best" rows="2" placeholder="예: 공룡이 자라는 재미로 계속하게 됐어요"></textarea></div>
+
+    <div class="fb-q"><label>5. 가장 아쉬웠거나 막혔던 곳은?</label>
+      <textarea id="fb-worst" rows="2" placeholder="예: 3-2 챕터 설명이 어려웠어요"></textarea></div>
+
+    <div class="fb-q"><label>6. 추가되면 좋겠는 것은?</label>
+      <textarea id="fb-wish" rows="2" placeholder="예: 엑셀 자동화 실전 사례"></textarea></div>
+
+    <div class="fb-q"><label>7. 회신받을 이메일 (선택)</label>
+      <input type="email" id="fb-email" placeholder="답변이 필요하면 남겨주세요"></div>
+
+    <div class="auth-err" id="fb-err"></div>
+    <div class="row" style="display:flex;gap:8px">
+      <button class="primary" id="fb-send" style="flex:1">제출하기</button>
+      <button id="fb-cancel">닫기</button>
     </div>
   </div>
 </div>
@@ -582,7 +631,7 @@ async function loadRemote(c){
     if(data.session?.access_token) headers["Authorization"]="Bearer "+data.session.access_token; }
   const body={id:c.id}; if(!AUTH_USER&&PROMO) body.promo=PROMO.code;
   const r=await fetch("/api/lesson",{method:"POST",headers,body:JSON.stringify(body)});
-  const j=await r.json().catch(()=>({}));
+  let j=await r.json().catch(()=>({}));
   if(!r.ok) throw j.reason||("http_"+r.status);
   if(j.teaser){
     j={...j, body:`<div class="paywall" style="text-align:center;margin-bottom:14px">
@@ -636,6 +685,7 @@ function render(){
   const isLast=pageIdx===pageCount-1;
   // 일러스트는 첫 페이지에만, 퀴즈는 마지막 페이지에만
   const artFile=LESSON_ART[cc.id]||("lesson-"+cc.id+".png");
+  const art=pageIdx===0?`<img class="lesson-art" src="assets/claude-master/learning/${artFile}" alt="${cc.title} 일러스트" onerror="this.remove()">`:"";
   const pager=pageCount>1?`<div class="pager">
       <button id="pg-prev" ${pageIdx===0?"disabled":""}>◀ 이전</button>
       <span class="pg">${pageIdx+1} / ${pageCount}</span>
@@ -644,8 +694,7 @@ function render(){
   m.innerHTML=`<div class="chapter">
       <div class="ch-lv">${cc.lv} · ${cc.part} · <b>${TIERS[cc.tier].name}</b></div>
       <h2>${cc.title}</h2><div class="ch-lead">${cc.lead}</div>
-      <div class="body">${pages[pageIdx]||cc.body}</div>${pager}${isLast?quizHTML(cc):""}</div>`;
-  if(pageIdx===0) insertLessonArt(m.querySelector(".body"), artFile, cc.title); // 삽화는 첫 페이지 본문 중간에
+      ${art}<div class="body">${pages[pageIdx]||cc.body}</div>${pager}${isLast?quizHTML(cc):""}</div>`;
   const pv=document.getElementById("pg-prev"), nx=document.getElementById("pg-next");
   if(pv) pv.onclick=()=>{ pageIdx--; render(); window.scrollTo(0,0); };
   if(nx) nx.onclick=()=>{ pageIdx++; render(); window.scrollTo(0,0); };
@@ -653,23 +702,6 @@ function render(){
   if(window.mermaid){ mermaid.initialize({startOnLoad:false,theme:'neutral'}); mermaid.run({nodes:m.querySelectorAll('.mermaid')}); }
 }
 let pageIdx=0, lastChapter=-1;
-/* 삽화를 본문 중간(블록 절반 지점)에 배치 — 짧은 본문은 본문 위, 이미지가 없으면 onerror로 제거 */
-function insertLessonArt(body, artFile, title){
-  if(!body) return;
-  const img=document.createElement("img");
-  img.className="lesson-art";
-  img.src="assets/claude-master/learning/"+artFile;
-  img.alt=title+" 일러스트";
-  img.loading="lazy";
-  img.onerror=()=>img.remove();
-  const blocks=[...body.children];
-  if(blocks.length>=4){
-    img.classList.add("mid");
-    body.insertBefore(img, blocks[Math.ceil(blocks.length/2)]);
-  }else{
-    body.parentElement.insertBefore(img, body);
-  }
-}
 function paginate(bodyHtml){
   const tmp=document.createElement("div"); tmp.innerHTML=bodyHtml;
   const MAX=1100;                       // 페이지당 본문 텍스트 길이 기준
@@ -858,11 +890,22 @@ function roamPickTarget(){ // 화면 전체를 자유 배회, 12% 확률로 화�
   roam.tx=pad+Math.random()*Math.max(120,innerWidth-pad*2);
   roam.ty=pad+Math.random()*Math.max(120,innerHeight-pad*2);
 }
-const ROAM_SRC={walk:"motion-idle",idle:"motion-idle",calm:"motion-calm",read:"motion-read",sleep:"motion-sleep",doze:"motion-sleep",dream:"motion-sleep",stretch:"motion-calm",excited:"motion-celebrate",hungry:"motion-idle"};
-const ROAM_EMOTE={sleep:"Zzz",doze:"z z…",dream:()=>"💭"+["🍖","⭐","🦋","🏆","🌈"][Math.floor(Math.random()*5)],hungry:"🍖❗",excited:"⭐!",stretch:"~"};
+const TROAM="assets/claude-master/pet/troam/"; // 투명·트리밍 버전 (로밍 전용)
+function roamBase(){ return TROAM+"pet-stage-"+Math.max(1,petStage())+".png"; }
+/* 상태 전용 스프라이트가 제작된 조합 (states-raw/PROMPT-PACK.md · 없는 조합은 기본+이모트 폴백) */
+const STATE_SPRITES={read:[1,2,3],sleep:[1,2,3,7],calm:[1,2,3],stretch:[1,2,3],hungry:[1,2,3],excited:[1,2,3,7],dream:[1,2,3,7]};
+function roamSprite(st){
+  const stage=Math.max(1,petStage());
+  const key=st==="dream"?"sleep":st; // 꿈 = 잠 이미지 + 💭
+  if(STATE_SPRITES[key]&&STATE_SPRITES[key].includes(stage))
+    return TROAM+"states/state-"+key+"-stage-"+stage+".png";
+  if(st==="excited") return TROAM+"pet-celebrate.png";
+  return roamBase();
+}
+const ROAM_EMOTE={sleep:"Zzz",doze:"z z…",dream:()=>"💭"+["🍖","⭐","🦋","🏆","🌈"][Math.floor(Math.random()*5)],hungry:"🍖❗",excited:"⭐!",stretch:"~",read:"📖",calm:"😌"};
 function roamSetAction(st){
   roam.state=st;
-  roam.img.src=PET_DIR+(ROAM_SRC[st]||ROAM_SRC.calm)+".png";
+  roam.img.src=roamSprite(st);
   // 상태 클래스 갈아끼우기
   roam.el.className=roam.el.className.split(" ").filter(c=>!c.startsWith("act-")&&c!=="emote").join(" ");
   roam.el.classList.add("act-"+st);
@@ -875,10 +918,9 @@ function roamSetAction(st){
 }
 const reducedMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
 function roamNext(){
-  // 홈 화면에서는 마스코트로서 항상 돌아다님; 학습 화면에서만 알 단계 잠금 유지
-  const onHome = typeof homeEl!=="undefined" && homeEl && homeEl.style.display!=="none";
-  if(petStage()===0 && !onHome){ roam.el.style.display="none"; roam.timer=setTimeout(roamNext,4000); return; } // 알 단계(PART 0 완주 전): 아직 못 걸음
+  if(petStage()===0){ roam.el.style.display="none"; roam.timer=setTimeout(roamNext,4000); return; } // 알 단계(PART 0 완주 전): 아직 못 걸음
   roam.el.style.display="block";
+  roam.img.style.height=(52+petStage()*5)+"px"; // 성장할수록 커진다
   // 행동 추첨: 걷기 확률 높게, 가끔 딴짓(책읽기·멍때리기·낮잠)
   const r=Math.random();
   let st,dur;
@@ -916,16 +958,9 @@ function roamLoop(){
   }
   requestAnimationFrame(roamLoop);
 }
-/* 펫 이미지 로드 실패 시 깨진 아이콘 노출 방지 — src가 수시로 교체되므로 실패하면 숨기고 성공하면 복원 */
-["pet-img","roam-img","evo-img"].forEach(id=>{
-  const el=document.getElementById(id); if(!el) return;
-  el.addEventListener("error",()=>{el.style.visibility="hidden";});
-  el.addEventListener("load",()=>{el.style.visibility="";});
-  if(el.complete&&el.naturalWidth===0) el.style.visibility="hidden";
-});
-
 function roamInit(){
   roam.el=document.getElementById("roamer"); roam.img=document.getElementById("roam-img");
+  roam.img.onerror=()=>{ if(roam.img.src.includes("/states/")) roam.img.src=roamBase(); };
   if(!roam.el||reducedMotion) return;
   roam.img.onclick=()=>{ toast(["🦕 반가워요!","📚 방금 뭔가 배웠어요","💤 …깜빡 졸았네요","⭐ 다음 챕터도 같이 가요!"][Math.random()*4|0]); };
   roam.x=Math.max(60,innerWidth-220); roam.y=Math.max(60,innerHeight-260); // 시작 위치: 우하단 근처
@@ -1048,13 +1083,18 @@ function renderAuth(){
   const who=document.getElementById("auth-who"), btn=document.getElementById("auth-btn");
   who.textContent=AUTH_USER?(AUTH_USER.email||"로그인됨"):"";
   btn.textContent=AUTH_USER?"로그아웃":"로그인";
+  const ab=document.getElementById("admin-btn");
+  if(ab) ab.style.display=(AUTH_USER&&IS_ADMIN)?"inline-block":"none";
 }
+let IS_ADMIN=false;
 async function fetchServerTier(){
   // 로그인 사용자의 등급은 서버(entitlements, RLS: 본인 조회만)가 권위 소스
   if(!sb||!AUTH_USER) return null;
   try{
-    const {data,error}=await sb.from("entitlements").select("tier").maybeSingle();
+    const {data,error}=await sb.from("entitlements").select("tier,is_admin").maybeSingle();
     if(error) return null;
+    IS_ADMIN=!!(data&&data.is_admin);
+    renderAuth();
     return data?data.tier:0;
   }catch(e){ return null; }
 }
@@ -1098,6 +1138,29 @@ document.getElementById("promo-apply").onclick=async()=>{
     err.textContent = e==="expired"?"만료된 코드입니다":e==="not_found"?"존재하지 않는 코드입니다":"코드 확인 실패 ("+e+")";
   }
 };
+/* 관리자 등급 설정 */
+(function(){
+  const am=document.getElementById("admin-modal");
+  const sel=document.getElementById("admin-tier");
+  TIERS.forEach(t=>{ const o=document.createElement("option"); o.value=t.level; o.textContent=t.level+" · "+t.name+(t.price?" (₩"+t.price.toLocaleString()+")":""); sel.appendChild(o); });
+  document.getElementById("admin-btn").onclick=()=>{ am.style.display="flex"; document.getElementById("admin-err").textContent=""; };
+  document.getElementById("admin-close").onclick=()=>{ am.style.display="none"; };
+  document.getElementById("admin-apply").onclick=async()=>{
+    const email=document.getElementById("admin-email").value.trim();
+    const tier=Number(sel.value);
+    const err=document.getElementById("admin-err"); err.textContent="";
+    if(!email){ err.textContent="이메일을 입력하세요"; return; }
+    try{
+      const {data}=await sb.auth.getSession();
+      const token=data.session&&data.session.access_token;
+      const r=await fetch("/api/admin-set-tier",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+token},body:JSON.stringify({email,tier})});
+      const j=await r.json();
+      if(!j.ok){ err.textContent={admin_required:"관리자 권한이 없습니다",user_not_found:"해당 이메일의 가입자가 없습니다",invalid_input:"입력값을 확인하세요"}[j.reason]||("실패: "+j.reason); return; }
+      toast("⚙ "+email+" → "+TIERS[tier].name+" 등급 적용 완료");
+      am.style.display="none";
+    }catch(e){ err.textContent="요청 실패 — 잠시 후 다시 시도"; }
+  };
+})();
 const modal=document.getElementById("auth-modal");
 const stepEmail=document.getElementById("auth-step-email"), stepCode=document.getElementById("auth-step-code");
 function openAuth(){ stepEmail.style.display="block"; stepCode.style.display="none";
@@ -1128,8 +1191,7 @@ document.getElementById("auth-send").onclick=async()=>{
 document.getElementById("auth-verify").onclick=async()=>{
   const code=document.getElementById("auth-code").value.trim();
   const err=document.getElementById("auth-err2"); err.textContent="";
-  // Supabase OTP 길이 설정(6~10자리)과 무관하게 동작하도록 유연하게 허용
-  if(!/^\d{6,10}$/.test(code)){ err.textContent="메일로 받은 숫자 인증 코드를 입력해 주세요."; return; }
+  if(!/^\d{6}$/.test(code)){ err.textContent="6자리 숫자 코드를 입력해 주세요."; return; }
   const {data,error}=await sb.auth.verifyOtp({email:pendingEmail,token:code,type:"email"});
   if(error){ err.textContent="인증 실패: "+error.message; return; }
   closeAuth(); setUser(data.user); toast("🎉 로그인 완료: "+(data.user?.email||""));
@@ -1152,6 +1214,46 @@ function bugContext(){
     +"로그인: "+(AUTH_USER?AUTH_USER.email:"게스트")+"\n"
     +"브라우저: "+navigator.userAgent.slice(0,80);
 }
+/* 설문·피드백 */
+(function(){
+  const fm=document.getElementById("fb-modal");
+  const picked={rating:null,ease:null,nps:null};
+  ["rating","ease","nps"].forEach(key=>{
+    const box=document.getElementById("fb-"+key);
+    const min=+box.dataset.min, max=+box.dataset.max;
+    for(let v=min;v<=max;v++){
+      const b=document.createElement("button"); b.textContent=v; b.type="button";
+      b.onclick=()=>{ picked[key]=v; [...box.children].forEach(c=>c.classList.toggle("on",+c.textContent===v)); };
+      box.appendChild(b);
+    }
+  });
+  document.getElementById("fb-btn").onclick=()=>{ fm.style.display="flex"; document.getElementById("fb-err").textContent=""; };
+  document.getElementById("fb-cancel").onclick=()=>{ fm.style.display="none"; };
+  fm.addEventListener("click",e=>{ if(e.target===fm) fm.style.display="none"; });
+  document.getElementById("fb-send").onclick=async()=>{
+    const err=document.getElementById("fb-err"); err.textContent="";
+    const c=CHAPTERS[current];
+    const payload={...picked,
+      best:document.getElementById("fb-best").value,
+      worst:document.getElementById("fb-worst").value,
+      wish:document.getElementById("fb-wish").value,
+      email:document.getElementById("fb-email").value,
+      chapter_ctx:c?(c.id+" "+c.title):"",
+      progress_ctx:"등급 "+TIERS[S.tier].name+" · 클리어 "+S.passed.length+"/"+CHAPTERS.length+" · LV."+petStage()};
+    if(picked.rating==null&&picked.nps==null&&!payload.best.trim()&&!payload.worst.trim()&&!payload.wish.trim()){
+      err.textContent="한 문항 이상 답변해 주세요"; return; }
+    try{
+      const headers={"Content-Type":"application/json"};
+      if(sb&&AUTH_USER){ const {data}=await sb.auth.getSession();
+        if(data.session&&data.session.access_token) headers.Authorization="Bearer "+data.session.access_token; }
+      const r=await fetch("/api/feedback",{method:"POST",headers,body:JSON.stringify(payload)});
+      const j=await r.json();
+      if(!j.ok){ err.textContent="제출 실패 ("+j.reason+") — 잠시 후 다시 시도해 주세요"; return; }
+      fm.style.display="none"; playSfx("event");
+      toast("🙏 소중한 의견 감사합니다! 교안 개선에 반영하겠습니다");
+    }catch(e){ err.textContent="네트워크 오류 — 잠시 후 다시 시도해 주세요"; }
+  };
+})();
 const bugModal=document.getElementById("bug-modal");
 document.getElementById("bug-btn").onclick=()=>{ bugModal.style.display="flex"; document.getElementById("bug-text").focus(); };
 document.getElementById("bug-cancel").onclick=()=>{ bugModal.style.display="none"; };
