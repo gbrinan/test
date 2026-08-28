@@ -1,52 +1,41 @@
-# Tasks: 기능명
-
-<!-- 기능의 한국어 이름을 제목에 포함합니다. -->
+# Tasks: soloforce paperthin 재설계
 
 ## Goal
 
-<!-- 명확한 최종 목표를 작성합니다. -->
+paperthin 5축 철학(아티팩트 신뢰·SSOT·절제·재귀 검증·negatives-as-corpus)을 soloforce의 문서·구조·운영 규약에 이식한다. 동작은 보존한다.
 
 ## Current Phase
-
-<!-- 현재 진행 중인 단계를 표시합니다. 이모지: 🔄 진행 중, ✅ 완료, ⏸️ 대기 -->
 
 🔄 Phase 1: Requirements & Discovery
 
 ## Phases
 
-<!-- 각 단계의 작업을 체크박스로 관리합니다. -->
-
 ### Phase 1: Requirements & Discovery 🔄
 
-- [ ] 요구사항 정의
-- [ ] 기존 코드 분석
-- [ ] 스펙 문서 작성 (spec.md)
+- [x] paperthin 28개 스킬 정독 (findings.md)
+- [x] fbpw 워크플로우 구조 세팅
+- [x] 스킬 설치 (hate, re0-plan, ssotize)
+- [x] 스펙 초안 작성 (spec.md)
+- [ ] /hate — 재설계 계획 공격 (root 반론 + first nail)
 - [ ] 스펙 리뷰 및 승인
 
 ### Phase 2: Planning & Structure ⏸️
 
+- [ ] /re0-plan — 사이클 casebook 개설
+- [ ] /ssotize — README 4종 + 설정값 SSOT 감사 (읽기 전용)
+- [ ] apps/ 생사 판정 기준 정의
 - [ ] 구현 계획 작성 (plan.md)
-- [ ] 기존 코드 상세 분석
-- [ ] 관련 클래스/메서드 존재 여부 확인
 
 ### Phase 3: Implementation ⏸️
 
-- [ ] UI Layer 구현
-- [ ] Application Layer 구현
-- [ ] Domain Layer 구현
-- [ ] Infrastructure Layer 구현 (필요시)
-- [ ] 단계별 컴파일 검증
+- [ ] SSOT 통합 실행 (승인된 계획만)
+- [ ] apps/ 아카이브 이동 (cause of death 기록)
+- [ ] 핵심 문서 re0 패스
+- [ ] 운영 규약 CLAUDE.md 반영
 
 ### Phase 4: Testing ⏸️
 
-- [ ] 전체 빌드 확인
-- [ ] 전체 테스트 통과 확인
-- [ ] 수동 테스트 (가능한 경우)
-
-## Notes
-
-<!-- 필요시 추가 항목을 덧붙입니다. -->
-
-- 진행할 때마다 Phase 상태를 업데이트하세요: ⏸️ 대기 → 🔄 진행 중 → ✅ 완료
-- 결정 사항은 findings.md의 Technical Decisions에 기록하세요.
-- 오류는 findings.md의 Issues Encountered에 기록하세요.
+- [ ] 콜드리드(shower) 검증 — README·온보딩
+- [ ] 동작 보존 확인 (npm start·핵심 플로우)
+- [ ] 성공 기준 4항 점검 (spec.md)
+- [ ] pr 리모트(soloforce2)로 PR 제출
