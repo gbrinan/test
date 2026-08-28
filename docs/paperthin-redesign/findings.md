@@ -112,3 +112,29 @@
 | 문서 역할 | 4종 모두 설치+실행+개요를 각자 서술 | 구조적 중복 | 역할 재정의(개요/사용자/Windows설치/소스배포) 후 사실은 정본 참조 |
 
 - 판정: doc-vs-doc 모순 최소 4건 확정. 단 hate의 root대로, 정본 선정은 **first nail 프로브(라이브 대조) 이후**로 보류.
+
+## 결정: 리포 기준 정본화 (2026-08-28, 사용자 확정)
+
+- first nail의 라이브 대조 프로브는 **명시적 스코프 아웃**. 이 재설계의 진실 기준은 "이 리포가 스스로 주장하는 것"이며, 라이브/형제 리포 정합은 별도 사이클로 이월.
+- 결과적으로 콜드리드 성공 기준의 의미도 좁아진다: "리포 내적 일관성" 검증이지 "운영 현실 일치" 검증이 아님 — spec에 한계로 명기.
+
+## /ssotize 2차 — 정본 지정 및 변이 계획 (승인 대기)
+
+리포 내부 근거로 확정한 ground truth:
+
+| 사실 | 리포 근거 | 정본 판정 |
+| --- | --- | --- |
+| 프로젝트명 | package.json `"name": "my-crew"` | **my-crew** 정본. `teamLGS`(README.md, WINDOWS 로그 경로)·`mycrew-system`(DIST)은 구명칭/채널 잔재 |
+| 실행 방식 | `"start": "tsx src/index.ts"` | 소스 직접 실행 — **개발 리포에서 build는 start의 전제조건 아님**. DIST의 build 필수 서술은 배포 채널 한정으로 재서술 |
+| Node 최소 버전 | engines 필드 **부재** | 정본이 없다가 진짜 문제. **package.json engines 신설**을 정본 홈으로 제안 (값은 인간 결정: tsx 요구 18+ vs DIST 주장 20 LTS → 20 권고) |
+| 포트 기본값 | .env.example + 코드 기본값 | **.env.example** 정본, README들은 "기본 포트(.env 참조)"로 참조화. WINDOWS의 하드코딩 6곳은 예시로서 유지 가능(설치 안내서=운영 문서, detool의 provenance 예외) |
+| ENV 키 목록 | .env.example | **.env.example** 정본. README.md 19행 표는 삭제 대신 "주요 키 발췌 + .env.example 참조"로, DIST 10행 표는 링크로 |
+
+변이 계획 (승인 후 Phase 3에서 soloforce 대상 실행):
+
+1. package.json에 `engines.node` 신설 (값 인간 확정 필요)
+2. README.md: `cd teamLGS` → 실제 클론 디렉토리 서술, Node 버전을 engines 참조로, ENV 표 축약+참조
+3. README-DISTRIBUTION.md: build 단계에 "배포 실행 모드 한정" 조건 명시(또는 실제 dist 실행 스크립트 확인 후 재서술), 디렉토리명 정합
+4. README-WINDOWS.md: `/tmp/teamLGS.log` 경로가 실제 스크립트 산출과 일치하는지 확인 후 정합(스크립트가 정본)
+5. 4종 역할 재정의 헤더: 개요(README) / 사용자(USER) / Windows 설치(WINDOWS) / 소스 배포(DISTRIBUTION), 각 문서 첫머리에 역할 1줄 + 타 문서 링크
+6. 모순 잔여분은 인간 결정 목록으로: Node 버전 값, DIST build 필요성의 실증

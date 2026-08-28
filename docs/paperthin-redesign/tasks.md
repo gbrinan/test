@@ -17,8 +17,8 @@ paperthin 5축 철학(아티팩트 신뢰·SSOT·절제·재귀 검증·negative
 - [x] 스킬 설치 (hate, re0-plan, ssotize)
 - [x] 스펙 초안 작성 (spec.md)
 - [x] /hate — 재설계 계획 공격 (root 반론 + first nail)
-- [ ] first nail 프로브: 사실 5개 라이브 시스템 대조 (repo-vs-world)
-- [ ] 스펙 리뷰 및 승인
+- [x] first nail 프로브 → 스코프 아웃 결정 (리포 기준 정본화, 사용자 확정)
+- [ ] 스펙 리뷰 및 승인 (변이 계획 승인 포함)
 
 ### Phase 2: Planning & Structure ⏸️
 
