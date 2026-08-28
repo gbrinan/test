@@ -29,7 +29,7 @@ paperthin 5축 철학(아티팩트 신뢰·SSOT·절제·재귀 검증·negative
 
 ### Phase 3: Implementation ⏸️
 
-- [ ] SSOT 통합 실행 (승인된 계획만)
+- [x] SSOT 통합 실행 1차 (engines·README 4종, 사본 브랜치 커밋)
 - [ ] apps/ 아카이브 이동 (cause of death 기록)
 - [ ] 핵심 문서 re0 패스
 - [ ] 운영 규약 CLAUDE.md 반영

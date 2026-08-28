@@ -88,3 +88,12 @@
 4. /hate: root(문서 불일치 ≠ 사본, 배포 현실 분기 가능성) + first_nail(라이브 대조 5사실 프로브)
 5. /re0-plan: .re0/iteration/0.1.0-paperthin-redesign/ 개설(DESIGN·WORKFLOW·EVIDENCE)
 6. /ssotize 1차 감사(읽기 전용): README 4종 모순 4건+ 발견, 정본 선정은 프로브 후로 보류
+
+### Phase 3: Implementation 🔄
+
+**작업 내역**:
+
+1. Node 20 승인 → soloforce 사본에 브랜치 claude/paperthin-ssot-pass 생성
+2. 변이 6단계 중 1·2·3·5 실행 (engines, README.md, DIST, 역할 헤더), 4는 절제 보류
+3. soloforce2 빈 리포 확인 — push 시 최초 population임을 기록
+4. 클라우드 세션 병합 요건 기록 (세션 산출물 미도달 상태)
