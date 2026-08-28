@@ -16,13 +16,14 @@ paperthin 5축 철학(아티팩트 신뢰·SSOT·절제·재귀 검증·negative
 - [x] fbpw 워크플로우 구조 세팅
 - [x] 스킬 설치 (hate, re0-plan, ssotize)
 - [x] 스펙 초안 작성 (spec.md)
-- [ ] /hate — 재설계 계획 공격 (root 반론 + first nail)
+- [x] /hate — 재설계 계획 공격 (root 반론 + first nail)
+- [ ] first nail 프로브: 사실 5개 라이브 시스템 대조 (repo-vs-world)
 - [ ] 스펙 리뷰 및 승인
 
 ### Phase 2: Planning & Structure ⏸️
 
-- [ ] /re0-plan — 사이클 casebook 개설
-- [ ] /ssotize — README 4종 + 설정값 SSOT 감사 (읽기 전용)
+- [x] /re0-plan — 사이클 casebook 개설
+- [x] /ssotize — README 4종 SSOT 감사 1차 (읽기 전용, 정본 선정 보류)
 - [ ] apps/ 생사 판정 기준 정의
 - [ ] 구현 계획 작성 (plan.md)
 

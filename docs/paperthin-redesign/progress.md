@@ -75,3 +75,16 @@
 | 3. 목표는?             | [목표 설명]      |
 | 4. 지금까지 배운 것?   | findings.md 참고 |
 | 5. 완료한 작업은?      | 위 내용 참고     |
+
+## Session 2026-08-28
+
+### Phase 1: Requirements & Discovery 🔄
+
+**작업 내역**:
+
+1. paperthin 28개 스킬 전문 정독, findings 기록
+2. fbpw 구조 세팅(templates/, docs/paperthin-redesign/), spec·tasks 초안
+3. 스킬 설치(hate, re0-plan, ssotize) 및 순서대로 실행
+4. /hate: root(문서 불일치 ≠ 사본, 배포 현실 분기 가능성) + first_nail(라이브 대조 5사실 프로브)
+5. /re0-plan: .re0/iteration/0.1.0-paperthin-redesign/ 개설(DESIGN·WORKFLOW·EVIDENCE)
+6. /ssotize 1차 감사(읽기 전용): README 4종 모순 4건+ 발견, 정본 선정은 프로브 후로 보류

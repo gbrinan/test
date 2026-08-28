@@ -92,3 +92,23 @@
 
 - 이 리포에 `templates/`(fbpw 템플릿 원본)와 `docs/<기능명>/` 구조를 채택한다.
 - 첫 기능 폴더는 `docs/paperthin-redesign/`로, soloforce 재설계 계획을 여기서 관리한다.
+
+## /hate 공격 결과 (fresh critic, 격리 실행)
+
+- **root**: "문서 엔트로피가 병"이라는 가정 자체가 의심. soloforce는 라이브 배포본(mycrew-program, 3456)이 개발 트리와 다른 살아있는 시스템 — README 4종의 불일치는 '한 사실의 네 사본'이 아니라 '네 배포 현실에 대한 네 사실'일 수 있다. 이 경우 정본 지정은 화해를 거부한 현실들 중 하나를 편집적 독단으로 승자 선정하는 것. 콜드리드 기준도 "내적으로 일관된 문서"를 검증할 뿐 "실행 중 시스템과의 일치"는 못 잡는다(깨끗한 confabulation이 지저분한 진실보다 잘 통과).
+- **first_nail**: 재작성 전 반나절 프로브 — 정본화 대상 사실 5개(포트, 진입점, 설치 명령, 라이브 체크아웃 위치, '현재' README)를 문서끼리가 아니라 **실행 중 시스템/라이브 리포와 대조**. 2개 이상이 repo-vs-world 불일치면 이 리포 안의 정본화는 픽션의 정본화이므로, out-of-scope였던 라이브/형제 리포 정합을 선행 단계로 재배열해야 한다.
+- 반영: spec Open Questions에 "라이브 대조 프로브"를 승인 게이트 앞 필수 단계로 추가 예정.
+
+## /ssotize 감사 (읽기 전용, 1차 — README 4종)
+
+| 사실 | 발생 위치 | 종류 | 제안 조치 |
+| --- | --- | --- | --- |
+| Node 최소 버전 | README.md "18 이상" / README-DISTRIBUTION.md "20 LTS 이상" | **모순** | reconcile — package.json engines를 정본 후보로, 인간 확인 필요 |
+| 프로젝트 디렉토리명 | README.md `cd teamLGS` / DIST `cd mycrew-system` / WINDOWS 로그 `/tmp/teamLGS.log` | **모순**(구명칭 잔재) | reconcile — 배포 채널별 실명 확인 후 통일 |
+| 실행 명령 | `npm run start`(README·WIN) vs `npm start`(DIST·USER) | 표기 분기 | dedupe — 동작 동일하면 한 표기로 |
+| build 단계 | DIST는 `npm run build` 필수 / README.md 설치 절차엔 없음 | **부분·누락** | reconcile — 실제 필요 여부 라이브 대조 |
+| 포트 3456 | 4종 전부 + .env.example, 하드코딩 다수(WINDOWS 6곳) | 사본 산재 | reference — 정본 1곳(.env.example) + "기본 포트" 참조화 |
+| ENV 키 표 | README.md 19행 / DIST 10행 | 부분 중복 | reference — 정본 1곳, 나머지는 링크 |
+| 문서 역할 | 4종 모두 설치+실행+개요를 각자 서술 | 구조적 중복 | 역할 재정의(개요/사용자/Windows설치/소스배포) 후 사실은 정본 참조 |
+
+- 판정: doc-vs-doc 모순 최소 4건 확정. 단 hate의 root대로, 정본 선정은 **first nail 프로브(라이브 대조) 이후**로 보류.
