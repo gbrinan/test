@@ -30,13 +30,13 @@ paperthin 5축 철학(아티팩트 신뢰·SSOT·절제·재귀 검증·negative
 ### Phase 3: Implementation ⏸️
 
 - [x] SSOT 통합 실행 1차 (engines·README 4종, 사본 브랜치 커밋)
-- [ ] apps/ 아카이브 이동 (cause of death 기록)
+- [x] apps/ 판정: 19개 전원 live (registry 근거), 아카이브 0건
 - [ ] 핵심 문서 re0 패스
-- [ ] 운영 규약 CLAUDE.md 반영
+- [x] 운영 규약 CLAUDE.md 반영
 
 ### Phase 4: Testing ⏸️
 
-- [ ] 콜드리드(shower) 검증 — README·온보딩
+- [x] 콜드리드(shower) 검증 — minor-gaps 4건 수정 완료
 - [ ] 동작 보존 확인 (npm start·핵심 플로우)
 - [ ] 성공 기준 4항 점검 (spec.md)
 - [ ] pr 리모트(soloforce2)로 PR 제출

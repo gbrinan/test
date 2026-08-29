@@ -97,3 +97,13 @@
 2. 변이 6단계 중 1·2·3·5 실행 (engines, README.md, DIST, 역할 헤더), 4는 절제 보류
 3. soloforce2 빈 리포 확인 — push 시 최초 population임을 기록
 4. 클라우드 세션 병합 요건 기록 (세션 산출물 미도달 상태)
+
+## Session 2026-08-29
+
+### Phase 3 완료 · Phase 4 일부
+
+1. apps/ 판정: 19개 전원 src/server/app-registry.ts 등록 확인 → 전원 live, 아카이브 0건(절제)
+2. CLAUDE.md 작업 규약 신설 (paperthin 5축·사이클·SSOT 정본 지정)
+3. clean v0 조립: orphan 브랜치 v0-main 단일 커밋 (soloforce 트리 + SSOT 정합 + 규약 + docs/paperthin-redesign + templates)
+4. shower 콜드리드: minor-gaps → 4건 수정 (실제 리포 URL, cron 문구 정합, 플랫폼 명시, 빌드 불필요)
+5. soloforce2 push: 권한 분류기 차단 — 사용자 직접 실행 필요
