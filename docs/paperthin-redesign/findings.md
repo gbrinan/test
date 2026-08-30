@@ -153,3 +153,10 @@
 ## 결정 (2026-08-30): DIST zip 이름 = soloforce
 
 - 배포 zip 아티팩트 이름을 `soloforce`로 확정 (사용자 결정). README-DISTRIBUTION의 `mycrew-system_*.zip` 표기와 zip 생성 스크립트를 함께 정합해야 함 — 다음 변이 후보, 위험성 점검 후 실행.
+
+## 구조 리뷰 3자 종합 (2026-08-30, hate+shower+직접분석)
+
+- 수렴 지점: **apps/ 폴더 vs app-registry.ts 모순**이 최대 결함. 레지스트리는 하드코딩 fallback(cwd/homedir 혼재) + 리포 밖 경로(~/mycrew-photos, ../mycrew-works/anandara) + ~/mycrew-apps 동적 스캔의 3중 메커니즘 — 앱 로스터가 리포가 아닌 머신 상태의 함수. SSOT 선언과 구현이 반대(hate root).
+- shower 판정 minor-gaps: 실행 진입점·SSOT 포인터는 우수. 블로커: ① 로스터 모순 ② 정체성 수프(soloforce2/my-crew/MyCrew) ③ config·prompts·templates·loops 파편화.
+- 기타: src/server 평면 136파일, tests/ 1파일(검증 표면 부재), 루트 셋업·런처 7종.
+- 권고 순서: first nail(로스터 3중 대조) → 정체성 1문장 → CLAUDE.md 코드 배치 규칙 → server 도메인화(차기 사이클).
