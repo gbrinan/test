@@ -149,3 +149,7 @@
 
 - gbrinan/soloforce2는 **빈 리포**(공개, 브랜치 0) — 재설계 결과의 새 홈. push가 최초 population이 된다.
 - 사용자 요건: claude.ai 클라우드 세션(session_01TijNmt2X66NNJxQDKLrGAT)의 내용도 병합 가능해야 함. 로컬 인덱스·리모트 브랜치 어디에도 아직 없음 → 그 세션에서 브랜치를 push하거나 산출물을 내려받아야 병합 가능. 구조적 대비: fbpw 기능 폴더 단위(docs/<기능명>/)로 세션 산출물을 수용하고, soloforce2에는 브랜치→PR로 합류시키는 규약 채택.
+
+## 결정 (2026-08-30): DIST zip 이름 = soloforce
+
+- 배포 zip 아티팩트 이름을 `soloforce`로 확정 (사용자 결정). README-DISTRIBUTION의 `mycrew-system_*.zip` 표기와 zip 생성 스크립트를 함께 정합해야 함 — 다음 변이 후보, 위험성 점검 후 실행.
