@@ -116,3 +116,9 @@
 2. 데모 키를 demo_key_* 형식으로 정정(비밀 우회 아님, 표기 정정), 단일 orphan 커밋 재조립
 3. soloforce2/main push 성공 (11149e5, clean v0)
 4. 게이트 5종 전부 통과 (EVIDENCE 기록), 사이클 retire → .re0/iteration/completed/
+
+### 라이브 싱크 (2026-08-30, 워크트리 방식)
+
+1. 완전성 점검: soloforce 대비 유실 0 / 라이브 대비 51파일 뒤처짐 확인
+2. git worktree(soloforce2-sync, 브랜치 sync/live-0233)에서 라이브 반영: apps/projects + 신규 14 + 수정 33
+3. 비밀 패턴 스캔 0건 → push → PR #1 오픈 (https://github.com/gbrinan/soloforce2/pull/1)
