@@ -160,3 +160,20 @@
 - shower 판정 minor-gaps: 실행 진입점·SSOT 포인터는 우수. 블로커: ① 로스터 모순 ② 정체성 수프(soloforce2/my-crew/MyCrew) ③ config·prompts·templates·loops 파편화.
 - 기타: src/server 평면 136파일, tests/ 1파일(검증 표면 부재), 루트 셋업·런처 7종.
 - 권고 순서: first nail(로스터 3중 대조) → 정체성 1문장 → CLAUDE.md 코드 배치 규칙 → server 도메인화(차기 사이클).
+
+## first nail 실행 결과 (2026-08-30, 실코드 3중 대조)
+
+방법: app-registry.ts의 실제 startAppRegistry()/listManifests()를 tsx로 실행(재구현 없음). 깨끗한 HOME / 실제 HOME / 라이브 cwd 3조건.
+
+| 조건 | 해석된 로스터 |
+| --- | --- |
+| 깨끗한 체크아웃(빈 HOME) | 20개 — 전부 리포 apps/ 유래 |
+| 실제 HOME | 20개 — 위와 동일 |
+| 라이브 cwd(C:/mycrew/mycrew-program) | **21개** — +anandara (../mycrew-works에서) |
+
+판정: hate root **부분 기각·부분 확정**.
+- 기각: "로스터가 머신 상태의 함수라 리포가 답을 못 준다" → 리포 코어는 어느 환경에서든 20/20 동일 해석. 리포는 자기 앱에 대해 자족적.
+- 확정: 확장점(../mycrew-works, ~/mycrew-apps, ~/mycrew-photos fallback)은 머신 의존 **가산**. 라이브에서만 anandara 등장 — 이 의미론(코어=리포, 확장=호스트 가산)이 코드에만 숨어 있고 문서에 없음.
+- 부수 발견: 앱 id ≠ 폴더명 2건 (apps/isenssign→id "sign", apps/mymovie→id "movie").
+
+후속 조치 후보: ① CLAUDE.md에 "로스터 의미론: 리포 코어 20 + 호스트 확장(선언적 목록)" 명문화 ② ../mycrew-works 하드코딩을 설정 파일로 이전 ③ id·폴더명 정합은 파괴적이라 보류(negatives 기록만).
