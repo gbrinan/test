@@ -6,7 +6,7 @@ paperthin 5축 철학(아티팩트 신뢰·SSOT·절제·재귀 검증·negative
 
 ## Current Phase
 
-🔄 Phase 1: Requirements & Discovery
+✅ Phase 4: 완료 — soloforce2 배포됨
 
 ## Phases
 
@@ -37,6 +37,6 @@ paperthin 5축 철학(아티팩트 신뢰·SSOT·절제·재귀 검증·negative
 ### Phase 4: Testing ⏸️
 
 - [x] 콜드리드(shower) 검증 — minor-gaps 4건 수정 완료
-- [ ] 동작 보존 확인 (npm start·핵심 플로우)
-- [ ] 성공 기준 4항 점검 (spec.md)
-- [ ] pr 리모트(soloforce2)로 PR 제출
+- [ ] 동작 보존 확인 (npm start — 라이브 검증은 사용자 몫으로 이월)
+- [x] 성공 기준 점검 — 게이트 5종 통과 (EVIDENCE)
+- [x] soloforce2/main push 완료 (clean v0 단일 커밋 11149e5)

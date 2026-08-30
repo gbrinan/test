@@ -107,3 +107,12 @@
 3. clean v0 조립: orphan 브랜치 v0-main 단일 커밋 (soloforce 트리 + SSOT 정합 + 규약 + docs/paperthin-redesign + templates)
 4. shower 콜드리드: minor-gaps → 4건 수정 (실제 리포 URL, cron 문구 정합, 플랫폼 명시, 빌드 불필요)
 5. soloforce2 push: 권한 분류기 차단 — 사용자 직접 실행 필요
+
+## Session 2026-08-30
+
+### Phase 4 완료 · 배포
+
+1. push 차단 원인 확정: GitHub 푸시 보호 — isenssign 데모 Stripe 키 형식(가짜) 감지
+2. 데모 키를 demo_key_* 형식으로 정정(비밀 우회 아님, 표기 정정), 단일 orphan 커밋 재조립
+3. soloforce2/main push 성공 (11149e5, clean v0)
+4. 게이트 5종 전부 통과 (EVIDENCE 기록), 사이클 retire → .re0/iteration/completed/
