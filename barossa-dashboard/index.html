@@ -15,7 +15,8 @@
   --feedgas:#5b4fc4; --lng:#2a78d6; --cond:#d4581f; --brent:#0f8b8c; --jkm:#b1348a;
   --late:#c62f2f; --late-bg:#fde8e8; --d7:#9a6200; --d7-bg:#fff2d6; --d30:#1d5fb8; --d30-bg:#e3eefc;
   --done:#1d7a3a; --done-bg:#e2f4e7; --plan:#4a5068; --plan-bg:#eef0f6; --rule:#6b4fa8; --rule-bg:#efeafa;
-  --santos:#1f8a70; --sk:#d6342c; --jera:#e08a00; --other:#8a90a6;
+  --series:#2a78d6; --context:#9a9db0; --santos:#1baf7a; --sk:#2a78d6; --jera:#eb6834; --other:#8a90a6;
+  --m-late:#d03b3b; --m-d7:#fab219; --m-d30:#5a86cf; --m-plan:#a3a8ba; --m-done:#0ca30c; --m-miss:#898781; --miss:#55586a; --miss-bg:#ececef;
   --shadow:0 1px 2px rgba(20,24,50,.05), 0 4px 16px -8px rgba(20,24,50,.14);
 }
 @media (prefers-color-scheme: dark){
@@ -27,7 +28,8 @@
     --feedgas:#9d93f0; --lng:#5ea3f0; --cond:#f0814e; --brent:#3cc3c4; --jkm:#e877bf;
     --late:#ff8a8a; --late-bg:#3d1c22; --d7:#ffc85a; --d7-bg:#3a2e14; --d30:#8cbcff; --d30-bg:#1b2c4a;
     --done:#7ad99a; --done-bg:#163325; --plan:#b9bfd6; --plan-bg:#262b44; --rule:#c3aef5; --rule-bg:#2b2346;
-    --santos:#4cc7a4; --sk:#ff7a72; --jera:#ffb347; --other:#9aa0b8;
+    --series:#3987e5; --context:#6f7590; --santos:#199e70; --sk:#3987e5; --jera:#d95926; --other:#9aa0b8;
+    --m-late:#d03b3b; --m-d7:#fab219; --m-d30:#8cb4f0; --m-plan:#6c7290; --m-done:#0ca30c; --m-miss:#898781; --miss:#c3c2b7; --miss-bg:#2c2f3a;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px -10px rgba(0,0,0,.6);
   }
 }
@@ -39,7 +41,8 @@
   --feedgas:#9d93f0; --lng:#5ea3f0; --cond:#f0814e; --brent:#3cc3c4; --jkm:#e877bf;
   --late:#ff8a8a; --late-bg:#3d1c22; --d7:#ffc85a; --d7-bg:#3a2e14; --d30:#8cbcff; --d30-bg:#1b2c4a;
   --done:#7ad99a; --done-bg:#163325; --plan:#b9bfd6; --plan-bg:#262b44; --rule:#c3aef5; --rule-bg:#2b2346;
-  --santos:#4cc7a4; --sk:#ff7a72; --jera:#ffb347; --other:#9aa0b8;
+  --series:#3987e5; --context:#6f7590; --santos:#199e70; --sk:#3987e5; --jera:#d95926; --other:#9aa0b8;
+    --m-late:#d03b3b; --m-d7:#fab219; --m-d30:#8cb4f0; --m-plan:#6c7290; --m-done:#0ca30c; --m-miss:#898781; --miss:#c3c2b7; --miss-bg:#2c2f3a;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px -10px rgba(0,0,0,.6);
 }
 *{box-sizing:border-box}
@@ -101,11 +104,25 @@ tr.flash td{animation:flash 2s ease}
 tr.sds td{background:color-mix(in srgb,var(--lng) 8%,var(--card))}
 tr.sds td:first-child{box-shadow:inset 3px 0 0 var(--lng)}
 .pill{display:inline-block;padding:1px 8px;border-radius:100px;font-size:11.5px;font-weight:700;white-space:nowrap}
-.lifter{color:#fff}
-.lifter.santos{background:var(--santos)}.lifter.sk{background:var(--sk)}.lifter.jera{background:var(--jera)}.lifter.other{background:var(--other)}
-:root[data-theme="dark"] .lifter,:root:not([data-theme="light"]) .lifter{color:#fff}
+/* Lifter: 중립 pill + 색 점 (글자는 텍스트 색) */
+.lifter{background:var(--surface);color:var(--text)}
+.ldot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:0}
+.ldot.santos{background:var(--santos)}.ldot.sk{background:var(--sk)}.ldot.jera{background:var(--jera)}.ldot.other{background:var(--other)}
 .st-late{background:var(--late-bg);color:var(--late)}.st-d7{background:var(--d7-bg);color:var(--d7)}.st-d30{background:var(--d30-bg);color:var(--d30)}
 .st-done{background:var(--done-bg);color:var(--done)}.st-plan{background:var(--plan-bg);color:var(--plan)}.st-rule{background:var(--rule-bg);color:var(--rule)}
+.st-miss{background:var(--miss-bg);color:var(--miss)}
+.sico{width:10px;height:10px;vertical-align:-1px;margin-right:4px;overflow:visible}
+/* 마감 타임라인 */
+.tl{margin:0 0 10px}
+.tl svg{display:block;width:100%;height:auto;overflow:visible}
+.tl .hit{cursor:default}
+.rulestrip{font-size:12px;color:var(--text2);background:var(--surface);border-radius:8px;padding:6px 10px;margin:0 0 10px}
+.rulestrip b{color:var(--text)}
+/* 달성률 막대 */
+.ach{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end}
+.ach .bar{position:relative;width:84px;height:8px;background:var(--grid);border-radius:0 4px 4px 0}
+.ach .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--series);border-radius:0 4px 4px 0}
+.ach .bar b{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--text2)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .chip{border:1px solid var(--border);border-radius:100px;padding:3px 10px;font-size:12px;font-weight:700;background:var(--card)}
 .chip[aria-pressed=true]{outline:2px solid var(--brand);outline-offset:1px}
@@ -118,7 +135,15 @@ tr.sds td:first-child{box-shadow:inset 3px 0 0 var(--lng)}
 .chart-legend{display:flex;gap:12px;font-size:11.5px;color:var(--muted);margin-top:4px;flex-wrap:wrap}
 .chart-legend i{display:inline-block;width:16px;height:0;border-top:2px solid currentColor;vertical-align:middle;margin-right:4px}
 .chart-legend i.dash{border-top-style:dashed}
-#tip{position:fixed;pointer-events:none;z-index:100;background:var(--text);color:var(--card);font-size:12px;padding:5px 8px;border-radius:6px;white-space:nowrap;display:none;font-variant-numeric:tabular-nums}
+.chart-legend i.thin{border-top-width:1px}
+.chart-legend i.dot{border-top-style:dotted}
+.chart-legend .tri{display:inline-block;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:7px solid var(--text2);margin-right:4px}
+.chart-flag{font-size:12px;color:var(--late);margin:4px 0 0;font-weight:600}
+#tip{position:fixed;pointer-events:none;z-index:100;background:var(--card);color:var(--text2);border:1px solid var(--border);box-shadow:var(--shadow);font-size:12px;padding:6px 9px;border-radius:8px;white-space:nowrap;display:none;font-variant-numeric:tabular-nums}
+#tip .tr{display:flex;align-items:center;gap:6px}
+#tip .tr b{color:var(--text)}
+#tip .k{display:inline-block;width:12px;border-top:2px solid}
+#tip .hd{color:var(--muted);margin-bottom:2px}
 .note{font-size:12px;color:var(--muted);margin:6px 0 0}
 .hdrcard{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));margin-bottom:12px}
 .hdrcard div{background:var(--surface);border-radius:8px;padding:8px 10px}
@@ -309,12 +334,18 @@ const M = (() => {
       if (a) for (let r = a.r + 1; r <= a.r + 2 && !u; r++) for (let c = a.c; c <= a.c + 3; c++) if (norm(at(fg, r, c)) === 'mmscf') { u = { r, c }; break; }
       if (!a || !dt || !u) ctx.warn('Feed Gas', !dt ? 'Date' : !a ? 'Actual' : 'Actual → MMscf', '헤더를 찾지 못함');
       else {
-        const rows = readDated(fg, u.r + 1, dt.c, { v: u.c });
-        m.feedGas = rows.map(x => ({ d: x.d, v: x.v.v }));
-        m.feedGasCol = addr(u.r, u.c);
+        // Nomination: 같은 헤더 행, Actual 왼쪽 → 단위행 MMscf
+        const n = findText(fg, 'nomination', { r0: a.r, r1: a.r, c1: a.c - 1 });
+        let un = null;
+        if (n) for (let c = n.c; c < a.c && !un; c++) if (norm(at(fg, u.r, c)) === 'mmscf') un = { r: u.r, c };
+        if (!un) ctx.warn('Feed Gas', 'Nomination → MMscf', '헤더를 찾지 못해 Nomination 선을 생략');
+        const rows = readDated(fg, u.r + 1, dt.c, un ? { v: u.c, n: un.c } : { v: u.c });
+        m.feedGas = rows.map(x => ({ d: x.d, v: x.v.v, n: un ? x.v.n : null }));
+        m.feedGasCol = addr(u.r, u.c); m.nomCol = un ? addr(un.r, un.c) : null;
         const act = rows.filter(x => x.v.v != null);
         m.lastActual = act.length ? act[act.length - 1].d : null;
         summarizeErrs(ctx, 'Feed Gas', 'Actual MMscf', rows, 'v', m.lastActual);
+        if (un) summarizeErrs(ctx, 'Feed Gas', 'Nomination MMscf', rows, 'n', m.lastActual);
       }
     }
     if (m.lastActual == null) ctx.warn('Feed Gas', 'Actual MMscf', '최신 실적일을 정하지 못해 실적/예측 구분을 기준일 전날로 대신합니다.');
@@ -348,10 +379,32 @@ const M = (() => {
       summarizeErrs(ctx, name, 'Production', rows, 'p', m.lastActual);
       summarizeErrs(ctx, name, 'Inventory', rows, 'i', m.lastActual);
       m[key + 'Hdr'] = `${name}!${addr(h.r, h.c)}`;
+      // 기준선: 헤더 위 블록(날짜열과 같은 열)의 라벨 → 오른쪽 첫 숫자. "LC 기준" 열이 있으면 그 값 우선
+      const lc = find(g, s => s === 'lc 기준', { r1: h.r - 1 });
+      m[key + 'Ref'] = [['working capacity', 'Working Capacity'], ['tank top', 'Tank Top'], ['unpumpable', 'Unpumpable']].map(([t, label]) => {
+        const c = find(g, (s, r, cc) => cc === h.c && s === t, { r1: h.r - 1 });
+        if (!c) { ctx.warn(name, label, '라벨을 찾지 못해 기준선을 생략'); return null; }
+        const nums = []; for (let k = c.c + 1; k < c.c + 8; k++) { const v = at(g, c.r, k); if (isNum(v)) nums.push({ k, v }); else if (isErr(v)) ctx.warn(name, label, `${addr(c.r, k)} ${v.code}`); }
+        const pick = (lc && nums.find(x => x.k === lc.c)) || nums[0];
+        if (!pick) { ctx.warn(name, label, '값이 숫자가 아니어서 기준선을 생략'); return null; }
+        const isLc = lc && pick.k === lc.c;
+        if (nums.length > 1) ctx.info(name, label, `같은 행에 값 ${nums.length}개(${nums.map(x => addr(c.r, x.k) + '=' + x.v.toLocaleString('en-US')).join(', ')}) — ${isLc ? '"LC 기준" 열' : '첫 값'} 사용`);
+        return { key: t, label: label + (isLc ? ' (LC 기준)' : ''), v: pick.v };
+      }).filter(Boolean);
       return rows.map(x => ({ d: x.d, p: x.v.p, i: x.v.i }));
     };
     m.lng = ledger('Ledger_ADP 및 SDS', 'lng');
     m.cond = ledger('Condensate Ledger', 'cond');
+    // 예측 재고가 0 미만 / Tank Top(없으면 Working Capacity) 초과인 구간 — 선은 자르지 않고 표시만
+    const flags = (rows, refs, name) => {
+      const lim = (refs || []).find(r => r.key === 'tank top') || (refs || []).find(r => r.key === 'working capacity');
+      const out = [], add = (kind, d) => { const l = out[out.length - 1]; if (l && l.kind === kind && l.d1 === d - 1) l.d1 = d; else out.push({ kind, d0: d, d1: d }); };
+      rows.forEach(x => { if (m.lastActual == null || x.d <= m.lastActual || x.i == null) return; if (x.i < 0) add('neg', x.d); else if (lim && x.i > lim.v) add('over', x.d); });
+      out.forEach(f => { f.text = f.kind === 'neg' ? '예측 재고가 0 미만' : `예측 재고가 ${lim.label} 초과`; ctx.info(name, 'Inventory', `${f.text}: ${iso(f.d0)} ~ ${iso(f.d1)} (선은 그대로 표시)`); });
+      return out;
+    };
+    m.lngFlags = flags(m.lng, m.lngRef, 'Ledger_ADP 및 SDS');
+    m.condFlags = flags(m.cond, m.condRef, 'Condensate Ledger');
 
     // LNG Lifting (ADP 및 SDS)
     m.lngLift = { slots: [] };
@@ -581,10 +634,12 @@ const M = (() => {
     if (hit(['ADP Process', 'Annual', 'Monthly', 'Cargo', '일정']) >= 3) return 'check';
     return null;
   }
-  function status(it, ref){
+  // pastCargo: Lifting 창이 기준일 전에 끝난 카고 → 지난 마감 + Actual 공란 = 실적 미입력 (지연 아님)
+  function status(it, ref, pastCargo){
     if (it.actualDay != null || it.actualText) return { k: 'done', label: '완료' };
     if (it.dueDay != null) {
       const diff = it.dueDay - ref;
+      if (diff < 0 && pastCargo) return { k: 'miss', label: '실적 미입력', diff };
       if (diff < 0) return { k: 'late', label: '지연', diff };
       if (diff <= 7) return { k: 'd7', label: 'D-7 임박', diff };
       if (diff <= 30) return { k: 'd30', label: 'D-30', diff };
@@ -603,14 +658,29 @@ const $ = s => document.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = (v, dec = 0) => M.isNum(v) ? v.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec }) : '–';
 const dday = diff => diff == null ? '' : diff === 0 ? 'D-Day' : diff > 0 ? `D-${diff}` : `D+${-diff}`;
-const STATUS = [['late', '지연'], ['d7', 'D-7 임박'], ['d30', 'D-30'], ['plan', '예정'], ['rule', '수시/규칙'], ['done', '완료']];
+const STATUS = [['late', '지연'], ['d7', 'D-7 임박'], ['d30', 'D-30'], ['plan', '예정'], ['miss', '실적 미입력'], ['rule', '수시/규칙'], ['done', '완료']];
+// 상태별 모양(색과 함께 쓰는 보조 표식) — 타임라인 점과 pill 아이콘이 같은 모양
+function shape(k, x, y, r, extra = ''){
+  const c = `var(--m-${k === 'rule' ? 'plan' : k})`, ring = `stroke="var(--card)" stroke-width="2" paint-order="stroke"`;
+  switch (k) {
+    case 'late': return `<path d="M${x},${y - r * 1.15}L${x + r * 1.1},${y + r * .8}L${x - r * 1.1},${y + r * .8}Z" fill="${c}" ${ring} ${extra}/>`;
+    case 'd7': return `<path d="M${x},${y - r * 1.2}L${x + r * 1.2},${y}L${x},${y + r * 1.2}L${x - r * 1.2},${y}Z" fill="${c}" ${ring} ${extra}/>`;
+    case 'done': return `<rect x="${x - r * .9}" y="${y - r * .9}" width="${r * 1.8}" height="${r * 1.8}" rx="1.5" fill="${c}" ${ring} ${extra}/>`;
+    case 'plan': case 'rule': return `<circle cx="${x}" cy="${y}" r="${r * .85}" fill="var(--card)" stroke="${c}" stroke-width="2" ${extra}/>`;
+    case 'miss': return `<rect x="${x - r * .8}" y="${y - r * .8}" width="${r * 1.6}" height="${r * 1.6}" rx="1" fill="var(--card)" stroke="${c}" stroke-width="2" ${extra}/>`;
+    default: return `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" ${ring} ${extra}/>`;
+  }
+}
+const sico = k => `<svg class="sico" viewBox="0 0 10 10" aria-hidden="true">${shape(k, 5, 5, 4)}</svg>`;
 const TABS = [['prod', 'Production Overview'], ['check', 'Periodical Checklist'], ['cargo', 'Cargo Operation (LNG)']];
 
 const S = { ledger: null, check: null, ref: M.todayDay(), tab: 'prod', cy: null, sheet: 'ADP Process', year: null, cargo: null, filters: {}, alerted: false };
 
 function lifterKey(v){ const n = M.norm(v); return n.includes('santos') ? 'santos' : (n === 'sk' || n.startsWith('sk ') || n.includes('prism')) ? 'sk' : n.includes('jera') ? 'jera' : 'other'; }
-const lifterPill = v => M.isEmpty(v) ? '–' : `<span class="pill lifter ${lifterKey(v)}">${esc(v)}</span>`;
-const statusPill = st => `<span class="pill st-${st.k}">${esc(st.label)}</span>`;
+const lifterPill = v => M.isEmpty(v) ? '–' : `<span class="pill lifter"><i class="ldot ${lifterKey(v)}"></i>${esc(v)}</span>`;
+const statusPill = st => `<span class="pill st-${st.k}">${sico(st.k)}${esc(st.label)}</span>`;
+// 카고 Lifting 창(끝, 없으면 시작)이 기준일 전이면 지난 카고
+const cargoPast = s => s && (s.end ?? s.start) != null && (s.end ?? s.start) < S.ref;
 // data-v: 엑셀 내보내기용 원값
 const td = (html, v, numeric) => `<td${numeric ? ' class="num" data-t="n"' : ' data-t="s"'} data-v="${esc(v ?? '')}">${html}</td>`;
 const tdNum = (v, dec) => M.isNum(v) ? td(fmt(v, dec), v, true) : `<td class="num" data-v="">–</td>`;
@@ -632,47 +702,87 @@ document.addEventListener('keydown', e => {
 });
 
 // ---------- 차트 (SVG) ----------
+// o: {label, series:[{label,color,pts:[{d,v}],split,area}], boundary, refDay, unit, dec, tight, h,
+//     refs:[{key,label,v}], markers:[{d,text}], flags:[{d0,d1,text}], direct}
 const charts = [];
+const REF_DASH = { 'working capacity': '', 'tank top': '4 3', 'unpumpable': '1 3' };
+const HALO = 'stroke="var(--card)" stroke-width="3" paint-order="stroke"';
 function lineChart(o){
-  const pts = o.points.filter(p => M.isNum(p.v));
-  if (!pts.length) return `<div class="placeholder">데이터 없음</div>`;
-  const W = 400, H = o.h || 170, L = 40, R = 10, T = 12, B = 22;
-  const d0 = pts[0].d, d1 = Math.max(pts[pts.length - 1].d, d0 + 1);
-  let lo = Math.min(0, ...pts.map(p => p.v)), hi = Math.max(...pts.map(p => p.v));
-  if (o.tight) { lo = Math.min(...pts.map(p => p.v)); const pad = (hi - lo) * .1 || 1; lo -= pad; hi += pad; }
+  const series = o.series.map(sr => ({ ...sr, pts: sr.pts.filter(p => M.isNum(p.v)) })).filter(sr => sr.pts.length);
+  if (!series.length) return `<div class="placeholder">데이터 없음</div>`;
+  const all = series.flatMap(sr => sr.pts), refs = o.refs || [];
+  const W = 400, H = o.h || 170, L = 40, R = 10, T = 12, B = o.markers ? 34 : 22, PB = H - B;
+  const d0 = Math.min(...all.map(p => p.d)), d1 = Math.max(...all.map(p => p.d), d0 + 1);
+  const vs = all.map(p => p.v).concat(refs.map(r => r.v));
+  let lo = Math.min(0, ...vs), hi = Math.max(...vs);
+  if (o.tight) { lo = Math.min(...vs); const pad = (hi - lo) * .1 || 1; lo -= pad; hi += pad; }
   if (hi === lo) hi = lo + 1;
   const step = niceStep((hi - lo) / 4); lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
-  const x = d => L + (d - d0) / (d1 - d0) * (W - L - R), y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+  const x = d => L + (d - d0) / (d1 - d0) * (W - L - R), y = v => T + (hi - v) / (hi - lo) * (PB - T);
   const bnd = o.boundary ?? Infinity;
-  const act = pts.filter(p => p.d <= bnd), fc = pts.filter(p => p.d > bnd);
   const path = arr => arr.map((p, k) => `${k ? 'L' : 'M'}${x(p.d).toFixed(1)},${y(p.v).toFixed(1)}`).join('');
   let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.label)}">`;
+  (o.flags || []).forEach(f => { const a = Math.max(f.d0, d0), b = Math.min(f.d1, d1); if (a <= b) s += `<rect x="${x(a) - 1}" y="${T}" width="${Math.max(2, x(b) - x(a) + 2)}" height="${PB - T}" fill="var(--m-late)" opacity=".1"/>`; });
   for (let v = lo; v <= hi + step / 2; v += step) s += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end" font-size="10" fill="var(--muted)">${esc(shortNum(v))}</text>`;
-  const ticks = 5; for (let k = 0; k <= ticks; k++) { const d = Math.round(d0 + (d1 - d0) * k / ticks); s += `<text x="${x(d)}" y="${H - 8}" text-anchor="${k === 0 ? 'start' : k === ticks ? 'end' : 'middle'}" font-size="10" fill="var(--muted)">${M.iso(d).slice(5)}</text>`; }
-  if (o.area && act.length) s += `<path d="${path(act)}L${x(act[act.length - 1].d)},${y(Math.max(lo, 0))}L${x(act[0].d)},${y(Math.max(lo, 0))}Z" fill="${o.color}" opacity=".12"/>`;
-  if (act.length) s += `<path d="${path(act)}" fill="none" stroke="${o.color}" stroke-width="2"/>`;
-  if (fc.length) s += `<path d="${path(act.length ? [act[act.length - 1], ...fc] : fc)}" fill="none" stroke="${o.color}" stroke-width="2" stroke-dasharray="5 4" opacity=".8"/>`;
-  if (o.refDay != null && o.refDay >= d0 && o.refDay <= d1) s += `<line x1="${x(o.refDay)}" x2="${x(o.refDay)}" y1="${T}" y2="${H - B}" stroke="var(--axis)" stroke-dasharray="2 3"/><text x="${x(o.refDay) + 3}" y="${T + 9}" font-size="10" fill="var(--muted)">기준일</text>`;
-  if (act.length) { const p = act[act.length - 1]; s += `<circle cx="${x(p.d)}" cy="${y(p.v)}" r="4" fill="${o.color}" stroke="var(--card)" stroke-width="2"/><text x="${Math.min(x(p.d), W - R - 40)}" y="${y(p.v) - 9}" font-size="10" font-weight="700" fill="${o.color}">Latest</text>`; }
-  s += `<line class="guide" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--axis)" visibility="hidden"/><rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/></svg>`;
-  const id = charts.length; charts.push({ pts, x, W, L, R, d0, d1, bnd, unit: o.unit, dec: o.dec ?? 0 });
+  const ticks = 5; for (let k = 0; k <= ticks; k++) { const d = Math.round(d0 + (d1 - d0) * k / ticks); s += `<text x="${x(d)}" y="${H - 6}" text-anchor="${k === 0 ? 'start' : k === ticks ? 'end' : 'middle'}" font-size="10" fill="var(--muted)">${M.iso(d).slice(5)}</text>`; }
+  refs.forEach(r => { s += `<line x1="${L}" x2="${W - R}" y1="${y(r.v)}" y2="${y(r.v)}" stroke="var(--text2)" stroke-width="1"${REF_DASH[r.key] ? ` stroke-dasharray="${REF_DASH[r.key]}"` : ''} opacity=".8"/>`; });
+  series.forEach(sr => {
+    const act = sr.split ? sr.pts.filter(p => p.d <= bnd) : sr.pts, fc = sr.split ? sr.pts.filter(p => p.d > bnd) : [];
+    if (sr.area && act.length) s += `<path d="${path(act)}L${x(act[act.length - 1].d)},${y(Math.max(lo, 0))}L${x(act[0].d)},${y(Math.max(lo, 0))}Z" fill="${sr.color}" opacity=".1"/>`;
+    if (act.length) s += `<path d="${path(act)}" fill="none" stroke="${sr.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    if (fc.length) s += `<path d="${path(act.length ? [act[act.length - 1], ...fc] : fc)}" fill="none" stroke="${sr.color}" stroke-width="2" stroke-dasharray="5 4"/>`;
+  });
+  // 기준선 라벨: 11px 안쪽으로 붙은 선은 한 줄로 묶음 (오른쪽 끝, 배경 halo)
+  const groups = [];
+  [...refs].sort((a, b) => b.v - a.v).forEach(r => { const g = groups[groups.length - 1], nm = r.label.replace(/ \(.*\)$/, ''); if (g && y(r.v) - y(g.v) < 11) g.names.push(nm); else groups.push({ v: r.v, names: [nm] }); });
+  groups.forEach(g => { s += `<text x="${W - R - 2}" y="${y(g.v) - 3}" text-anchor="end" font-size="9.5" fill="var(--text2)" ${HALO}>${esc(g.names.join(' · '))}</text>`; });
+  if (o.refDay != null && o.refDay >= d0 && o.refDay <= d1) s += `<line x1="${x(o.refDay)}" x2="${x(o.refDay)}" y1="${T}" y2="${PB}" stroke="var(--text2)" stroke-width="1"/><text x="${x(o.refDay) + 3}" y="${refs.length ? PB - 4 : T + 9}" font-size="10" fill="var(--text2)" ${HALO}>기준일</text>`;
+  const lastAct = sr => { const a = sr.pts.filter(p => !sr.split || p.d <= bnd); return a[a.length - 1]; };
+  if (o.direct) {
+    const labs = series.map(sr => ({ sr, p: lastAct(sr) })).filter(l => l.p).map(l => ({ ...l, y: y(l.p.v) })).sort((a, b) => a.y - b.y);
+    labs.forEach((l, k) => { let ty = l.y - 7; if (k && ty - labs[k - 1].ty < 11) ty = l.y + 14; l.ty = ty;
+      s += `<circle cx="${x(l.p.d)}" cy="${l.y}" r="4" fill="${l.sr.color}" stroke="var(--card)" stroke-width="2"/><text x="${x(l.p.d) - 7}" y="${ty}" text-anchor="end" font-size="10" font-weight="700" fill="var(--text)" ${HALO}>${esc(l.sr.label)} ${fmt(l.p.v, o.dec ?? 0)}</text>`; });
+  } else { const p = lastAct(series[0]); if (p) s += `<circle cx="${x(p.d)}" cy="${y(p.v)}" r="4" fill="${series[0].color}" stroke="var(--card)" stroke-width="2"/><text x="${Math.min(x(p.d), W - R - 40)}" y="${y(p.v) - 9}" font-size="10" font-weight="700" fill="var(--text2)" ${HALO}>Latest</text>`; }
+  const mk = (o.markers || []).filter(m => m.d >= d0 && m.d <= d1);
+  mk.forEach(m => { const mx = x(m.d); s += `<line x1="${mx}" x2="${mx}" y1="${PB - 6}" y2="${PB}" stroke="var(--text2)"/><path d="M${mx},${PB + 3}L${mx + 4.5},${PB + 11}L${mx - 4.5},${PB + 11}Z" fill="var(--text2)" stroke="var(--card)" stroke-width="2" paint-order="stroke"/>`; });
+  s += `<line class="guide" x1="0" x2="0" y1="${T}" y2="${PB}" stroke="var(--axis)" visibility="hidden"/><rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T}" fill="transparent"/></svg>`;
+  const dates = [...new Set(all.map(p => p.d))].sort((a, b) => a - b);
+  const id = charts.length;
+  charts.push({ dates, x, W, L, R, d0, d1, bnd, unit: o.unit, dec: o.dec ?? 0, flags: o.flags || [],
+    series: series.map(sr => ({ label: sr.label, color: sr.color, split: sr.split, map: new Map(sr.pts.map(p => [p.d, p.v])) })),
+    markers: mk.reduce((a, m) => (a[m.d] = (a[m.d] || []).concat(m.text), a), {}) });
   return `<div class="chartbox" data-chart="${id}">${s}</div>`;
 }
 function niceStep(raw){ const p = Math.pow(10, Math.floor(Math.log10(raw || 1))), f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
 function shortNum(v){ const a = Math.abs(v); return a >= 1e6 ? (v / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M' : a >= 1e3 ? (v / 1e3).toFixed(a >= 1e4 ? 0 : 1) + 'k' : String(Math.round(v * 100) / 100); }
+// 툴팁: 워크북 문자열은 textContent로만 넣음
+function tipRow(tip, val, label, color, dash){
+  const r = document.createElement('div'); r.className = 'tr';
+  if (color) { const k = document.createElement('span'); k.className = 'k'; k.style.borderTopColor = color; if (dash) k.style.borderTopStyle = 'dashed'; r.append(k); }
+  const b = document.createElement('b'); b.textContent = val; const t = document.createElement('span'); t.textContent = label; r.append(b, t); tip.append(r);
+}
+function placeTip(e){ const tip = $('#tip'); tip.style.display = 'block'; tip.style.left = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8) + 'px'; tip.style.top = Math.max(4, e.clientY - tip.offsetHeight - 10) + 'px'; }
+const timelines = [];
 document.addEventListener('pointermove', e => {
-  const box = e.target.closest && e.target.closest('[data-chart]'), tip = $('#tip');
+  const tip = $('#tip'), box = e.target.closest && e.target.closest('[data-chart]'), tl = e.target.closest && e.target.closest('[data-tl]');
   document.querySelectorAll('.chartbox .guide').forEach(g => { if (!box || !box.contains(g)) g.setAttribute('visibility', 'hidden'); });
+  if (tl) {
+    const [ti, k] = tl.dataset.tl.split(':').map(Number), x = timelines[ti][k];
+    tip.replaceChildren(); const hd = document.createElement('div'); hd.className = 'hd'; hd.textContent = x.when; tip.append(hd);
+    tipRow(tip, x.st.label, x.it.event || '–'); placeTip(e); return;
+  }
   if (!box) { tip.style.display = 'none'; return; }
   const c = charts[+box.dataset.chart], svg = box.querySelector('svg'), rc = svg.getBoundingClientRect();
   const px = (e.clientX - rc.left) / rc.width * c.W;
-  const d = c.d0 + (px - c.L) / (c.W - c.L - c.R) * (c.d1 - c.d0);
-  let best = c.pts[0]; for (const p of c.pts) if (Math.abs(p.d - d) < Math.abs(best.d - d)) best = p;
-  const g = svg.querySelector('.guide'), gx = c.x(best.d); g.setAttribute('x1', gx); g.setAttribute('x2', gx); g.setAttribute('visibility', 'visible');
-  tip.innerHTML = `${M.iso(best.d)} · <b>${fmt(best.v, c.dec)}</b> ${esc(c.unit)}${best.d > c.bnd ? ' (예측)' : c.bnd !== Infinity ? ' (실적)' : ''}`;
-  tip.style.display = 'block';
-  tip.style.left = Math.min(e.clientX + 12, window.innerWidth - tip.offsetWidth - 8) + 'px';
-  tip.style.top = (e.clientY - 34) + 'px';
+  const dd = c.d0 + (px - c.L) / (c.W - c.L - c.R) * (c.d1 - c.d0);
+  let d = c.dates[0]; for (const v of c.dates) if (Math.abs(v - dd) < Math.abs(d - dd)) d = v;
+  const g = svg.querySelector('.guide'), gx = c.x(d); g.setAttribute('x1', gx); g.setAttribute('x2', gx); g.setAttribute('visibility', 'visible');
+  tip.replaceChildren(); const hd = document.createElement('div'); hd.className = 'hd';
+  hd.textContent = M.iso(d) + (c.bnd === Infinity ? '' : d > c.bnd ? ' · 예측' : ' · 실적'); tip.append(hd);
+  c.series.forEach(sr => { const v = sr.map.get(d); if (M.isNum(v)) tipRow(tip, `${fmt(v, c.dec)} ${c.unit}`, sr.label, sr.color, sr.split && d > c.bnd); });
+  (c.markers[d] || []).forEach(t => tipRow(tip, '▲ Lifting', t));
+  c.flags.filter(f => d >= f.d0 && d <= f.d1).forEach(f => tipRow(tip, '⚠', f.text));
+  placeTip(e);
 });
 
 // ---------- Tab 1: Production Overview ----------
@@ -689,8 +799,27 @@ function renderProd(){
   const end = Math.max(B, S.ref) + 30;
   const win = (arr, key) => arr.filter(x => x.d > B - 30 && x.d <= end).map(x => ({ d: x.d, v: x[key] }));
   const fgPts = [...m.feedGas.filter(x => x.d > B - 30 && x.d <= B && x.v != null), ...m.fgForecast.filter(x => x.d > B && x.d <= end)];
-  const chart = (label, pts, color, unit, area) => `<h3>${label}</h3>${lineChart({ label, points: pts, color, unit, area, boundary: B, refDay: S.ref })}`;
-  const legend = `<div class="chart-legend"><span><i></i>실적</span><span><i class="dash"></i>예측</span><span>● Latest = 최신 실적일 ${M.iso(B)}</span></div>`;
+  const nomPts = m.feedGas.filter(x => x.d > B - 30 && x.d <= B).map(x => ({ d: x.d, v: x.n }));
+  const one = (label, pts, unit, extra = {}) => lineChart({ label, unit, boundary: B, refDay: S.ref, series: [{ label, color: 'var(--series)', pts, split: true, area: extra.area }], ...extra });
+  const key = (cls, txt, color) => `<span><i class="${cls}" style="color:${color || 'var(--series)'}"></i>${txt}</span>`;
+  const legend = `<div class="chart-legend">${key('', '실적')}${key('dash', '예측')}<span>● Latest = 최신 실적일 ${M.iso(B)}</span></div>`;
+  const fgChart = lineChart({ label: 'Feed Gas', unit: 'mmscf', dec: 1, boundary: B, refDay: S.ref, direct: true, series: [
+    { label: 'Actual', color: 'var(--series)', pts: fgPts, split: true },
+    { label: 'Nomination', color: 'var(--context)', pts: nomPts, split: false }] });
+  const fgLegend = `<div class="chart-legend">${key('', 'Actual (Gas Export)')}${key('', 'Nomination', 'var(--context)')}${key('dash', '예측 (Forecast 시트)')}</div>`;
+  // 재고: 기준선 + Lifting 표식 + 예측 경고 구간
+  const lngMk = m.lngLift.slots.map(s => ({ d: s.start, text: `${s.slot} · ${M.isEmpty(s.lifter) ? '–' : s.lifter} · ${fmt(s.plan)} cbm` }));
+  const condMk = m.condLift.slots.filter(s => s.start != null).map(s => ({ d: s.start, text: `${s.slot} · ${s.parts.map(p => p.lifter).filter(Boolean).join('/') || '–'} · ${fmt(s.parts.reduce((a, p) => a + (p.plan || 0), 0))} bbl` }));
+  const invNote = (refs, flags, unit) => {
+    const dash = { 'working capacity': 'thin', 'tank top': 'thin dash', 'unpumpable': 'thin dot' };
+    const inWin = flags.filter(f => f.d1 > B - 30 && f.d0 <= end), more = flags.length - inWin.length;
+    const byText = {}; inWin.forEach(f => (byText[f.text] = byText[f.text] || []).push(f.d0 === f.d1 ? M.iso(f.d0).slice(5) : `${M.iso(f.d0).slice(5)}~${M.iso(f.d1).slice(5)}`));
+    return `<div class="chart-legend">${key('', '실적')}${key('dash', '예측')}<span><span class="tri"></span>Lifting</span>${
+      refs.map(r => `<span><i class="${dash[r.key]}" style="color:var(--text2)"></i>${esc(r.label)} ${fmt(r.v)}</span>`).join('')}</div>${
+      Object.entries(byText).map(([t, ds]) => `<p class="chart-flag">⚠ ${esc(t)} (${ds.length}구간): ${ds.join(', ')} — 선은 자르지 않음</p>`).join('')}${
+      more > 0 ? `<p class="note">그래프 범위 밖 경고 구간 ${more}개 — 데이터 점검 참고</p>` : ''}`;
+  };
+  const inv = (label, rows, refs, mk, flags, unit) => `<h3>${label}</h3>${one(label, win(rows, 'i'), unit, { area: true, refs, markers: mk, flags })}${invNote(refs, flags, unit)}`;
 
   const lngRows = m.lngLift.slots.filter(s => s.start >= S.ref);
   const condRows = m.condLift.slots.filter(s => s.start != null && s.start >= S.ref);
@@ -698,7 +827,9 @@ function renderProd(){
   const in90 = iss != null ? m.lngLift.slots.filter(s => s.start >= iss && s.start <= iss + 90).length : null;
 
   const prod = m.prod;
-  const pctCell = v => M.isNum(v) ? td(fmt(v * 100, 1) + '%', v, true) : `<td class="num" data-v="">–</td>`;
+  // 달성률 막대: 0 ~ max(120%, 표 안 최댓값), 100% 눈금. 값이 커도 자르지 않음
+  const pctMax = prod ? Math.max(1.2, ...prod.rows.flatMap(r => r.vals.slice(5)).filter(M.isNum)) : 1.2;
+  const pctCell = v => M.isNum(v) ? td(`<span class="ach"><span class="bar" aria-hidden="true"><i style="width:${Math.max(0, v) / pctMax * 100}%"></i><b style="left:${100 / pctMax}%"></b></span>${fmt(v * 100, 1)}%</span>`, v, true) : `<td class="num" data-v="">–</td>`;
   const prodTable = !prod ? `<div class="placeholder">Operation Daily 표를 찾지 못했습니다 (데이터 점검 참고).</div>` :
     `<div class="tw"><table data-sheet="생산 실적 vs 계획"><thead><tr><th>구분</th><th></th><th class="num">Day (${M.iso(prod.day)})</th><th class="num">MTD 실적</th><th class="num">YTD 실적</th><th class="num">MTD 계획</th><th class="num">YTD 계획</th><th class="num">MTD 달성률</th><th class="num">YTD 달성률</th></tr></thead><tbody>${
       prod.rows.map((r, k) => { const dec = /lng|condensate/i.test(r.group) ? 2 : 1; return `<tr>${tdTxt(k && prod.rows[k - 1].group === r.group ? '' : r.group)}${tdTxt(r.sub)}${r.vals.slice(0, 5).map(v => tdNum(v, dec)).join('')}${r.vals.slice(5).map(pctCell).join('')}</tr>`; }).join('')
@@ -707,7 +838,7 @@ function renderProd(){
   const p = m.price, lastP = key => [...p.daily].reverse().find(x => M.isNum(x[key]));
   const priceKpi = (key, name, unit, color) => { const l = lastP(key); const i = l ? p.daily.indexOf(l) : -1; const prev = i > 0 ? p.daily.slice(0, i).reverse().find(x => M.isNum(x[key])) : null;
     const ch = l && prev ? l[key] - prev[key] : null;
-    return `<div><div class="kpi"><div class="l">${name} 최근값 (${l ? M.iso(l.d) : '–'})</div><div class="v">${fmt(l?.[key], 2)}<small>${unit}</small></div><div class="s">전일 대비 ${ch == null ? '–' : (ch >= 0 ? '+' : '') + fmt(ch, 2)}</div></div>${lineChart({ label: name, points: p.daily.map(x => ({ d: x.d, v: x[key] })), color, unit, tight: true, dec: 2, h: 150 })}</div>`; };
+    return `<div><div class="kpi"><div class="l">${name} 최근값 (${l ? M.iso(l.d) : '–'})</div><div class="v">${fmt(l?.[key], 2)}<small>${unit}</small></div><div class="s">전일 대비 ${ch == null ? '–' : (ch >= 0 ? '+' : '') + fmt(ch, 2)}</div></div>${lineChart({ label: name, unit, tight: true, dec: 2, h: 150, series: [{ label: name, color, pts: p.daily.map(x => ({ d: x.d, v: x[key] })) }] })}</div>`; };
 
   return `
   <section class="card"><h2>Project Status <span class="muted" style="font-size:12px;font-weight:600">· 최신 보고일 ${M.iso(B)} 실적</span></h2>
@@ -721,9 +852,9 @@ function renderProd(){
   </section>
   <section><h2>Production 그래프 <span class="muted" style="font-size:12px;font-weight:600">· 최근 실적 30일 + 예측 (기준일+30일까지)</span></h2>
     <div class="grid g3">
-      <div class="card">${chart('Feed Gas Export (mmscf)', fgPts, 'var(--feedgas)', 'mmscf', true)}${legend}</div>
-      <div class="card">${chart('LNG 생산 (cbm)', win(m.lng, 'p'), 'var(--lng)', 'cbm')}${chart('LNG 재고 (cbm)', win(m.lng, 'i'), 'var(--lng)', 'cbm', true)}${legend}</div>
-      <div class="card">${chart('Condensate 생산 (bbl)', win(m.cond, 'p'), 'var(--cond)', 'bbl')}${chart('Condensate 재고 (bbl)', win(m.cond, 'i'), 'var(--cond)', 'bbl', true)}${legend}</div>
+      <div class="card"><h3>Feed Gas — Nomination vs Actual (mmscf)</h3>${fgChart}${fgLegend}</div>
+      <div class="card"><h3>LNG 생산 (cbm)</h3>${one('LNG 생산', win(m.lng, 'p'), 'cbm')}${legend}${inv('LNG 재고 (cbm)', m.lng, m.lngRef || [], lngMk, m.lngFlags || [], 'cbm')}</div>
+      <div class="card"><h3>Condensate 생산 (bbl)</h3>${one('Condensate 생산', win(m.cond, 'p'), 'bbl')}${legend}${inv('Condensate 재고 (bbl)', m.cond, m.condRef || [], condMk, m.condFlags || [], 'bbl')}</div>
     </div>
   </section>
   <section class="grid g2">
@@ -742,29 +873,72 @@ function renderProd(){
   </section>
   <section class="card"><h2>생산 실적 vs 계획</h2>${prodTable}</section>
   <section class="card"><h2>Brent · JKM</h2>
-    <div class="grid g2">${priceKpi('b', 'Brent', 'US$/bbl', 'var(--brent)')}${priceKpi('j', 'JKM', '$/MMBtu', 'var(--jkm)')}</div>
+    <div class="grid g2">${priceKpi('b', 'Brent', 'US$/bbl', 'var(--series)')}${priceKpi('j', 'JKM', '$/MMBtu', 'var(--series)')}</div>
     ${p.monthly.length ? `<div class="tw" style="margin-top:10px"><table data-sheet="Brent JKM 월평균"><thead><tr><th>월</th><th class="num">Brent 월평균 (US$/bbl)</th><th class="num">JKM 월평균 ($/MMBtu)</th></tr></thead><tbody>${
       p.monthly.map(x => `<tr>${td(M.iso(x.d).slice(0, 7), M.iso(x.d).slice(0, 7))}${tdNum(x.b, 2)}${tdNum(x.j, 2)}</tr>`).join('')}</tbody></table></div>` : ''}
   </section>`;
 }
 
 // ---------- 체크리스트 표 공통 ----------
-function checklistBlock(key, rows, title){
-  const ref = S.ref, list = rows.map(it => ({ it, st: M.status(it, ref) }));
+const dlab = v => v === 0 ? 'D' : v < 0 ? `D${v}` : `D+${v}`;
+// 마감 타임라인: 체크리스트 = 날짜축, 카고 = Lifting 시작일 기준 D-day 축. 날짜 없는 항목은 아래 띠로만
+function timeline(list, opt){
+  const dated = list.filter(x => x.it.dueDay != null), undated = list.filter(x => x.it.dueDay == null);
+  const ti = timelines.length, reg = []; timelines.push(reg);
+  let svg = '';
+  if (dated.length) {
+    const rel = opt.anchor != null, val = x => rel ? x.it.dueDay - opt.anchor : x.it.dueDay, refV = rel ? S.ref - opt.anchor : S.ref;
+    let v0 = Math.min(...dated.map(val)), v1 = Math.max(...dated.map(val));
+    if (rel) { v0 = Math.min(v0, -30); v1 = Math.max(v1, 0); }
+    const refIn = !rel || (refV >= v0 - 20 && refV <= v1 + 20);
+    if (refIn) { v0 = Math.min(v0, refV); v1 = Math.max(v1, refV); }
+    const pad = Math.max(2, (v1 - v0) * .03); v0 -= pad; v1 += pad;
+    const W = Math.min(1100, Math.max(330, ($('#app')?.clientWidth || 800) - 60)), L = 12, R = 12;
+    const x = v => L + (v - v0) / (v1 - v0) * (W - L - R);
+    // 같은 위치(9px 칸)에 겹치면 위로 쌓음, 칸당 최대 6개
+    const stack = {}, pos = dated.map(d => { const px = x(val(d)), b = Math.round(px / 9); stack[b] = (stack[b] || 0) + 1; return { d, px, b, i: stack[b] - 1 }; });
+    const maxS = Math.min(6, Math.max(...Object.values(stack)));
+    const T = 18, base = T + maxS * 12, AX = base + 9, H = AX + 18;
+    svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="마감 타임라인">`;
+    svg += `<line x1="${L}" x2="${W - R}" y1="${AX}" y2="${AX}" stroke="var(--axis)"/>`;
+    const tick = (v, label, strong) => `<line x1="${x(v)}" x2="${x(v)}" y1="${AX}" y2="${AX + 4}" stroke="var(--axis)"/><text x="${x(v)}" y="${AX + 15}" text-anchor="middle" font-size="10.5" fill="var(${strong ? '--text2' : '--muted'})"${strong ? ' font-weight="700"' : ''}>${label}</text>`;
+    if (rel) { const st = (v1 - v0) > 120 ? 30 : (v1 - v0) > 60 ? 15 : 10; for (let v = Math.ceil(v0 / st) * st; v <= v1; v += st) svg += tick(v, v === 0 ? 'D (Lifting)' : dlab(v), v === 0); }
+    else { const a = new Date(v0 * M.DAY), months = []; for (let y = a.getUTCFullYear(), mo = a.getUTCMonth() + 1; ; mo++) { const d = Date.UTC(y, mo, 1) / M.DAY; if (d > v1) break; months.push(d); }
+      const every = Math.ceil(months.length / Math.max(1, Math.floor(W / 70))); months.forEach((d, k) => { if (k % every === 0) svg += tick(d, M.iso(d).slice(0, 7)); }); }
+    if (refIn) svg += `<line x1="${x(refV)}" x2="${x(refV)}" y1="${T - 8}" y2="${AX}" stroke="var(--text2)"/><text x="${x(refV) + 3}" y="${T - 10 + 8}" font-size="10.5" fill="var(--text2)" ${HALO}>기준일</text>`;
+    else svg += `<text x="${refV > v1 ? W - R : L}" y="${T - 4}" text-anchor="${refV > v1 ? 'end' : 'start'}" font-size="10.5" fill="var(--text2)">${refV > v1 ? `기준일 ${dlab(refV)} →` : `← 기준일 ${dlab(refV)}`}</text>`;
+    const over = {};
+    pos.forEach(({ d, px, b, i }) => {
+      if (i >= 6) { over[b] = (over[b] || 0) + 1; return; }
+      const k = reg.length, py = base - i * 12;
+      reg.push({ it: d.it, st: d.st, when: `${M.iso(d.it.dueDay)}${rel ? ` (${dlab(val(d))})` : ''} · 기준일 ${dday(d.it.dueDay - S.ref)}` });
+      svg += `<g class="hit" data-tl="${ti}:${k}">${shape(d.st.k, px, py, 4.5)}<circle cx="${px}" cy="${py}" r="11" fill="transparent"/></g>`;
+    });
+    Object.entries(over).forEach(([b, n]) => { svg += `<text x="${b * 9 + 6}" y="${T - 2}" font-size="10" fill="var(--muted)">+${n}</text>`; });
+    svg = `<div class="tl">${svg}</svg></div>`;
+  }
+  const strip = undated.length ? `<div class="rulestrip">↻ <b>날짜 없는 항목 ${undated.length}건</b> (수시/규칙 등 — 타임라인 제외): ${undated.slice(0, 6).map(x => esc(x.it.event || '–')).join(' · ')}${undated.length > 6 ? ` 외 ${undated.length - 6}건` : ''}</div>` : '';
+  return svg + strip;
+}
+// opt: { pastCargo, anchor(카고 Lifting 시작일) }
+function checklistBlock(key, rows, title, opt = {}){
+  const ref = S.ref, list = rows.map(it => ({ it, st: M.status(it, ref, opt.pastCargo) }));
   const counts = {}; list.forEach(x => counts[x.st.k] = (counts[x.st.k] || 0) + 1);
-  const f = S.filters[key];
+  const f = S.filters[key], shown = list.filter(x => !f || x.st.k === f);
   const open = list.filter(x => x.st.k !== 'done' && x.it.dueDay != null && x.it.dueDay >= ref).sort((a, b) => a.it.dueDay - b.it.dueDay)[0];
-  const lateN = counts.late || 0;
-  return `<div class="chips no-print" role="group" aria-label="상태 필터">
+  const lateN = counts.late || 0, missN = counts.miss || 0;
+  return `<div class="chips no-print" role="group" aria-label="상태 필터 (범례)">
       <button type="button" class="chip" data-filter="${esc(key)}" data-k="" aria-pressed="${!f}">전체 ${list.length}</button>
-      ${STATUS.filter(([k]) => counts[k]).map(([k, l]) => `<button type="button" class="chip st-${k}" data-filter="${esc(key)}" data-k="${k}" aria-pressed="${f === k}">${l} ${counts[k]}</button>`).join('')}
+      ${STATUS.filter(([k]) => counts[k]).map(([k, l]) => `<button type="button" class="chip st-${k}" data-filter="${esc(key)}" data-k="${k}" aria-pressed="${f === k}">${sico(k)}${l} ${counts[k]}</button>`).join('')}
     </div>
-    <p class="nextdue">다음 마감: ${open ? `<b>${M.iso(open.it.dueDay)}</b> (${dday(open.it.dueDay - ref)}) ${esc(open.it.event)}` : '기준일 이후 열린 마감 없음'}${lateN ? ` · <span style="color:var(--late);font-weight:700">지연 ${lateN}건</span>` : ''}</p>
-    <div class="tw"><table data-sheet="${esc(title)}"><thead><tr><th>Contract</th><th>Clauses</th><th>From</th><th>To</th><th>Event</th><th>Items covered</th><th>Due</th><th>Due Date</th><th>Actual</th><th>상태</th></tr></thead><tbody>${
-      list.map(({ it, st }) => `<tr id="${esc(key + '-' + it.r)}"${f && f !== st.k ? ' style="display:none"' : ''}>${tdTxt(it.contract)}${tdWrap(it.clauses)}${tdTxt(it.from)}${tdTxt(it.to)}${tdWrap(it.event)}${
-        td(it.items ? `<div class="items">${esc(it.items)}</div>${it.items.split('\n').length > 2 || it.items.length > 90 ? '<button type="button" class="more" aria-expanded="false">더보기</button>' : ''}` : '–', it.items)}${
-        tdTxt(it.dueRule)}${it.dueDay != null ? tdDay(it.dueDay) : tdTxt(it.dueText)}${it.actualDay != null ? tdDay(it.actualDay) : tdTxt(it.actualText)}${
-        td(statusPill(st) + (st.diff != null && st.k !== 'plan' ? ` <span class="muted">${dday(st.diff)}</span>` : '') + (st.k === 'rule' && (it.dueText || it.dueRule) ? `<div class="muted" style="font-size:11.5px;white-space:normal;max-width:160px">${esc(it.dueText || it.dueRule)}</div>` : ''), st.label)}</tr>`).join('')
+    <p class="nextdue">다음 마감: ${open ? `<b>${M.iso(open.it.dueDay)}</b> (${dday(open.it.dueDay - ref)}) ${esc(open.it.event)}` : '기준일 이후 열린 마감 없음'}${lateN ? ` · <span style="color:var(--late);font-weight:700">지연 ${lateN}건</span>` : ''}${missN ? ` · 실적 미입력 ${missN}건 (Lifting이 끝난 카고 — 알림 제외)` : ''}</p>
+    ${timeline(shown, opt)}
+    <div class="tw"><table data-sheet="${esc(title)}"><thead><tr><th>상태</th><th>Due Date</th><th>D-day</th><th>Event</th><th>Due</th><th>Actual</th><th>Contract</th><th>Clauses</th><th>From</th><th>To</th><th>Items covered</th></tr></thead><tbody>${
+      list.map(({ it, st }) => `<tr id="${esc(key + '-' + it.r)}"${f && f !== st.k ? ' style="display:none"' : ''}>${
+        td(statusPill(st) + (st.k === 'rule' && (it.dueText || it.dueRule) ? `<div class="muted" style="font-size:11.5px;white-space:normal;max-width:160px">${esc(it.dueText || it.dueRule)}</div>` : ''), st.label)}${
+        it.dueDay != null ? tdDay(it.dueDay) : tdTxt(it.dueText)}${tdTxt(it.dueDay != null && st.k !== 'done' ? dday(it.dueDay - ref) : '')}${tdWrap(it.event)}${
+        tdTxt(it.dueRule)}${it.actualDay != null ? tdDay(it.actualDay) : tdTxt(it.actualText)}${tdTxt(it.contract)}${tdWrap(it.clauses)}${tdTxt(it.from)}${tdTxt(it.to)}${
+        td(it.items ? `<div class="items">${esc(it.items)}</div>${it.items.split('\n').length > 2 || it.items.length > 90 ? '<button type="button" class="more" aria-expanded="false">더보기</button>' : ''}` : '–', it.items)}</tr>`).join('')
     }</tbody></table></div>`;
 }
 
@@ -811,7 +985,8 @@ function renderCargo(){
       <div class="hdrcard">${f('Lifting Slot', M.iso(s.start) + (s.end != null ? ' ~ ' + M.iso(s.end) : ''))}${f('Lifter', lifterPill(s.lifter))}${f('LNG Ship', esc(s.ship || '–'))}
         ${f('Lifting Vol. (cbm)', fmt(s.vol))}${f('Planned (MMBtu)', fmt(s.mmbtu))}${f('Cargo Capacity', fmt(s.capacity))}${f('Ship Type', esc(s.shipType || '–'))}${f('Departing Port', esc(s.port || '–'))}
         ${s.actCbm != null || s.actMmbtu != null ? f('Actual (cbm)', fmt(s.actCbm)) + f('Actual (MMBtu)', fmt(s.actMmbtu)) : ''}</div>
-      ${pair ? checklistBlock('cg-' + s.slot.replace(/\W/g, ''), pair.rows, 'Cargo ' + s.slot) : `<div class="placeholder">Cargo 시트에 이 카고의 체크리스트 열이 없습니다.</div>`}</section>`;
+      ${cargoPast(s) ? `<p class="note" style="margin:0 0 8px">Lifting 창이 기준일 전에 끝난 카고입니다 — 지난 마감에 Actual이 비어 있으면 "실적 미입력"으로 표시합니다 (지연 아님, 알림 제외).</p>` : ''}
+      ${pair ? checklistBlock('cg-' + s.slot.replace(/\W/g, ''), pair.rows, 'Cargo ' + s.slot, { pastCargo: cargoPast(s), anchor: s.start }) :`<div class="placeholder">Cargo 시트에 이 카고의 체크리스트 열이 없습니다.</div>`}</section>`;
   }
   return tabBar('mid', years.map(y => [y, y]), S.year, 'year') + tabBar('sub', subs, S.cargo, 'cargo') + body;
 }
@@ -835,12 +1010,12 @@ function renderHistory(g){
 // ---------- 알림 ----------
 function alertItems(){
   const m = S.check?.model; if (!m) return [];
-  const out = [], push = (it, where, nav) => { const st = M.status(it, S.ref); if (st.k === 'late' || st.k === 'd7') out.push({ it, st, where, nav }); };
+  const out = [], push = (it, where, nav, past) => { const st = M.status(it, S.ref, past); if (st.k === 'late' || st.k === 'd7') out.push({ it, st, where, nav }); };
   m.sheets.forEach(s => s.rows.forEach(it => push(it, `${s.cy} · ${s.name}`, { tab: 'check', cy: s.cy, sheet: s.name, row: 'chk-' + s.name.replace(/\W/g, '') + '-' + it.r })));
   if (m.cargo && m.schedule) {
     const yearOf = s => s.start == null ? '날짜 없음' : String(new Date(s.start * M.DAY).getUTCFullYear());
     m.cargo.pairs.forEach(p => { const s = m.schedule.slots.find(x => M.norm(x.slot) === M.norm(p.slot)); if (!s) return;
-      p.rows.forEach(it => push(it, `Cargo ${p.slot}`, { tab: 'cargo', year: yearOf(s), cargo: s.slot, row: 'cg-' + s.slot.replace(/\W/g, '') + '-' + it.r })); });
+      p.rows.forEach(it => push(it, `Cargo ${p.slot}`, { tab: 'cargo', year: yearOf(s), cargo: s.slot, row: 'cg-' + s.slot.replace(/\W/g, '') + '-' + it.r }, cargoPast(s))); });
   }
   return out.sort((a, b) => (a.st.k === b.st.k ? 0 : a.st.k === 'd7' ? -1 : 1) || (a.st.k === 'd7' ? a.it.dueDay - b.it.dueDay : b.it.dueDay - a.it.dueDay));
 }
@@ -864,7 +1039,7 @@ function go(nav){
 
 // ---------- 전체 렌더 ----------
 function render(){
-  charts.length = 0;
+  charts.length = 0; timelines.length = 0;
   const any = S.ledger || S.check;
   $('#loader').hidden = !!any; $('#app').hidden = !any; $('#filebar').hidden = !any;
   $('#filebar').innerHTML = `<span>Ledger: <b>${esc(S.ledger?.name || '미선택')}</b></span><span>체크리스트: <b>${esc(S.check?.name || '미선택')}</b></span>
@@ -944,6 +1119,8 @@ $('#btnExport').onclick = () => {
   });
   XLSX.writeFile(wb, `barossa_${S.tab}_${M.iso(S.ref)}.xlsx`);
 };
+// 타임라인 폭은 화면 폭을 따름 → 크기 바뀌면 다시 그림
+let rsz; window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { if (S.tab !== 'prod') render(); }, 200); });
 render();
 </script>
 </body>

@@ -11,9 +11,9 @@
 ## 읽는 시트·헤더 (헤더 텍스트로 위치를 찾습니다)
 | 탭 | 시트 | 헤더 |
 |---|---|---|
-| Production | Feed Gas | `Date`, `Actual` 아래 단위행 `MMscf` (실적) |
+| Production | Feed Gas | `Date`, `Actual` 아래 단위행 `MMscf` (실적), 같은 헤더 행 `Nomination` 아래 `MMscf` (Nomination 선) |
 | Production | Forecast | `Date`+`Feed Gas` 헤더 블록 중 날짜 행이 가장 많은 블록 (현재 `* Daily Production` 블록) |
-| Production | Ledger_ADP 및 SDS / Condensate Ledger | 같은 행의 `Date`·`Production`·`Inventory` |
+| Production | Ledger_ADP 및 SDS / Condensate Ledger | 같은 행의 `Date`·`Production`·`Inventory`. 재고 기준선은 헤더 위 블록의 `Working Capacity`·`Tank Top`·`Unpumpable` 라벨 오른쪽 값 (`LC 기준` 열이 있으면 그 값) |
 | Production | ADP 및 SDS / LP | `Slot Number`, `Lifting Slot`, `Lifter`, `Cargo Size (Planned_…)`, `Cargo Size (Actual_…)`, `Proposed Vessel`, `Issue`, `last confirmed SDS slot` |
 | Production | Operation Daily | `Barossa & DLNG Production` 표의 `Actual` / `Plan…` / `Actual vs Plan` |
 | Production | BrentnJKM | `날짜`, `Brent가격`, `JKM가격`, `월`, `Brent 월평균`, `JKM 월평균` |
@@ -28,6 +28,10 @@
 
 ## 상태 규칙
 Actual 있음 → 완료 / Due Date < 기준일 → 지연 / 0~7일 → D-7 임박 / 8~30일 → D-30 / 그 이후 → 예정 / Due Date가 날짜가 아님 → 수시/규칙.
+
+카고만 예외: Lifting 창(끝, 없으면 시작)이 기준일 전에 끝난 카고는 지난 마감에 Actual이 비어 있으면 **실적 미입력**(회색)으로 보고, 알림 배너·팝업에서 뺍니다. 상태는 색과 함께 모양 아이콘·글자로 표시합니다.
+
+그래프 보조 표시: 재고 그래프의 ▲는 Lifting 날짜(ADP 및 SDS / LP, 툴팁에 Lifter), 붉은 띠는 예측 재고가 0 미만이거나 Tank Top을 넘는 구간입니다(선은 자르지 않음).
 
 ## 데이터 점검
 시트·헤더가 없거나 셀이 `#REF!`·`#DIV/0!` 같은 오류값이면 값을 지어내지 않고 "–"로 표시한 뒤, 화면 아래 **데이터 점검**에 시트·헤더·사유를 남깁니다.
