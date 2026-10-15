@@ -76,6 +76,9 @@ section{margin-bottom:14px}
 .filebar.drag{border-color:var(--brand);background:var(--brand-soft)}
 .filebar b{font-weight:700}
 .privacy{font-size:12px;color:var(--muted)}
+.sample{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:8px 12px;margin-bottom:12px;border:1.5px dashed var(--brand);border-radius:10px;background:var(--brand-soft);font-size:13px}
+.sample span{color:var(--text2)}
+@media print{.sample:not([hidden]){display:flex!important;border-color:#888;background:none}}
 .loadmsg{font-size:13px;margin-top:8px;color:var(--late)}
 .banner{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--late-bg);color:var(--late);font-weight:600;font-size:13px;margin-bottom:12px}
 .banner .btn{padding:3px 9px;font-size:12px}
@@ -196,8 +199,11 @@ dialog::backdrop{background:rgba(10,12,25,.45)}
     </p>
     <p class="privacy">파일은 이 브라우저 안에서만 읽고, 어디에도 전송·저장하지 않습니다.</p>
     <p class="muted" style="font-size:12px">두 파일 중 하나만 불러와도 됩니다. 시트 이름으로 어떤 파일인지 자동 판별합니다.</p>
+    <p style="margin-top:16px"><button class="btn" type="button" data-act="sample">샘플 데이터로 보기</button></p>
+    <p class="muted" style="font-size:12px">실제 데이터가 아닌 임의 생성 값으로 화면 구성을 보여 줍니다.</p>
     <div class="loadmsg" id="loadMsg" role="alert"></div>
   </div>
+  <div id="sampleBadge" class="sample" role="status" hidden><b>샘플 데이터 — 실제 값 아님</b><span>임의 생성 값으로 화면 구성만 보여 줍니다.</span><button class="btn no-print" type="button" data-act="real">실제 파일 불러오기</button></div>
   <div id="filebar" class="filebar no-print" hidden></div>
   <input type="file" id="fileInput" accept=".xlsx,.xlsm,.xls" multiple hidden>
 
@@ -676,7 +682,7 @@ const TABS = [['prod', 'Production Overview'], ['check', 'Periodical Checklist']
 
 const S = { ledger: null, check: null, ref: M.todayDay(), tab: 'prod', cy: null, sheet: 'ADP Process', year: null, cargo: null, filters: {}, alerted: false };
 
-function lifterKey(v){ const n = M.norm(v); return n.includes('santos') ? 'santos' : (n === 'sk' || n.startsWith('sk ') || n.includes('prism')) ? 'sk' : n.includes('jera') ? 'jera' : 'other'; }
+function lifterKey(v){ const n = M.norm(v); if (/^partner [abc]$/.test(n)) return { a: 'santos', b: 'sk', c: 'jera' }[n.slice(-1)]; return n.includes('santos') ? 'santos' : (n === 'sk' || n.startsWith('sk ') || n.includes('prism')) ? 'sk' : n.includes('jera') ? 'jera' : 'other'; }
 const lifterPill = v => M.isEmpty(v) ? '–' : `<span class="pill lifter"><i class="ldot ${lifterKey(v)}"></i>${esc(v)}</span>`;
 const statusPill = st => `<span class="pill st-${st.k}">${sico(st.k)}${esc(st.label)}</span>`;
 // 카고 Lifting 창(끝, 없으면 시작)이 기준일 전이면 지난 카고
@@ -1042,6 +1048,7 @@ function render(){
   charts.length = 0; timelines.length = 0;
   const any = S.ledger || S.check;
   $('#loader').hidden = !!any; $('#app').hidden = !any; $('#filebar').hidden = !any;
+  $('#sampleBadge').hidden = !isSample();
   $('#filebar').innerHTML = `<span>Ledger: <b>${esc(S.ledger?.name || '미선택')}</b></span><span>체크리스트: <b>${esc(S.check?.name || '미선택')}</b></span>
     <button class="btn" type="button" data-pick="ledger">Ledger 다시 불러오기</button><button class="btn" type="button" data-pick="check">체크리스트 다시 불러오기</button>
     <span class="privacy">파일은 이 브라우저 안에서만 읽고, 어디에도 전송·저장하지 않습니다.</span>`;
@@ -1068,13 +1075,89 @@ document.addEventListener('click', e => {
   else if (d.pick) { $('#fileInput').dataset.want = d.pick; $('#fileInput').click(); }
   else if (t.classList.contains('more')) { const box = t.previousElementSibling, open = box.classList.toggle('open'); t.textContent = open ? '접기' : '더보기'; t.setAttribute('aria-expanded', open); }
   else if (t.id === 'openAlerts') openAlerts(S._alerts || []);
+  else if (d.act === 'sample') loadSample();
+  else if (d.act === 'real') { if (S.ledger?.sample) S.ledger = null; if (S.check?.sample) S.check = null; render(); }
 });
 $('#alertClose').onclick = () => $('#alertDlg').close();
 const refInput = $('#refDate');
 refInput.value = M.iso(S.ref);
 refInput.addEventListener('change', () => { const v = refInput.value; if (!v) return; S.ref = Date.UTC(+v.slice(0, 4), +v.slice(5, 7) - 1, +v.slice(8, 10)) / M.DAY; render(); });
 
-async function loadFiles(files){
+// ---------- 샘플 데이터 (임의 생성 값 · 실제 값 아님) ----------
+// 시드 고정 난수 + 기준일 기준 상대 날짜로 두 워크북을 만들고, .xlsx로 써서 실제 파일과 같은 경로(loadFiles)로 읽음
+const isSample = () => !!(S.ledger?.sample || S.check?.sample);
+function sampleBooks(){
+  let seed = 20240607; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  const step = (base, n, q) => base + Math.round(rnd() * n) * q;
+  const R = S.ref, B = R - 2, D = d => { const t = new Date(d * M.DAY); return new Date(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()); };
+  const span = (a, b) => Array.from({ length: b - a + 1 }, (_, k) => a + k);
+  const book = sheets => { const wb = XLSX.utils.book_new(); sheets.forEach(([n, aoa]) => XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), n)); return wb; };
+  const LIFT = ['Partner A', 'Partner B', 'Partner C'], SHIP = ['Vessel Alpha', 'Vessel Bravo', 'Vessel Charlie', 'Vessel Delta'];
+  // LNG 슬롯: 8일 간격. 10번째 슬롯은 일부러 크게 → 예측 재고 0 미만 경고 예시
+  const slots = span(0, 13).map(k => ({ id: `S${String(k + 1).padStart(2, '0')}-26`, st: R - 56 + k * 8, lifter: LIFT[k % 3], ship: SHIP[k % 4], plan: [160000, 150000, 155000][k % 3] + (k === 9 ? 30000 : 0) }));
+  const sdsLast = [...slots].reverse().find(s => s.st <= R + 30);
+  let inv = 90000; const lng = span(R - 60, R + 45).map(d => { const p = d <= B ? step(18500, 8, 250) : 19500; inv += p; const s = slots.find(x => x.st === d); if (s) inv -= s.plan; return [null, D(d), p, inv]; });
+  const cl = [{ id: 'C01-26', st: R - 20, parts: [['Partner A', 300000], ['Partner B', 200000]] }, { id: 'C02-26', st: R + 25, parts: [['Partner B', 500000]] }];
+  let ci = 300000; const cond = span(R - 60, R + 45).map(d => { const p = d <= B ? step(7600, 8, 100) : 8000; ci += p; const c = cl.find(x => x.st === d); if (c) ci -= 500000; return [null, D(d), p, ci]; });
+  const fg = span(R - 60, R + 30).map(d => [null, D(d), d <= B ? 16000 : null, d <= B ? 600 : null, null, d <= B ? (d === R - 20 ? 300 : step(545, 8, 5)) : null]);
+  let b = 80, j = 12; const px = span(R - 120, B).filter(d => new Date(d * M.DAY).getUTCDay() % 6).map(d => (b = Math.round((b + (rnd() - .5) * 3) * 20) / 20, j = Math.round((j + (rnd() - .5) * .5) * 100) / 100, [d, b, j]));
+  const mon = {}; px.forEach(([d, bb, jj]) => { const k = M.iso(d).slice(0, 7); (mon[k] = mon[k] || []).push([bb, jj]); });
+  const brent = [['날짜', 'Brent가격', 'JKM월물', 'JKM가격', null, '월', 'Brent 월평균', null, 'JKM 월평균']].concat(px.map(([d, bb, jj], i) => {
+    const m = Object.entries(mon)[i], avg = k => m && m[1].reduce((a, v) => a + v[k], 0) / m[1].length;
+    return [D(d), bb, null, jj, null, m ? D(Date.UTC(+m[0].slice(0, 4), +m[0].slice(5) - 1, 1) / M.DAY) : null, m ? avg(0) : null, null, m ? avg(1) : null]; }));
+  const lngB = lng.find(r => +r[1] === +D(B))[2] / 1000, fgB = fg.find(r => +r[1] === +D(B))[5];
+  const pr = (g, sub, day, mtd, ytd, pm, py) => [null, g, sub, day, mtd, ytd, pm, py, pm ? mtd / pm : null, py ? ytd / py : null];
+  const ledger = book([
+    ['Operation Daily', [[null, 'Barossa & DLNG Production'], [null, null, null, 'Actual', null, null, 'Plan (샘플)', null, 'Actual vs Plan'], [null, null, null, D(B), 'MTD', 'YTD', 'MTD', 'YTD', 'MTD', 'YTD'],
+      pr('Feed Gas Export (mmscf)', null, fgB, 8400, 120000, 9000, 150000), pr('LNG (Kcbm)', 'JV Prod.', lngB, 290, 4200, 300, 5000), pr(null, 'Partner B Net', lngB * .4, 116, 1680, 120, 2000), pr(null, 'Partner B Load', 0, 155, 930, 160, 1100),
+      pr('Condensate (Kbbl)', 'JV Prod.', 8, 120, 1700, 125, 2000), pr(null, 'Partner B Net', 3.2, 48, 680, 50, 800), pr(null, 'Partner B Load', 0, 0, 200, 0, 250)]],
+    ['Feed Gas', [['Month', 'Date', 'Gas Export'], [null, null, 'Nomination', null, 'Actual'], [null, null, 'kNm3', 'MMscf', 'kNm3', 'MMscf'], ...fg]],
+    ['Forecast', [[null, 'Date', 'Production Rate', 'Feed Gas', 'LNG', 'Condensate'], ...span(R - 60, R + 60).map(d => [null, D(d), .95, 580, 19500, 8000])]],
+    ['Ledger_ADP 및 SDS', [[null, '[LNG Balance Ledger (cbm)]'], [null, 'Working Capacity', 200000, 'cbm'], [null, 'Tank Top', 180000, 'cbm'], [null, 'Unpumpable', 15000, 'cbm'], [null, 'Date', 'Production', 'Inventory'], ...lng]],
+    ['Condensate Ledger', [[null, '[Condensate Balance Ledger (bbl)]'], [null, 'Working Capacity', 900000, 'bbl'], [null, 'Tank Top', 700000, 'bbl'], [null, 'Unpumpable', 200000, 'bbl'], [null, 'Date', 'Production', 'Inventory'], ...cond]],
+    ['ADP 및 SDS', [['ADP'], ['Issue', D(R - 20), null, 'last confirmed SDS slot', sdsLast.id], ['Slot Number', 'Lifting Slot', null, null, 'Lifter', 'Cargo Size (Planned_cbm)', 'Cargo Size (Actual_cbm)', 'Proposed Vessel'],
+      ...slots.map(s => [s.id, D(s.st), '~', D(s.st + 1), s.lifter, s.plan, s.st <= B ? s.plan - step(0, 10, 100) : null, s.ship])]],
+    ['LP', [['Condensate Lifting Plan'], ['Issue', D(R - 30)], ['Slot Number', 'Lifting Slot', null, null, 'Lifter', 'Cargo Size (Planned_bbl)', 'Cargo Size (Actual_bbl)', 'Proposed Vessel'],
+      ...cl.flatMap(c => c.parts.map(([l, v], k) => [k ? null : c.id, k ? null : D(c.st), k ? null : '~', k ? null : D(c.st + 2), l, v, c.st <= B ? v : null, k ? null : 'Vessel Echo']))]],
+    ['BrentnJKM', brent]]);
+
+  // 체크리스트: 기준일 대비 마감 오프셋(일) → 완료/지연/D-7/D-30/예정/수시 상태가 고르게 나오도록
+  const ITEMS = [' - 일정 요약\n - 담당자 연락처\n - 첨부 서류 목록', ' - 대상 기간\n - 예상 수량', ' - 변경 사유\n - 변경 전/후 비교\n - 승인 요청'];
+  const it = (k, ev, rule, due, act) => [`Contract ${'XYZ'[k % 3]}`, `${k % 5 + 1}.${k % 3 + 1}`, `Party ${k % 2 + 1}`, `Party ${2 - k % 2}`, ev, ITEMS[k % 3], rule,
+    typeof due === 'number' ? D(R + due) : due, act == null ? null : D(R + act)];
+  const cyStart = Date.UTC(new Date(R * M.DAY).getUTCFullYear() + 1, 0, 1) / M.DAY;
+  const chk = rows => [['Contract', 'Clauses', 'Contract Party', null, 'Event', 'Items covered', 'CY Start', D(cyStart), 'Actual'], [null, null, 'From', 'To', null, null, 'Due', 'Due Date'], ...rows];
+  const adp = chk([it(0, '연간 일정 통보', 'CY-6M', -40, -42), it(1, '정비 계획 공유', 'CY-5M', -25), it(2, '선박 정보 제출', 'CY-4M', -6), it(3, '예비 일정 제안', 'CY-3M', 3),
+    it(4, '수량 통보', 'CY-3M', 6), it(5, '예비 ADP 확정', 'CY-2M', 18), it(6, '변경 요청 협의', 'CY-2M', 28), it(7, '최종 일정 확정', 'CY-1M', 50), it(8, '연간 계획 확정 통보', 'CY-1M', 75)]);
+  const annual = chk([it(0, '연간 정산 보고', null, '매년 1/20'), it(1, '보증서 갱신', null, -60), it(2, '예산 제출', null, -100, -98), it(3, '연간 회의 소집', null, '(일정 없음)'), it(4, '중기 계획 제출', null, 120)]);
+  const monthly = chk([it(0, '월간 실적 보고', null, null, -3), it(1, '월간 청구서 발행', '+10 영업일'), it(2, '월간 작업 보고', '+15 영업일'), it(3, '월간 출하 계획', null, '매월 말일')]);
+  const sched = [4, 7, 10, 13].map(k => slots[k]), pairs = sched.slice(0, 3);   // 마지막 슬롯은 Cargo 열 없음 → 데이터 점검 예시
+  const OFF = [[30, '선박 지정 통보'], [21, '선박 정보 제출'], [14, '검정인 지정'], [7, '서류 지시'], [4, '96시간 전 통보'], [2, '48시간 전 통보'], [1, '24시간 전 통보'], [0, '하역 준비 완료 통보'], [-1, '출항 통보'], [-7, '선적 서류 송부'], [-30, '정산 자료 송부'], ['선적 후 즉시', '수량 확인'], ['매월', '가격 협의']];
+  const cg = [['Contract', 'Clauses', 'Contract Party', null, 'Event', 'Items covered', 'Slot No.', ...pairs.flatMap(p => [p.id, null])],
+    [null, null, null, null, null, null, 'Lifting Slot', ...pairs.flatMap(p => [D(p.st), null])], [null, null, null, null, null, null, 'LNG Ship', ...pairs.flatMap(p => [p.ship, null])],
+    [null, null, null, null, null, null, 'Lifting Vol.', ...pairs.flatMap(p => [p.plan, null])], [null, null, 'From', 'To', null, null, 'Due', ...pairs.flatMap(() => ['Due Date', 'Actual'])],
+    ...OFF.map(([o, ev], k) => [`Contract ${'XYZ'[k % 3]}`, `${k % 4 + 6}.${k % 2 + 1}`, `Party ${k % 2 + 1}`, `Party ${2 - k % 2}`, ev, ITEMS[k % 3], o, ...pairs.flatMap((p, pi) => {
+      if (typeof o !== 'number') return [null, null];
+      const due = p.st - o, done = due < R && (pi === 0 ? o >= 7 : o >= 14 || (pi === 2 && o === 30));
+      return [D(due), done ? D(due - 1) : null]; })])];
+  const check = book([
+    ['ADP Process', adp], ['Annual', annual], ['Monthly', monthly],
+    ['일정', [['SDS'], [], ['As of', D(R - 7)], ['Slot Number', 'Lifting Slot', null, null, 'Lifter', 'Lifting Vol.', 'Planned Cargo Size (MMBtu)', 'Actual (cbm)', 'Actual (MMBtu)', 'LNG Ship', 'Cargo Capacity', 'Ship Type', 'Departing Port'],
+      ...sched.map(s => [s.id, D(s.st), '~', D(s.st + 1), s.lifter, s.plan, s.plan * 23, s.st <= B ? s.plan - 200 : null, s.st <= B ? (s.plan - 200) * 23 : null, s.ship, 175000, 'Membrane', 'Port North'])]],
+    ['Cargo', cg],
+    ['History (연단위)', [['Cargo No.', null, null, ...pairs.map(p => p.id), '연간 (AVG)'], ['Lifter', null, null, ...pairs.map(p => p.lifter)],
+      ['SPEC', 'GHV', 'BTU/SCF', 1060, 1065, 1062, 1062.3], [null, 'C1 Methane', 'mol%', 94.5, 94.2, 94.8, 94.5],
+      ['Quantities', 'Delivered', 'cbm', ...pairs.map(p => p.plan - 200), null], [null, null, 'MMBtu', ...pairs.map(p => (p.plan - 200) * 23), null]]]]);
+  return [ledger, check];
+}
+async function loadSample(){
+  if (typeof XLSX === 'undefined') { $('#loadMsg').textContent = 'SheetJS 라이브러리를 불러오지 못했습니다 (네트워크 확인).'; return; }
+  const file = (wb, n) => new File([XLSX.write(wb, { type: 'array', bookType: 'xlsx' })], n);
+  const [a, b] = sampleBooks();
+  await loadFiles([file(a, 'sample-ledger.xlsx'), file(b, 'sample-checklist.xlsx')], true);
+}
+
+async function loadFiles(files, sample = false){
   const msg = $('#loadMsg'); msg.textContent = '';
   if (typeof XLSX === 'undefined') { msg.textContent = 'SheetJS 라이브러리를 불러오지 못했습니다 (네트워크 확인). cdn.jsdelivr.net 접속이 필요합니다.'; alert(msg.textContent); return; }
   const errs = []; let gotCheck = false;
@@ -1082,8 +1165,8 @@ async function loadFiles(files){
     try {
       const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
       const kind = M.detect(wb);
-      if (kind === 'ledger') S.ledger = { name: f.name, model: M.parseLedger(wb) };
-      else if (kind === 'check') { S.check = { name: f.name, model: M.parseCheck(wb) }; gotCheck = true; }
+      if (kind === 'ledger') S.ledger = { name: f.name, model: M.parseLedger(wb), sample };
+      else if (kind === 'check') { S.check = { name: f.name, model: M.parseCheck(wb), sample }; gotCheck = true; }
       else errs.push(`${f.name}: 시트 구성으로 Ledger/체크리스트 어느 쪽인지 판별하지 못했습니다.`);
     } catch (err) { errs.push(`${f.name}: 읽기 실패 — ${err.message}`); }
   }
@@ -1107,7 +1190,7 @@ $('#btnTheme').onclick = () => {
 
 // PDF 출력 / 엑셀 내보내기 — 현재 탭만
 const tabName = () => (TABS.find(t => t[0] === S.tab) || [])[1] + (S.tab === 'check' && S.check ? ` · ${S.cy} · ${S.sheet}` : S.tab === 'cargo' && S.check ? ` · ${S.year} · ${S.cargo === '__hist' ? '연간 History' : S.cargo}` : '');
-$('#btnPrint').onclick = () => { $('#printHead').innerHTML = `<b>${esc(tabName())}</b> · 기준일 ${M.iso(S.ref)}`; window.print(); };
+$('#btnPrint').onclick = () => { $('#printHead').innerHTML = `<b>${esc(tabName())}</b> · 기준일 ${M.iso(S.ref)}${isSample() ? ' · <b>샘플 데이터 — 실제 값 아님</b>' : ''}`; window.print(); };
 $('#btnExport').onclick = () => {
   const tables = [...document.querySelectorAll('#app [role=tabpanel] table')];
   if (!tables.length) { alert('내보낼 표가 없습니다. 먼저 워크북을 불러오세요.'); return; }
