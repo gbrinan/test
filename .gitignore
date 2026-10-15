@@ -1,2 +1,5 @@
 .claude/
 .moai/
+barossa-dashboard/**/*.xlsx
+barossa-dashboard/**/*.xls
+barossa-dashboard/**/*.csv
