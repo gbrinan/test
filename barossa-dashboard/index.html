@@ -525,17 +525,15 @@ const M = (() => {
       summarizeErrs(ctx, name, 'Production', rows, 'p', m.lastActual);
       summarizeErrs(ctx, name, 'Inventory', rows, 'i', m.lastActual);
       m[key + 'Hdr'] = `${name}!${addr(h.r, h.c)}`;
-      // 기준선: 헤더 위 블록(날짜열과 같은 열)의 라벨 → 오른쪽 첫 숫자. "LC 기준" 열이 있으면 그 값 우선
-      const lc = find(g, s => s === 'lc 기준', { r1: h.r - 1 });
+      // 기준선: 헤더 위 블록(날짜열과 같은 열)의 라벨 → 오른쪽 첫 숫자 (원장 수식이 참조하는 값). 같은 행의 LC 기준·PSA/DLNG 값은 참고로만 기록
       m[key + 'Ref'] = [['working capacity', 'Working Capacity'], ['tank top', 'Tank Top'], ['unpumpable', 'Unpumpable']].map(([t, label]) => {
         const c = find(g, (s, r, cc) => cc === h.c && s === t, { r1: h.r - 1 });
         if (!c) { ctx.warn(name, label, '라벨을 찾지 못해 기준선을 생략'); return null; }
         const nums = []; for (let k = c.c + 1; k < c.c + 8; k++) { const v = at(g, c.r, k), n = numAt(g, c.r, k, label); if (n != null) nums.push({ k, v: n }); else if (isErr(v)) ctx.warn(name, label, `${addr(c.r, k)} ${v.code}`); }
-        const pick = (lc && nums.find(x => x.k === lc.c)) || nums[0];
+        const pick = nums[0];
         if (!pick) { ctx.warn(name, label, '값이 숫자가 아니어서 기준선을 생략'); return null; }
-        const isLc = lc && pick.k === lc.c;
-        if (nums.length > 1) ctx.info(name, label, `같은 행에 값 ${nums.length}개(${nums.map(x => addr(c.r, x.k) + '=' + x.v.toLocaleString('en-US')).join(', ')}) — ${isLc ? '"LC 기준" 열' : '첫 값'} 사용`);
-        return { key: t, label: label + (isLc ? ' (LC 기준)' : ''), v: pick.v };
+        if (nums.length > 1) ctx.info(name, label, `같은 행에 값 ${nums.length}개(${nums.map(x => addr(c.r, x.k) + '=' + x.v.toLocaleString('en-US')).join(', ')}) — 원장 수식 기준 첫 값 ${addr(c.r, pick.k)} 사용`);
+        return { key: t, label, v: pick.v };
       }).filter(Boolean);
       return rows.map(x => ({ d: x.d, p: x.v.p, i: x.v.i }));
     };
