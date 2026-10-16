@@ -250,16 +250,39 @@ const M = (() => {
       default: return null;
     }
   }
-  function grid(ws){
+  // 텍스트 날짜: 셀 전체가 날짜 형식일 때만 인정 (뒤에 글자가 붙으면 날짜 아님 → 규칙 텍스트로 남김)
+  // 빗금·점 형식은 일-월-연 (호주·한국 관행). 앞 두 값이 모두 12 이하이면 모호 표시
+  function textDate(s){
+    const t = s.trim(); let m, y, mo, d, amb = false;
+    if ((m = t.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/))) [y, mo, d] = [+m[1], +m[2], +m[3]];
+    else if ((m = t.match(/^(\d{1,2})[\/.](\d{1,2})[\/.](\d{4})$/))) { [d, mo, y] = [+m[1], +m[2], +m[3]]; amb = d <= 12 && mo <= 12 && d !== mo; }
+    else return null;
+    const dt = new Date(y, mo - 1, d);
+    return dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d ? { dt, amb } : null;
+  }
+  // 텍스트 숫자: 공백·천 단위 쉼표 허용 ("1,234", " 42 ")
+  const NUMRE = /^\s*-?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?\s*$/;
+  let CUR = null;   // 지금 파싱 중인 ctx (텍스트 숫자 변환 기록용, 파싱은 동기라 안전)
+  function numAt(g, r, c, header){
+    const v = at(g, r, c);
+    if (isNum(v)) return v;
+    if (typeof v === 'string' && NUMRE.test(v)) { CUR && CUR.tn(g.name, header || colName(c) + '열'); return +v.replace(/[,\s]/g, ''); }
+    return null;
+  }
+  function grid(ws, name, notes = []){
     const rows = [];
-    if (!ws || !ws['!ref']) return { rows, merges: [] };
+    if (!ws || !ws['!ref']) return { rows, merges: [], name, notes };
     const R = XLSX.utils.decode_range(ws['!ref']);
     for (let r = 0; r <= R.e.r; r++) {
       const row = new Array(R.e.c + 1).fill(null);
-      for (let c = 0; c <= R.e.c; c++) row[c] = cellValue(ws[XLSX.utils.encode_cell({ r, c })]);
+      for (let c = 0; c <= R.e.c; c++) {
+        let v = cellValue(ws[XLSX.utils.encode_cell({ r, c })]);
+        if (typeof v === 'string') { const t = textDate(v); if (t) { notes.push({ a: XLSX.utils.encode_cell({ r, c }), raw: v.trim(), amb: t.amb }); v = t.dt; } }
+        row[c] = v;
+      }
       rows.push(row);
     }
-    return { rows, merges: ws['!merges'] || [] };
+    return { rows, merges: ws['!merges'] || [], name, notes };
   }
   const at = (g, r, c) => (g.rows[r] || [])[c] ?? null;
   function find(g, pred, o = {}){
@@ -278,34 +301,49 @@ const M = (() => {
     return null;
   }
 
-  function makeCtx(wb){
-    const cache = {}, issues = [];
+  function makeCtx(wb, m){
+    const cache = {}, issues = [], tnums = {};
+    m.err = {};   // 카드별 실패 사유: 시트 없음 / 헤더 없음 (빈 데이터와 구분)
     const ctx = {
       issues,
       warn: (sheet, header, msg) => issues.push({ level: 'warn', sheet, header, msg }),
       info: (sheet, header, msg) => issues.push({ level: 'info', sheet, header, msg }),
-      sheet(name){
-        if (!wb.Sheets[name]) { ctx.warn(name, '(시트)', '시트를 찾을 수 없어 관련 항목을 "–"로 표시합니다.'); return null; }
-        return cache[name] || (cache[name] = grid(wb.Sheets[name]));
+      // 카드에 보일 실패 사유 + 데이터 점검 경고
+      fail(sec, sheet, header){
+        m.err[sec] = header ? `'${sheet}' 시트에서 필요한 헤더 '${header}'를 찾지 못했습니다` : `필요한 시트 '${sheet}'를 찾지 못했습니다`;
+        if (header) ctx.warn(sheet, header, '필요한 헤더를 찾지 못함 — 관련 카드/열을 "–"로 표시');
       },
+      sheet(name, sec){
+        if (!wb.Sheets[name]) { ctx.warn(name, '(시트)', '필요한 시트를 찾지 못함 — 관련 카드에 표시'); if (sec) ctx.fail(sec, name); return null; }
+        if (cache[name]) return cache[name];
+        const g = cache[name] = grid(wb.Sheets[name], name);
+        const n = g.notes;
+        if (n.length) ctx.info(name, '텍스트 날짜', `텍스트로 입력된 날짜 ${n.length}개를 날짜로 읽음 (예: ${n[0].a} "${n[0].raw}")`);
+        n.filter(x => x.amb).forEach(x => ctx.info(name, x.a, `"${x.raw}" — 일/월 순서가 모호해 일-월-연으로 읽음`));
+        return g;
+      },
+      tn(sheet, header){ const k = sheet + '\u0000' + header; tnums[k] = (tnums[k] || 0) + 1; },
+      // 파싱 끝에 텍스트 숫자 변환 건수를 시트·열별로 한 줄씩
+      flush(){ Object.entries(tnums).forEach(([k, n]) => { const [s, h] = k.split('\u0000'); ctx.info(s, h, `텍스트로 입력된 숫자 ${n}개를 숫자로 변환`); }); },
       // 숫자면 숫자, 오류/공백이면 null (오류는 기록)
       num(sheet, header, g, r, c){
         const v = at(g, r, c);
         if (isErr(v)) { ctx.warn(sheet, header, `${addr(r, c)} 셀이 ${v.code} — 건너뜀`); return null; }
-        return isNum(v) ? v : null;
+        return numAt(g, r, c, header);
       }
     };
+    CUR = ctx;
     return ctx;
   }
 
-  // 날짜열 + 값열들 → 행 목록 {r, d, v:{k:number|null}, e:{k:errcode}}
-  function readDated(g, startRow, dateCol, cols){
+  // 날짜열 + 값열들 → 행 목록 {r, d, v:{k:number|null}, e:{k:errcode}}. names: 텍스트 숫자 기록용 열 이름
+  function readDated(g, startRow, dateCol, cols, names = {}){
     const out = [];
     for (let r = startRow; r < g.rows.length; r++) {
       const d = asDay(at(g, r, dateCol));
       if (d == null) continue;
       const v = {}, e = {};
-      for (const k in cols) { const x = at(g, r, cols[k]); v[k] = isNum(x) ? x : null; if (isErr(x)) e[k] = x.code; }
+      for (const k in cols) { const x = at(g, r, cols[k]); v[k] = numAt(g, r, cols[k], names[k]); if (isErr(x)) e[k] = x.code; }
       out.push({ r, d, v, e });
     }
     return out;
@@ -328,24 +366,23 @@ const M = (() => {
 
   // ---------- Ledger 워크북 ----------
   function parseLedger(wb){
-    const ctx = makeCtx(wb);
-    const m = { issues: ctx.issues };
+    const m = {}, ctx = makeCtx(wb, m); m.issues = ctx.issues;
 
     // Feed Gas 실적: "Actual" 아래 단위행 "MMscf"
     m.feedGas = [];
-    const fg = ctx.sheet('Feed Gas');
+    const fg = ctx.sheet('Feed Gas', 'fg');
     if (fg) {
       const a = findText(fg, 'actual', { r1: 20 }), dt = findText(fg, 'date', { r1: 20 });
       let u = null;
       if (a) for (let r = a.r + 1; r <= a.r + 2 && !u; r++) for (let c = a.c; c <= a.c + 3; c++) if (norm(at(fg, r, c)) === 'mmscf') { u = { r, c }; break; }
-      if (!a || !dt || !u) ctx.warn('Feed Gas', !dt ? 'Date' : !a ? 'Actual' : 'Actual → MMscf', '헤더를 찾지 못함');
+      if (!a || !dt || !u) ctx.fail('fg', 'Feed Gas', !dt ? 'Date' : !a ? 'Actual' : 'Actual → MMscf');
       else {
         // Nomination: 같은 헤더 행, Actual 왼쪽 → 단위행 MMscf
         const n = findText(fg, 'nomination', { r0: a.r, r1: a.r, c1: a.c - 1 });
         let un = null;
         if (n) for (let c = n.c; c < a.c && !un; c++) if (norm(at(fg, u.r, c)) === 'mmscf') un = { r: u.r, c };
         if (!un) ctx.warn('Feed Gas', 'Nomination → MMscf', '헤더를 찾지 못해 Nomination 선을 생략');
-        const rows = readDated(fg, u.r + 1, dt.c, un ? { v: u.c, n: un.c } : { v: u.c });
+        const rows = readDated(fg, u.r + 1, dt.c, un ? { v: u.c, n: un.c } : { v: u.c }, { v: 'Actual MMscf', n: 'Nomination MMscf' });
         m.feedGas = rows.map(x => ({ d: x.d, v: x.v.v, n: un ? x.v.n : null }));
         m.feedGasCol = addr(u.r, u.c); m.nomCol = un ? addr(un.r, un.c) : null;
         const act = rows.filter(x => x.v.v != null);
@@ -358,17 +395,17 @@ const M = (() => {
 
     // Forecast: "Date"+"Feed Gas" 헤더 블록 중 날짜 행이 가장 많은 블록
     m.fgForecast = [];
-    const fc = ctx.sheet('Forecast');
+    const fc = ctx.sheet('Forecast', 'fc');
     if (fc) {
       let best = null;
       for (let r = 0; r < Math.min(fc.rows.length, 80); r++) fc.rows[r].forEach((v, c) => {
         if (norm(v) !== 'feed gas') return;
         let dc = -1; for (let k = c - 1; k >= 0; k--) if (norm(at(fc, r, k)) === 'date') { dc = k; break; }
         if (dc < 0) return;
-        const rows = readDated(fc, r + 1, dc, { v: c });
+        const rows = readDated(fc, r + 1, dc, { v: c }, { v: 'Feed Gas' });
         if (!best || rows.length > best.rows.length) best = { r, c, dc, rows };
       });
-      if (!best) ctx.warn('Forecast', 'Date / Feed Gas', '예측 블록 헤더를 찾지 못함');
+      if (!best) ctx.fail('fc', 'Forecast', 'Date / Feed Gas');
       else {
         m.fgForecast = best.rows.map(x => ({ d: x.d, v: x.v.v, e: x.e.v }));
         m.fgForecastCol = `${addr(best.r, best.dc)} Date / ${addr(best.r, best.c)} Feed Gas`;
@@ -377,11 +414,11 @@ const M = (() => {
 
     // LNG / Condensate 원장: Date·Production·Inventory
     const ledger = (name, key) => {
-      const g = ctx.sheet(name); if (!g) return [];
+      const g = ctx.sheet(name, key); if (!g) return [];
       const h = findLedgerHeader(g);
-      if (!h) { ctx.warn(name, 'Date / Production / Inventory', '헤더 행을 찾지 못함'); return []; }
+      if (!h) { ctx.fail(key, name, 'Date / Production / Inventory'); return []; }
       const row = g.rows[h.r].map(norm);
-      const rows = readDated(g, h.r + 1, h.c, { p: row.indexOf('production', h.c + 1), i: row.indexOf('inventory', h.c + 1) });
+      const rows = readDated(g, h.r + 1, h.c, { p: row.indexOf('production', h.c + 1), i: row.indexOf('inventory', h.c + 1) }, { p: 'Production', i: 'Inventory' });
       summarizeErrs(ctx, name, 'Production', rows, 'p', m.lastActual);
       summarizeErrs(ctx, name, 'Inventory', rows, 'i', m.lastActual);
       m[key + 'Hdr'] = `${name}!${addr(h.r, h.c)}`;
@@ -390,7 +427,7 @@ const M = (() => {
       m[key + 'Ref'] = [['working capacity', 'Working Capacity'], ['tank top', 'Tank Top'], ['unpumpable', 'Unpumpable']].map(([t, label]) => {
         const c = find(g, (s, r, cc) => cc === h.c && s === t, { r1: h.r - 1 });
         if (!c) { ctx.warn(name, label, '라벨을 찾지 못해 기준선을 생략'); return null; }
-        const nums = []; for (let k = c.c + 1; k < c.c + 8; k++) { const v = at(g, c.r, k); if (isNum(v)) nums.push({ k, v }); else if (isErr(v)) ctx.warn(name, label, `${addr(c.r, k)} ${v.code}`); }
+        const nums = []; for (let k = c.c + 1; k < c.c + 8; k++) { const v = at(g, c.r, k), n = numAt(g, c.r, k, label); if (n != null) nums.push({ k, v: n }); else if (isErr(v)) ctx.warn(name, label, `${addr(c.r, k)} ${v.code}`); }
         const pick = (lc && nums.find(x => x.k === lc.c)) || nums[0];
         if (!pick) { ctx.warn(name, label, '값이 숫자가 아니어서 기준선을 생략'); return null; }
         const isLc = lc && pick.k === lc.c;
@@ -414,10 +451,10 @@ const M = (() => {
 
     // LNG Lifting (ADP 및 SDS)
     m.lngLift = { slots: [] };
-    const adp = ctx.sheet('ADP 및 SDS');
+    const adp = ctx.sheet('ADP 및 SDS', 'lngLift');
     if (adp) {
       const h = find(adp, (s, r) => s === 'slot number' && adp.rows[r].some(v => norm(v) === 'lifting slot'), { r1: 30 });
-      if (!h) ctx.warn('ADP 및 SDS', 'Slot Number', '헤더 행을 찾지 못함');
+      if (!h) ctx.fail('lngLift', 'ADP 및 SDS', 'Slot Number / Lifting Slot');
       else {
         const row = adp.rows[h.r].map(norm);
         const col = t => { const i = row.indexOf(t); if (i < 0) ctx.warn('ADP 및 SDS', t, '헤더 없음 — "–" 표시'); return i; };
@@ -446,10 +483,10 @@ const M = (() => {
 
     // Condensate Lifting (LP) — 슬롯번호 빈 행은 직전 슬롯의 Lifter 분할
     m.condLift = { slots: [] };
-    const lp = ctx.sheet('LP');
+    const lp = ctx.sheet('LP', 'condLift');
     if (lp) {
       const h = find(lp, (s, r) => s === 'slot number' && lp.rows[r].some(v => norm(v) === 'lifting slot'), { r1: 20 });
-      if (!h) ctx.warn('LP', 'Slot Number', '헤더 행을 찾지 못함');
+      if (!h) ctx.fail('condLift', 'LP', 'Slot Number / Lifting Slot');
       else {
         const row = lp.rows[h.r].map(norm);
         const col = t => { const i = row.indexOf(t); if (i < 0) ctx.warn('LP', t, '헤더 없음 — "–" 표시'); return i; };
@@ -471,15 +508,15 @@ const M = (() => {
 
     // 생산 실적 vs 계획 (Operation Daily)
     m.prod = null;
-    const od = ctx.sheet('Operation Daily');
+    const od = ctx.sheet('Operation Daily', 'prod');
     if (od) {
       const t = findText(od, 'barossa & dlng production');
-      if (!t) ctx.warn('Operation Daily', 'Barossa & DLNG Production', '표 제목을 찾지 못함');
+      if (!t) ctx.fail('prod', 'Operation Daily', 'Barossa & DLNG Production');
       else {
         const a = findText(od, 'actual', { r0: t.r + 1, r1: t.r + 6, c0: t.c + 1 });
         const p = a && findStart(od, 'plan', { r0: a.r, r1: a.r, c0: a.c + 1 });
         const v = a && findText(od, 'actual vs plan', { r0: a.r, r1: a.r, c0: a.c + 1 });
-        if (!a || !p || !v) ctx.warn('Operation Daily', !a ? 'Actual' : !p ? 'Plan…' : 'Actual vs Plan', '헤더를 찾지 못함');
+        if (!a || !p || !v) ctx.fail('prod', 'Operation Daily', !a ? 'Actual' : !p ? 'Plan…' : 'Actual vs Plan');
         else {
           const cols = [a.c, a.c + 1, a.c + 2, p.c, p.c + 1, v.c, v.c + 1];
           m.prod = { day: asDay(at(od, a.r + 1, a.c)), planLabel: String(at(od, p.r, p.c)).trim(), rows: [] };
@@ -490,7 +527,7 @@ const M = (() => {
             const vals = cols.map(c => at(od, r, c));
             if (isEmpty(lab) && !sub && vals.every(isEmpty)) break;
             if (!isEmpty(lab)) group = String(lab).trim();
-            m.prod.rows.push({ group, sub, vals: vals.map((x, k) => { if (isErr(x)) { ctx.warn('Operation Daily', group + ' ' + sub, `${addr(r, cols[k])} ${x.code} — "–" 처리`); return null; } return isNum(x) ? x : null; }) });
+            m.prod.rows.push({ group, sub, vals: vals.map((x, k) => { if (isErr(x)) { ctx.warn('Operation Daily', group + ' ' + sub, `${addr(r, cols[k])} ${x.code} — "–" 처리`); return null; } return numAt(od, r, cols[k], group); }) });
           }
           for (const want of ['feed gas export', 'lng', 'condensate'])
             if (!m.prod.rows.some(x => norm(x.group).startsWith(want))) ctx.warn('Operation Daily', want, '행을 찾지 못함');
@@ -500,21 +537,21 @@ const M = (() => {
 
     // Brent · JKM
     m.price = { daily: [], monthly: [] };
-    const bj = ctx.sheet('BrentnJKM');
+    const bj = ctx.sheet('BrentnJKM', 'price');
     if (bj) {
       const h = find(bj, (s, r) => s === '날짜' && bj.rows[r].some(v => norm(v) === 'brent가격'), { r1: 10 });
-      if (!h) ctx.warn('BrentnJKM', '날짜 / Brent가격 / JKM가격', '헤더 행을 찾지 못함');
+      if (!h) ctx.fail('price', 'BrentnJKM', '날짜 / Brent가격');
       else {
         const row = bj.rows[h.r].map(norm);
         const b = row.indexOf('brent가격'), j = row.indexOf('jkm가격'), bm = row.indexOf('brent 월평균'), jm = row.indexOf('jkm 월평균');
         if (j < 0) ctx.warn('BrentnJKM', 'JKM가격', '헤더 없음');
-        const daily = readDated(bj, h.r + 1, h.c, { b, j });
+        const daily = readDated(bj, h.r + 1, h.c, { b, j }, { b: 'Brent가격', j: 'JKM가격' });
         summarizeErrs(ctx, 'BrentnJKM', 'Brent가격', daily, 'b', null); summarizeErrs(ctx, 'BrentnJKM', 'JKM가격', daily, 'j', null);
         m.price.daily = daily.map(x => ({ d: x.d, b: x.v.b, j: x.v.j }));
         let mc = -1; if (bm >= 0) for (let k = bm - 1; k >= 0; k--) if (row[k] === '월') { mc = k; break; }
         if (bm < 0 || mc < 0) ctx.warn('BrentnJKM', '월 / Brent 월평균', '월평균 헤더를 찾지 못함');
         else {
-          const mon = readDated(bj, h.r + 1, mc, { b: bm, j: jm });
+          const mon = readDated(bj, h.r + 1, mc, { b: bm, j: jm }, { b: 'Brent 월평균', j: 'JKM 월평균' });
           let last = -1; mon.forEach((x, k) => { if (x.v.b != null || x.v.j != null) last = k; });
           const kept = mon.slice(0, last + 1), dropped = mon.length - kept.length;
           kept.forEach(x => { for (const k in x.e) ctx.warn('BrentnJKM', k === 'b' ? 'Brent 월평균' : 'JKM 월평균', `${iso(x.d).slice(0, 7)} ${x.e[k]} — "–" 처리`); });
@@ -523,6 +560,7 @@ const M = (() => {
         }
       }
     }
+    ctx.flush();
     return m;
   }
 
@@ -542,40 +580,53 @@ const M = (() => {
     const dv = at(g, r, dueC), av = actC >= 0 ? at(g, r, actC) : null;
     if (isErr(dv)) ctx.warn(sheet, 'Due Date', `${addr(r, dueC)} ${dv.code} — "–" 처리`);
     if (isErr(av)) ctx.warn(sheet, 'Actual', `${addr(r, actC)} ${av.code} — 미완료로 간주`);
-    item.dueDay = dv instanceof Date ? asDay(dv) : null;
+    item.dueDay = dv instanceof Date ? asDay(dv) : null;   // 텍스트 날짜는 grid()에서 이미 Date로 바뀜
     item.dueText = item.dueDay == null ? strOf(dv) : '';
     item.actualDay = av instanceof Date ? asDay(av) : null;
     item.actualText = item.actualDay == null ? strOf(av) : '';
     return item;
   }
   function parseCheck(wb){
-    const ctx = makeCtx(wb);
-    const m = { issues: ctx.issues, sheets: [], cargo: null, schedule: null, history: null };
+    const m = { sheets: [], cargo: null, schedule: null, history: null }, ctx = makeCtx(wb, m); m.issues = ctx.issues;
     const H_NAMES = ['contract', 'clauses', 'from', 'to', 'event', 'items covered', 'due', 'due date', 'actual'];
     for (const name of ['ADP Process', 'Annual', 'Monthly']) {
-      const g = ctx.sheet(name); if (!g) continue;
-      const h = findText(g, 'contract', { r1: 30 });
-      if (!h) { ctx.warn(name, 'Contract', '헤더 행을 찾지 못함'); continue; }
+      const g = ctx.sheet(name, name);
+      const h = g && findText(g, 'contract', { r1: 30 });
+      if (g && !h) ctx.fail(name, name, 'Contract');
+      if (!h) { m.sheets.push({ name, cy: null, rows: [], extras: [], err: m.err[name] }); continue; }
       const H = headerCols(g, [h.r, h.r + 1], H_NAMES);
-      for (const k of H_NAMES) if (H[k] < 0) ctx.warn(name, k, '헤더 없음 — "–" 표시');
+      for (const k of H_NAMES) if (H[k] < 0) ctx.warn(name, k.replace(/\b[a-z]/g, x => x.toUpperCase()), '필요한 헤더를 찾지 못함 — 이 열은 "–"로 표시');
       const cy = findText(g, 'cy start', { r1: h.r + 1 });
       const cyDay = cy ? asDay(rightValue(g, cy.r, cy.c, 3)) : null;
       if (cyDay == null) ctx.warn(name, 'CY Start', 'CY 시작일을 읽지 못해 "CY 미상"으로 분류');
+      // 사용자가 추가한 열: 헤더 2행에 글자가 있는데 알려진 열이 아닌 것 → 표 끝에 그대로 표시
+      const used = new Set(Object.values(H).filter(c => c >= 0));
+      if (cy) { used.add(cy.c); for (let k = 1; k <= 3; k++) if (!isEmpty(at(g, cy.r, cy.c + k))) { used.add(cy.c + k); break; } }
+      const extras = [];
+      for (let c = 0; c < Math.max(g.rows[h.r].length, (g.rows[h.r + 1] || []).length); c++) {
+        if (used.has(c)) continue;
+        const lab = [at(g, h.r, c), at(g, h.r + 1, c)].find(v => typeof v === 'string' && v.trim() && norm(v) !== 'contract party');
+        if (lab) extras.push({ c, label: lab.trim() });
+      }
+      if (extras.length) ctx.info(name, extras.map(x => x.label).join(', '), '알 수 없는 열 — 표 끝에 그대로 표시');
       const rows = [];
       for (let r = h.r + 2; r < g.rows.length; r++) {
         const it = readItem(ctx, name, g, r, H);
+        it.extra = extras.map(x => strOf(at(g, r, x.c)));
         if (!it.contract && !it.event && !it.items) continue;
         it.dueRule = H.due >= 0 ? strOf(at(g, r, H.due)) : '';
         rows.push(dueActual(ctx, name, g, r, H['due date'], H.actual, it));
       }
-      m.sheets.push({ name, cy: cyDay == null ? 'CY 미상' : 'CY ' + new Date(cyDay * DAY).getUTCFullYear(), rows });
+      m.sheets.push({ name, cy: cyDay == null ? 'CY 미상' : 'CY ' + new Date(cyDay * DAY).getUTCFullYear(), rows, extras: extras.map(x => x.label) });
     }
+    // 시트/헤더가 없는 체크리스트도 탭은 남겨 사유를 보여 줌 (CY는 다른 시트 것을 따름)
+    const cy0 = (m.sheets.find(x => x.cy) || {}).cy || 'CY 미상'; m.sheets.forEach(x => { if (!x.cy) x.cy = cy0; });
 
     // 일정 (카고 목록)
-    const sc = ctx.sheet('일정');
+    const sc = ctx.sheet('일정', 'schedule');
     if (sc) {
       const h = find(sc, (s, r) => s === 'slot number' && sc.rows[r].some(v => norm(v) === 'lifting slot'), { r1: 20 });
-      if (!h) ctx.warn('일정', 'Slot Number', '헤더 행을 찾지 못함');
+      if (!h) ctx.fail('schedule', '일정', 'Slot Number / Lifting Slot');
       else {
         const row = sc.rows[h.r].map(norm);
         const names = ['lifting slot', 'lifter', 'lifting vol.', 'planned cargo size (mmbtu)', 'actual (cbm)', 'actual (mmbtu)', 'lng ship', 'cargo capacity', 'ship type', 'departing port'];
@@ -596,12 +647,12 @@ const M = (() => {
     }
 
     // Cargo (카고별 체크리스트: 열 쌍 = Due Date / Actual)
-    const cg = ctx.sheet('Cargo');
+    const cg = ctx.sheet('Cargo', 'cargo');
     if (cg) {
       const lab = findText(cg, 'slot no.', { r1: 30 });
       const h = findText(cg, 'contract', { r1: 30 });
       const dueRow = lab ? find(cg, (s, r, c) => c === lab.c && s === 'due', { r0: lab.r + 1, r1: lab.r + 10 }) : null;
-      if (!lab || !h || !dueRow) ctx.warn('Cargo', !lab ? 'Slot No.' : !h ? 'Contract' : 'Due', '헤더를 찾지 못함');
+      if (!lab || !h || !dueRow) ctx.fail('cargo', 'Cargo', !lab ? 'Slot No.' : !h ? 'Contract' : 'Due');
       else {
         const H = headerCols(cg, Array.from({ length: dueRow.r - h.r + 1 }, (_, k) => h.r + k), ['contract', 'clauses', 'from', 'to', 'event', 'items covered']);
         const items = [];
@@ -625,11 +676,12 @@ const M = (() => {
     }
 
     // History (연단위) — 시트를 그대로 표로
-    const hs = ctx.sheet('History (연단위)');
+    const hs = ctx.sheet('History (연단위)', 'history');
     if (hs) {
       hs.rows.forEach((row, r) => row.forEach((v, c) => { if (isErr(v)) ctx.warn('History (연단위)', addr(r, c), `${v.code} — "–" 처리`); }));
       m.history = hs;
     }
+    ctx.flush();
     return m;
   }
 
@@ -691,6 +743,7 @@ const cargoPast = s => s && (s.end ?? s.start) != null && (s.end ?? s.start) < S
 const td = (html, v, numeric) => `<td${numeric ? ' class="num" data-t="n"' : ' data-t="s"'} data-v="${esc(v ?? '')}">${html}</td>`;
 const tdNum = (v, dec) => M.isNum(v) ? td(fmt(v, dec), v, true) : `<td class="num" data-v="">–</td>`;
 const tdDay = d => td(M.iso(d), d == null ? '' : M.iso(d));
+const errBox = msg => `<div class="placeholder" role="alert" style="color:var(--late)">⚠ ${esc(msg)} — 데이터 점검 참고</div>`;
 const tdTxt = s => td(M.isEmpty(s) ? '–' : esc(s), s || '');
 const tdWrap = s => td(M.isEmpty(s) ? "–" : esc(s), s || "").replace("<td", "<td class=\"w\"");
 
@@ -836,7 +889,7 @@ function renderProd(){
   // 달성률 막대: 0 ~ max(120%, 표 안 최댓값), 100% 눈금. 값이 커도 자르지 않음
   const pctMax = prod ? Math.max(1.2, ...prod.rows.flatMap(r => r.vals.slice(5)).filter(M.isNum)) : 1.2;
   const pctCell = v => M.isNum(v) ? td(`<span class="ach"><span class="bar" aria-hidden="true"><i style="width:${Math.max(0, v) / pctMax * 100}%"></i><b style="left:${100 / pctMax}%"></b></span>${fmt(v * 100, 1)}%</span>`, v, true) : `<td class="num" data-v="">–</td>`;
-  const prodTable = !prod ? `<div class="placeholder">Operation Daily 표를 찾지 못했습니다 (데이터 점검 참고).</div>` :
+  const prodTable = !prod ? errBox(m.err.prod || 'Operation Daily 표를 읽지 못했습니다') :
     `<div class="tw"><table data-sheet="생산 실적 vs 계획"><thead><tr><th>구분</th><th></th><th class="num">Day (${M.iso(prod.day)})</th><th class="num">MTD 실적</th><th class="num">YTD 실적</th><th class="num">MTD 계획</th><th class="num">YTD 계획</th><th class="num">MTD 달성률</th><th class="num">YTD 달성률</th></tr></thead><tbody>${
       prod.rows.map((r, k) => { const dec = /lng|condensate/i.test(r.group) ? 2 : 1; return `<tr>${tdTxt(k && prod.rows[k - 1].group === r.group ? '' : r.group)}${tdTxt(r.sub)}${r.vals.slice(0, 5).map(v => tdNum(v, dec)).join('')}${r.vals.slice(5).map(pctCell).join('')}</tr>`; }).join('')
     }</tbody></table></div><p class="note">계획 기준: ${esc(prod.planLabel)} · 달성률 = 실적 ÷ 계획</p>`;
@@ -858,27 +911,27 @@ function renderProd(){
   </section>
   <section><h2>Production 그래프 <span class="muted" style="font-size:12px;font-weight:600">· 최근 실적 30일 + 예측 (기준일+30일까지)</span></h2>
     <div class="grid g3">
-      <div class="card"><h3>Feed Gas — Nomination vs Actual (mmscf)</h3>${fgChart}${fgLegend}</div>
-      <div class="card"><h3>LNG 생산 (cbm)</h3>${one('LNG 생산', win(m.lng, 'p'), 'cbm')}${legend}${inv('LNG 재고 (cbm)', m.lng, m.lngRef || [], lngMk, m.lngFlags || [], 'cbm')}</div>
-      <div class="card"><h3>Condensate 생산 (bbl)</h3>${one('Condensate 생산', win(m.cond, 'p'), 'bbl')}${legend}${inv('Condensate 재고 (bbl)', m.cond, m.condRef || [], condMk, m.condFlags || [], 'bbl')}</div>
+      <div class="card"><h3>Feed Gas — Nomination vs Actual (mmscf)</h3>${m.err.fg ? errBox(m.err.fg) : fgChart + fgLegend}${m.err.fc ? `<p class="chart-flag">⚠ 예측 꼬리 없음: ${esc(m.err.fc)}</p>` : ''}</div>
+      <div class="card"><h3>LNG 생산 (cbm)</h3>${m.err.lng ? errBox(m.err.lng) : one('LNG 생산', win(m.lng, 'p'), 'cbm') + legend + inv('LNG 재고 (cbm)', m.lng, m.lngRef || [], lngMk, m.lngFlags || [], 'cbm')}</div>
+      <div class="card"><h3>Condensate 생산 (bbl)</h3>${m.err.cond ? errBox(m.err.cond) : one('Condensate 생산', win(m.cond, 'p'), 'bbl') + legend + inv('Condensate 재고 (bbl)', m.cond, m.condRef || [], condMk, m.condFlags || [], 'bbl')}</div>
     </div>
   </section>
   <section class="grid g2">
     <div class="card"><h2>LNG Lifting 일정 (향후)</h2>
-      <p class="note" style="margin:0 0 8px">ADP Issue ${M.iso(iss)} · SDS 90일 창 ${iss != null ? M.iso(iss) + ' ~ ' + M.iso(iss + 90) + ` (슬롯 ${in90}개)` : '–'} · 마지막 SDS 확정 슬롯 ${esc((m.lngLift.lastSds || '–').toUpperCase())}</p>
-      ${lngRows.length ? `<div class="tw"><table data-sheet="LNG Lifting"><thead><tr><th>Slot</th><th>Lifting Slot</th><th>D-day</th><th>Lifter</th><th class="num">Planned (cbm)</th><th class="num">Actual (cbm)</th><th>Proposed Vessel</th><th>상태</th></tr></thead><tbody>${
+      ${m.err.lngLift ? "" : `<p class="note" style="margin:0 0 8px">ADP Issue ${M.iso(iss)} · SDS 90일 창 ${iss != null ? M.iso(iss) + ' ~ ' + M.iso(iss + 90) + ` (슬롯 ${in90}개)` : '–'} · 마지막 SDS 확정 슬롯 ${esc((m.lngLift.lastSds || '–').toUpperCase())}</p>`}
+      ${m.err.lngLift ? errBox(m.err.lngLift) : lngRows.length ? `<div class="tw"><table data-sheet="LNG Lifting"><thead><tr><th>Slot</th><th>Lifting Slot</th><th>D-day</th><th>Lifter</th><th class="num">Planned (cbm)</th><th class="num">Actual (cbm)</th><th>Proposed Vessel</th><th>상태</th></tr></thead><tbody>${
         lngRows.map(s => `<tr class="${s.sds ? 'sds' : ''}">${tdTxt(s.slot)}${td(M.iso(s.start) + (s.end != null ? ' ~ ' + M.iso(s.end).slice(5) : ''), M.iso(s.start))}${tdTxt(dday(s.start - S.ref))}${td(lifterPill(s.lifter), s.lifter)}${tdNum(s.plan)}${tdNum(s.act)}${tdTxt(s.vessel)}${td(s.sds ? '<span class="pill st-d30">SDS 확정</span>' : '<span class="pill st-plan">ADP</span>', s.sds ? 'SDS 확정' : 'ADP')}</tr>`).join('')
       }</tbody></table></div>` : `<div class="placeholder">기준일 이후 LNG 슬롯이 없습니다.</div>`}
     </div>
     <div class="card"><h2>Condensate Lifting 일정 (향후)</h2>
-      <p class="note" style="margin:0 0 8px">LP Issue ${M.iso(m.condLift.issue)}</p>
-      ${condRows.length ? `<div class="tw"><table data-sheet="Condensate Lifting"><thead><tr><th>Slot</th><th>Lifting Slot</th><th>D-day</th><th>Lifter</th><th class="num">Planned (bbl)</th><th class="num">Actual (bbl)</th><th>Proposed Vessel</th></tr></thead><tbody>${
+      ${m.err.condLift ? "" : `<p class="note" style="margin:0 0 8px">LP Issue ${M.iso(m.condLift.issue)}</p>`}
+      ${m.err.condLift ? errBox(m.err.condLift) : condRows.length ? `<div class="tw"><table data-sheet="Condensate Lifting"><thead><tr><th>Slot</th><th>Lifting Slot</th><th>D-day</th><th>Lifter</th><th class="num">Planned (bbl)</th><th class="num">Actual (bbl)</th><th>Proposed Vessel</th></tr></thead><tbody>${
         condRows.map(s => s.parts.map((pt, k) => `<tr>${k ? '<td data-v=""></td><td data-v=""></td><td data-v=""></td>' : tdTxt(s.slot) + td(M.iso(s.start) + (s.end != null ? ' ~ ' + M.iso(s.end).slice(5) : ''), M.iso(s.start)) + tdTxt(dday(s.start - S.ref))}${td(lifterPill(pt.lifter), pt.lifter)}${tdNum(pt.plan)}${tdNum(pt.act)}${k ? '<td data-v=""></td>' : tdTxt(s.vessel)}</tr>`).join('')).join('')
       }</tbody></table></div>` : `<div class="placeholder">기준일 이후 Condensate 슬롯이 없습니다.</div>`}
     </div>
   </section>
   <section class="card"><h2>생산 실적 vs 계획</h2>${prodTable}</section>
-  <section class="card"><h2>Brent · JKM</h2>
+  <section class="card"><h2>Brent · JKM</h2>${m.err.price ? errBox(m.err.price) : ''}
     <div class="grid g2">${priceKpi('b', 'Brent', 'US$/bbl', 'var(--series)')}${priceKpi('j', 'JKM', '$/MMBtu', 'var(--series)')}</div>
     ${p.monthly.length ? `<div class="tw" style="margin-top:10px"><table data-sheet="Brent JKM 월평균"><thead><tr><th>월</th><th class="num">Brent 월평균 (US$/bbl)</th><th class="num">JKM 월평균 ($/MMBtu)</th></tr></thead><tbody>${
       p.monthly.map(x => `<tr>${td(M.iso(x.d).slice(0, 7), M.iso(x.d).slice(0, 7))}${tdNum(x.b, 2)}${tdNum(x.j, 2)}</tr>`).join('')}</tbody></table></div>` : ''}
@@ -939,12 +992,12 @@ function checklistBlock(key, rows, title, opt = {}){
     </div>
     <p class="nextdue">다음 마감: ${open ? `<b>${M.iso(open.it.dueDay)}</b> (${dday(open.it.dueDay - ref)}) ${esc(open.it.event)}` : '기준일 이후 열린 마감 없음'}${lateN ? ` · <span style="color:var(--late);font-weight:700">지연 ${lateN}건</span>` : ''}${missN ? ` · 실적 미입력 ${missN}건 (Lifting이 끝난 카고 — 알림 제외)` : ''}</p>
     ${timeline(shown, opt)}
-    <div class="tw"><table data-sheet="${esc(title)}"><thead><tr><th>상태</th><th>Due Date</th><th>D-day</th><th>Event</th><th>Due</th><th>Actual</th><th>Contract</th><th>Clauses</th><th>From</th><th>To</th><th>Items covered</th></tr></thead><tbody>${
+    <div class="tw"><table data-sheet="${esc(title)}"><thead><tr><th>상태</th><th>Due Date</th><th>D-day</th><th>Event</th><th>Due</th><th>Actual</th><th>Contract</th><th>Clauses</th><th>From</th><th>To</th><th>Items covered</th>${(opt.extras || []).map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${
       list.map(({ it, st }) => `<tr id="${esc(key + '-' + it.r)}"${f && f !== st.k ? ' style="display:none"' : ''}>${
         td(statusPill(st) + (st.k === 'rule' && (it.dueText || it.dueRule) ? `<div class="muted" style="font-size:11.5px;white-space:normal;max-width:160px">${esc(it.dueText || it.dueRule)}</div>` : ''), st.label)}${
         it.dueDay != null ? tdDay(it.dueDay) : tdTxt(it.dueText)}${tdTxt(it.dueDay != null && st.k !== 'done' ? dday(it.dueDay - ref) : '')}${tdWrap(it.event)}${
         tdTxt(it.dueRule)}${it.actualDay != null ? tdDay(it.actualDay) : tdTxt(it.actualText)}${tdTxt(it.contract)}${tdWrap(it.clauses)}${tdTxt(it.from)}${tdTxt(it.to)}${
-        td(it.items ? `<div class="items">${esc(it.items)}</div>${it.items.split('\n').length > 2 || it.items.length > 90 ? '<button type="button" class="more" aria-expanded="false">더보기</button>' : ''}` : '–', it.items)}</tr>`).join('')
+        td(it.items ? `<div class="items">${esc(it.items)}</div>${it.items.split('\n').length > 2 || it.items.length > 90 ? '<button type="button" class="more" aria-expanded="false">더보기</button>' : ''}` : '–', it.items)}${(it.extra || []).map(tdWrap).join('')}</tr>`).join('')
     }</tbody></table></div>`;
 }
 
@@ -959,7 +1012,7 @@ function renderCheck(){
   if (!sheets.some(s => s.name === S.sheet)) S.sheet = sheets[0].name;
   const sh = sheets.find(s => s.name === S.sheet);
   return tabBar('mid', cys.map(c => [c, c]), S.cy, 'cy') + tabBar('sub', sheets.map(s => [s.name, s.name]), S.sheet, 'sheet') +
-    `<section class="card"><h2>${esc(S.cy)} · ${esc(sh.name)}</h2>${checklistBlock('chk-' + sh.name.replace(/\W/g, ''), sh.rows, sh.name)}</section>`;
+    `<section class="card"><h2>${esc(S.cy)} · ${esc(sh.name)}</h2>${sh.err ? errBox(sh.err) : checklistBlock('chk-' + sh.name.replace(/\W/g, ''), sh.rows, sh.name, { extras: sh.extras })}</section>`;
 }
 
 // ---------- Tab 3: Cargo Operation (LNG) ----------
@@ -974,7 +1027,7 @@ function cargoNotes(m){
 function renderCargo(){
   const m = S.check?.model;
   if (!m) return `<div class="placeholder">이 탭은 <b>체크리스트 워크북 (Dashboard)</b>을 불러오면 표시됩니다.</div>`;
-  if (!m.schedule) return `<div class="placeholder">"일정" 시트를 읽지 못했습니다 (데이터 점검 참고).</div>`;
+  if (!m.schedule) return errBox(m.err.schedule || '"일정" 시트를 읽지 못했습니다');
   const yearOf = s => s.start == null ? '날짜 없음' : String(new Date(s.start * M.DAY).getUTCFullYear());
   const years = [...new Set(m.schedule.slots.map(yearOf))];
   if (!years.length) return `<div class="placeholder">"일정" 시트에 카고 슬롯이 없습니다.</div>`;
@@ -992,12 +1045,12 @@ function renderCargo(){
         ${f('Lifting Vol. (cbm)', fmt(s.vol))}${f('Planned (MMBtu)', fmt(s.mmbtu))}${f('Cargo Capacity', fmt(s.capacity))}${f('Ship Type', esc(s.shipType || '–'))}${f('Departing Port', esc(s.port || '–'))}
         ${s.actCbm != null || s.actMmbtu != null ? f('Actual (cbm)', fmt(s.actCbm)) + f('Actual (MMBtu)', fmt(s.actMmbtu)) : ''}</div>
       ${cargoPast(s) ? `<p class="note" style="margin:0 0 8px">Lifting 창이 기준일 전에 끝난 카고입니다 — 지난 마감에 Actual이 비어 있으면 "실적 미입력"으로 표시합니다 (지연 아님, 알림 제외).</p>` : ''}
-      ${pair ? checklistBlock('cg-' + s.slot.replace(/\W/g, ''), pair.rows, 'Cargo ' + s.slot, { pastCargo: cargoPast(s), anchor: s.start }) :`<div class="placeholder">Cargo 시트에 이 카고의 체크리스트 열이 없습니다.</div>`}</section>`;
+      ${pair ? checklistBlock('cg-' + s.slot.replace(/\W/g, ''), pair.rows, 'Cargo ' + s.slot, { pastCargo: cargoPast(s), anchor: s.start }) : m.err.cargo ? errBox(m.err.cargo) : `<div class="placeholder">Cargo 시트에 이 카고의 체크리스트 열이 없습니다.</div>`}</section>`;
   }
   return tabBar('mid', years.map(y => [y, y]), S.year, 'year') + tabBar('sub', subs, S.cargo, 'cargo') + body;
 }
 function renderHistory(g){
-  if (!g) return `<div class="placeholder">"History (연단위)" 시트를 읽지 못했습니다.</div>`;
+  if (!g) return errBox(S.check.model.err.history || '"History (연단위)" 시트를 읽지 못했습니다');
   const rows = g.rows, width = Math.max(0, ...rows.map(r => r.length));
   const usedCols = [...Array(width).keys()].filter(c => rows.some(r => !M.isEmpty(r[c])));
   const usedRows = [...rows.keys()].filter(r => rows[r].some(v => !M.isEmpty(v)));
