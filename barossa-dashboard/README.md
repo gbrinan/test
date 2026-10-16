@@ -14,7 +14,7 @@
 |---|---|---|
 | Production | Feed Gas | `Date`, `Actual` 아래 단위행 `MMscf` (실적), 같은 헤더 행 `Nomination` 아래 `MMscf` (Nomination 선) |
 | Production | Forecast | `Date`+`Feed Gas` 헤더 블록 중 날짜 행이 가장 많은 블록 (현재 `* Daily Production` 블록) |
-| Production | Ledger_ADP 및 SDS / Condensate Ledger | 같은 행의 `Date`·`Production`·`Inventory`. 재고 기준선은 헤더 위 블록의 `Working Capacity`·`Tank Top`·`Unpumpable` 라벨 오른쪽 값 (`LC 기준` 열이 있으면 그 값) |
+| Production | Ledger_ADP 및 SDS / Condensate Ledger | 같은 행의 `Date`·`Production`·`Inventory`. 재고 기준선은 헤더 위 블록의 `Working Capacity`·`Tank Top`·`Unpumpable` 라벨 오른쪽 첫 값 (원장 수식이 참조하는 값. 같은 행의 `LC 기준`·`PSA/DLNG` 값은 데이터 점검에 참고로만 표시) |
 | Production | ADP 및 SDS / LP | `Slot Number`, `Lifting Slot`, `Lifter`, `Cargo Size (Planned_…)`, `Cargo Size (Actual_…)`, `Proposed Vessel`, `Issue`, `last confirmed SDS slot` |
 | Production | Operation Daily | `Barossa & DLNG Production` 표의 `Actual` / `Plan…` / `Actual vs Plan` |
 | Production | BrentnJKM | `날짜`, `Brent가격`, `JKM가격`, `월`, `Brent 월평균`, `JKM 월평균` |
