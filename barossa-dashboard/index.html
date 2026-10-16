@@ -120,6 +120,23 @@ tr.sds td:first-child{box-shadow:inset 3px 0 0 var(--lng)}
 .tl .hit{cursor:default}
 .rulestrip{font-size:12px;color:var(--text2);background:var(--surface);border-radius:8px;padding:6px 10px;margin:0 0 10px}
 .rulestrip b{color:var(--text)}
+/* 미입력: 빨간 글자 + ⊘ + 글자 (지연 ▲와 구분) */
+.miss-in{color:var(--late);font-weight:700;white-space:nowrap}
+.miss-txt{color:var(--late);font-weight:600}
+.goto{border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;text-align:left}
+.goto:hover,.goto:focus-visible{text-decoration:underline}
+.nexttask{font-size:13px;margin:0 0 10px;color:var(--text2)}
+.nexttask .goto{color:var(--text)}
+/* 카고 진행 막대 */
+.prog{margin:0 0 10px}
+.prog-h{font-size:12.5px;margin-bottom:4px}
+.pbar{display:flex;gap:2px;height:12px;max-width:640px}
+.pseg{min-width:4px}
+.pseg:last-child{border-radius:0 4px 4px 0}
+.ps-done{background:var(--m-done)}.ps-late{background:var(--m-late)}.ps-d7{background:var(--m-d7)}.ps-d30{background:var(--m-d30)}.ps-plan{background:var(--m-plan)}.ps-miss{background:var(--m-miss)}
+.ps-rule{background:repeating-linear-gradient(135deg,var(--late) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 1px var(--late)}
+.plegend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--text2);margin-top:5px}
+.plegend b{color:var(--text)}
 /* 한 줄 알림 */
 .insight{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:9px 12px;margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--brand);border-radius:10px;font-size:13.5px}
 .insight .t{font-weight:600;flex:1 1 300px;min-width:0}
@@ -215,7 +232,10 @@ dialog::backdrop{background:rgba(10,12,25,.45)}
   .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
   .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:2mm}
-  .kpi,.chartbox,.hdrcard,.chart-legend,.tl,.rulestrip,tr,.nextdue{break-inside:avoid}
+  .kpi,.chartbox,.hdrcard,.chart-legend,.tl,.rulestrip,tr,.nextdue,.nexttask,.prog{break-inside:avoid}
+  .nexttask{font-size:9pt}
+  .pbar{max-width:none}
+  .plegend{font-size:8pt}
   .kpi{padding:2mm 3mm} .kpi .v{font-size:13pt}
   .chartbox svg{max-height:58mm}
   .chartbox svg text,.tl svg text{font-size:12.5px}
@@ -809,7 +829,8 @@ function shape(k, x, y, r, extra = ''){
     case 'late': return `<path d="M${x},${y - r * 1.15}L${x + r * 1.1},${y + r * .8}L${x - r * 1.1},${y + r * .8}Z" fill="${c}" ${ring} ${extra}/>`;
     case 'd7': return `<path d="M${x},${y - r * 1.2}L${x + r * 1.2},${y}L${x},${y + r * 1.2}L${x - r * 1.2},${y}Z" fill="${c}" ${ring} ${extra}/>`;
     case 'done': return `<rect x="${x - r * .9}" y="${y - r * .9}" width="${r * 1.8}" height="${r * 1.8}" rx="1.5" fill="${c}" ${ring} ${extra}/>`;
-    case 'plan': case 'rule': return `<circle cx="${x}" cy="${y}" r="${r * .85}" fill="var(--card)" stroke="${c}" stroke-width="2" ${extra}/>`;
+    case 'plan': return `<circle cx="${x}" cy="${y}" r="${r * .85}" fill="var(--card)" stroke="${c}" stroke-width="2" ${extra}/>`;
+    case 'rule': return `<g ${extra}><circle cx="${x}" cy="${y}" r="${r * .85}" fill="var(--card)" stroke="var(--late)" stroke-width="1.8"/><path d="M${x - r * .6},${y + r * .6}L${x + r * .6},${y - r * .6}" stroke="var(--late)" stroke-width="1.8"/></g>`;
     case 'miss': return `<rect x="${x - r * .8}" y="${y - r * .8}" width="${r * 1.6}" height="${r * 1.6}" rx="1" fill="var(--card)" stroke="${c}" stroke-width="2" ${extra}/>`;
     default: return `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" ${ring} ${extra}/>`;
   }
@@ -1025,8 +1046,36 @@ function renderProd(){
 
 // ---------- 체크리스트 표 공통 ----------
 const dlab = v => v === 0 ? 'D' : v < 0 ? `D${v}` : `D+${v}`;
-// 마감 타임라인: 체크리스트 = 날짜축, 카고 = Lifting 시작일 기준 D-day 축. 날짜 없는 항목은 아래 띠로만
-function timeline(list, opt){
+// 미입력 표시: 빨간 글자 + ⊘ 아이콘 + 글자 (지연 ▲와 구분)
+const MISS = lab => `<span class="miss-in">⊘ ${lab}</span>`;
+const gotoBtn = (key, it, html) => `<button type="button" class="goto" data-goto="${esc(key + '|' + it.r)}">${html}</button>`;
+const shortTxt = (s, n = 16) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+// 글자 폭 추정 (한글은 넓게)
+const textW = (s, fs = 10.5) => [...String(s)].reduce((w, ch) => w + (/[ㄱ-힝]/.test(ch) ? fs : fs * .58), 0);
+const STATUS_ORDER = [['done', '완료'], ['late', '지연'], ['d7', 'D-7 임박'], ['d30', 'D-30'], ['plan', '예정'], ['miss', '실적 미입력'], ['rule', '날짜 없음']];
+// 카고 진행 요약: 상태별 칸 막대 + 개수 + 완료/전체
+function progressBar(list){
+  const c = {}; list.forEach(x => c[x.st.k] = (c[x.st.k] || 0) + 1);
+  const items = STATUS_ORDER.filter(([k]) => c[k]);
+  return `<div class="prog"><div class="prog-h"><b>완료 ${c.done || 0} / 전체 ${list.length}</b></div>
+    <div class="pbar" role="img" aria-label="${esc(items.map(([k, l]) => `${l} ${c[k]}건`).join(', '))}">${items.map(([k, l]) => `<span class="pseg ps-${k}" style="flex:${c[k]} 1 0" title="${l} ${c[k]}건"></span>`).join('')}</div>
+    <div class="plegend">${items.map(([k, l]) => `<span>${sico(k)}${l} <b>${c[k]}</b></span>`).join('')}</div></div>`;
+}
+// 바로 앞 과제: 지연이 있으면 가장 오래 지연된 것, 없으면 기준일 이후 가장 이른 열린 과제
+function nextTask(list, key){
+  const asc = (a, b) => a.it.dueDay - b.it.dueDay;
+  const late = list.filter(x => x.st.k === 'late').sort(asc), fut = list.filter(x => ['d7', 'd30', 'plan'].includes(x.st.k)).sort(asc), miss = list.filter(x => x.st.k === 'miss').sort(asc);
+  const pick = late[0] || fut[0];
+  if (pick) {
+    const { it, st } = pick, who = [it.from, it.to].filter(Boolean).join(' → ');
+    return `<p class="nexttask">바로 앞 과제: ${gotoBtn(key, it, `${statusPill(st)} <b>${it.event ? esc(it.event) : MISS('Event 미입력')}</b> · ${M.iso(it.dueDay)} (${dday(st.diff)}${st.k === 'late' ? ' 지연' : ''})${who ? ' · ' + esc(who) : ''}`)}${late.length > 1 ? ` <span class="muted">· 그 밖에 지연 ${late.length - 1}건</span>` : ''}</p>`;
+  }
+  if (miss.length) return `<p class="nexttask">바로 앞 과제: 열린 과제 없음 · ${MISS('실적 미입력')} ${miss.length}건 — 가장 오래된 항목 ${gotoBtn(key, miss[0].it, `<b>${esc(miss[0].it.event || '–')}</b> (${M.iso(miss[0].it.dueDay)})`)}</p>`;
+  return `<p class="nexttask">바로 앞 과제: 열린 과제 없음</p>`;
+}
+// 마감 타임라인: 체크리스트 = 날짜축, 카고 = Lifting 시작일 기준 D-day 축.
+// 기준일은 항상 축 위에 둠 — 너무 멀면 축을 끊고(≈) 짧은 구간을 덧붙임
+function timeline(list, opt, key){
   const dated = list.filter(x => x.it.dueDay != null), undated = list.filter(x => x.it.dueDay == null);
   const ti = timelines.length, reg = []; timelines.push(reg);
   let svg = '';
@@ -1034,54 +1083,78 @@ function timeline(list, opt){
     const rel = opt.anchor != null, val = x => rel ? x.it.dueDay - opt.anchor : x.it.dueDay, refV = rel ? S.ref - opt.anchor : S.ref;
     let v0 = Math.min(...dated.map(val)), v1 = Math.max(...dated.map(val));
     if (rel) { v0 = Math.min(v0, -30); v1 = Math.max(v1, 0); }
-    const refIn = !rel || (refV >= v0 - 20 && refV <= v1 + 20);
-    if (refIn) { v0 = Math.min(v0, refV); v1 = Math.max(v1, refV); }
-    const pad = Math.max(2, (v1 - v0) * .03); v0 -= pad; v1 += pad;
-    const W = Math.min(1100, Math.max(330, ($('#app')?.clientWidth || 800) - 60)), L = 12, R = 12;
-    const x = v => L + (v - v0) / (v1 - v0) * (W - L - R);
-    // 같은 위치(9px 칸)에 겹치면 위로 쌓음, 칸당 최대 6개
-    const stack = {}, pos = dated.map(d => { const px = x(val(d)), b = Math.round(px / 9); stack[b] = (stack[b] || 0) + 1; return { d, px, b, i: stack[b] - 1 }; });
+    const W = Math.min(1100, Math.max(330, ($('#app')?.clientWidth || 800) - 60)), L = 12, R = 12, BRK = 16, far = Math.max(25, (v1 - v0) * .35);
+    let segs;
+    if (refV > v1 + far) segs = [{ a: v0, b: v1, w: .82 }, { a: refV - 3, b: refV + 3, w: .18 }];
+    else if (refV < v0 - far) segs = [{ a: refV - 3, b: refV + 3, w: .18 }, { a: v0, b: v1, w: .82 }];
+    else segs = [{ a: Math.min(v0, refV), b: Math.max(v1, refV), w: 1 }];
+    segs.forEach(s => { const p = Math.max(1.5, (s.b - s.a) * .03); s.a -= p; s.b += p; });
+    const usable = W - L - R - (segs.length - 1) * BRK; let acc = L;
+    segs.forEach(s => { s.x0 = acc; s.x1 = acc + usable * s.w; acc = s.x1 + BRK; });
+    const x = v => { const s = segs.find(g => v >= g.a && v <= g.b) || (v < segs[0].a ? segs[0] : segs[segs.length - 1]); return s.x0 + (Math.min(Math.max(v, s.a), s.b) - s.a) / (s.b - s.a) * (s.x1 - s.x0); };
+    // 같은 위치(10px 칸)에 겹치면 위로 쌓음, 칸당 최대 6개
+    const GAP = 15, stack = {}, pos = dated.map(d => { const px = x(val(d)), b = Math.round(px / 10); stack[b] = (stack[b] || 0) + 1; return { d, px, b, i: stack[b] - 1 }; });
     const maxS = Math.min(6, Math.max(...Object.values(stack)));
-    const T = 18, base = T + maxS * 12, AX = base + 9, H = AX + 18;
-    svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="마감 타임라인">`;
-    svg += `<line x1="${L}" x2="${W - R}" y1="${AX}" y2="${AX}" stroke="var(--axis)"/>`;
-    const tick = (v, label, strong) => `<line x1="${x(v)}" x2="${x(v)}" y1="${AX}" y2="${AX + 4}" stroke="var(--axis)"/><text x="${x(v)}" y="${AX + 15}" text-anchor="middle" font-size="10.5" fill="var(${strong ? '--text2' : '--muted'})"${strong ? ' font-weight="700"' : ''}>${label}</text>`;
-    if (rel) { const st = (v1 - v0) > 120 ? 30 : (v1 - v0) > 60 ? 15 : 10; for (let v = Math.ceil(v0 / st) * st; v <= v1; v += st) svg += tick(v, v === 0 ? 'D (Lifting)' : dlab(v), v === 0); }
-    else { const a = new Date(v0 * M.DAY), months = []; for (let y = a.getUTCFullYear(), mo = a.getUTCMonth() + 1; ; mo++) { const d = Date.UTC(y, mo, 1) / M.DAY; if (d > v1) break; months.push(d); }
+    const T = 34, base = T + 8 + (maxS - 1) * GAP, AX = base + 11, H = AX + 20, rx = x(refV);
+    svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="마감 타임라인 — 기준일 ${M.iso(S.ref)}">`;
+    // 지난 쪽(기준일 왼쪽) 옅게
+    svg += `<rect x="${L}" y="${T - 4}" width="${Math.max(0, rx - L)}" height="${AX - T + 4}" fill="var(--text2)" opacity=".07"/>`;
+    segs.forEach(s => { svg += `<line x1="${s.x0}" x2="${s.x1}" y1="${AX}" y2="${AX}" stroke="var(--axis)"/>`; });
+    if (segs.length > 1) { const bx = segs[0].x1 + BRK / 2; svg += `<path d="M${bx - 5},${AX + 5}L${bx - 1},${AX - 5}M${bx + 1},${AX + 5}L${bx + 5},${AX - 5}" stroke="var(--text2)" stroke-width="1.5"/><text x="${bx}" y="${AX + 17}" text-anchor="middle" font-size="10" fill="var(--muted)">생략</text>`; }
+    const tick = (v, label, strong) => `<line x1="${x(v)}" x2="${x(v)}" y1="${AX}" y2="${AX + 4}" stroke="var(--axis)"/><text x="${x(v)}" y="${AX + 16}" text-anchor="middle" font-size="10.5" fill="var(${strong ? '--text' : '--muted'})"${strong ? ' font-weight="700"' : ''}>${label}</text>`;
+    const main = segs.find(s => s.w > .5) || segs[0];
+    if (rel) { const sp = main.b - main.a, st = sp > 120 ? 30 : sp > 60 ? 15 : 10; for (let v = Math.ceil(main.a / st) * st; v <= main.b; v += st) if (v !== 0 && (segs.length < 2 || Math.abs(x(v) - (segs[0].x1 + BRK / 2)) > 26)) svg += tick(v, dlab(v)); }
+    else { const a = new Date(v0 * M.DAY), months = []; for (let y = a.getUTCFullYear(), mo = a.getUTCMonth() + 1; ; mo++) { const d = Date.UTC(y, mo, 1) / M.DAY; if (d > main.b) break; if (d >= main.a) months.push(d); }
       const every = Math.ceil(months.length / Math.max(1, Math.floor(W / 70))); months.forEach((d, k) => { if (k % every === 0) svg += tick(d, M.iso(d).slice(0, 7)); }); }
-    if (refIn) svg += `<line x1="${x(refV)}" x2="${x(refV)}" y1="${T - 8}" y2="${AX}" stroke="var(--text2)"/><text x="${x(refV) + 3}" y="${T - 10 + 8}" font-size="10.5" fill="var(--text2)" ${HALO}>기준일</text>`;
-    else svg += `<text x="${refV > v1 ? W - R : L}" y="${T - 4}" text-anchor="${refV > v1 ? 'end' : 'start'}" font-size="10.5" fill="var(--text2)">${refV > v1 ? `기준일 ${dlab(refV)} →` : `← 기준일 ${dlab(refV)}`}</text>`;
+    // Lifting 일(D): 점선 + 마름모 (기준일 실선과 구분)
+    if (rel) { const lx = x(0); svg += `<line x1="${lx}" x2="${lx}" y1="${T - 4}" y2="${AX}" stroke="var(--text)" stroke-dasharray="3 3" opacity=".7"/><path d="M${lx},${AX - 6}L${lx + 6},${AX}L${lx},${AX + 6}L${lx - 6},${AX}Z" fill="var(--text)" stroke="var(--card)" stroke-width="2" paint-order="stroke"/>` + `<text x="${lx}" y="${AX + 16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--text)" ${HALO}>D (Lifting)</text>`; }
+    // 기준일: 굵은 실선 + 위쪽 배지
+    const badge = `기준일 ${M.iso(S.ref)}${rel ? ' · ' + (refV < 0 ? `리프팅 D${refV}` : refV === 0 ? '리프팅 당일' : `리프팅 후 D+${refV}`) : ''}`, bw = textW(badge, 11) + 14;
+    const bx0 = Math.min(Math.max(rx - bw / 2, L), W - R - bw);
+    svg += `<line x1="${rx}" x2="${rx}" y1="20" y2="${AX}" stroke="var(--text)" stroke-width="2"/><rect x="${bx0}" y="2" width="${bw}" height="19" rx="9.5" fill="var(--text)"/><text x="${bx0 + bw / 2}" y="15.5" text-anchor="middle" font-size="11" font-weight="700" fill="var(--card)">${esc(badge)}</text>`;
+    // 점 + 짧은 이름표 (같은 줄의 다른 점·이름표와 겹치지 않을 때만, 아니면 툴팁)
+    const occ = {}, take = (i, a, b) => (occ[i] = occ[i] || []).push([a, b]), free = (i, a, b) => a >= L && b <= W - R && !(occ[i] || []).some(([p, q]) => a < q + 3 && b > p - 3) && !(a < rx + 3 && b > rx - 3);
+    const shown = pos.filter(p => p.i < 6);
+    shown.forEach(p => take(p.i, p.px - 6, p.px + 6));
+    let labels = '';
+    shown.forEach(p => {
+      const lab = shortTxt(p.d.it.event, 18); if (!lab) return;
+      const w = textW(lab), py = base - p.i * GAP;
+      if (free(p.i, p.px + 11, p.px + 11 + w)) { take(p.i, p.px + 11, p.px + 11 + w); labels += `<text x="${p.px + 11}" y="${py + 3.5}" font-size="10.5" fill="var(--text2)" ${HALO}>${esc(lab)}</text>`; }
+      else if (free(p.i, p.px - 11 - w, p.px - 11)) { take(p.i, p.px - 11 - w, p.px - 11); labels += `<text x="${p.px - 11}" y="${py + 3.5}" text-anchor="end" font-size="10.5" fill="var(--text2)" ${HALO}>${esc(lab)}</text>`; }
+    });
+    svg += labels;
     const over = {};
     pos.forEach(({ d, px, b, i }) => {
       if (i >= 6) { over[b] = (over[b] || 0) + 1; return; }
-      const k = reg.length, py = base - i * 12;
+      const k = reg.length, py = base - i * GAP;
       reg.push({ it: d.it, st: d.st, when: `${M.iso(d.it.dueDay)}${rel ? ` (${dlab(val(d))})` : ''} · 기준일 ${dday(d.it.dueDay - S.ref)}` });
       svg += `<g class="hit" data-tl="${ti}:${k}">${shape(d.st.k, px, py, 4.5)}<circle cx="${px}" cy="${py}" r="11" fill="transparent"/></g>`;
     });
-    Object.entries(over).forEach(([b, n]) => { svg += `<text x="${b * 9 + 6}" y="${T - 2}" font-size="10" fill="var(--muted)">+${n}</text>`; });
+    Object.entries(over).forEach(([b, n]) => { svg += `<text x="${b * 10 + 6}" y="${T - 6}" font-size="10" fill="var(--muted)">+${n}</text>`; });
     svg = `<div class="tl">${svg}</svg></div>`;
   }
-  const strip = undated.length ? `<div class="rulestrip">↻ <b>날짜 없는 항목 ${undated.length}건</b> (수시/규칙 등 — 타임라인 제외): ${undated.slice(0, 6).map(x => esc(x.it.event || '–')).join(' · ')}${undated.length > 6 ? ` 외 ${undated.length - 6}건` : ''}</div>` : '';
+  const strip = undated.length ? `<div class="rulestrip">${MISS('날짜 없음')} <b>${undated.length}건</b> (Due Date 없음 — 타임라인 제외): ${undated.slice(0, 12).map(x => gotoBtn(key, x.it, `<span class="miss-txt">${esc(shortTxt(x.it.event, 28) || 'Event 미입력')}</span>`)).join(' · ')}${undated.length > 12 ? ` 외 ${undated.length - 12}건` : ''}</div>` : '';
   return svg + strip;
 }
-// opt: { pastCargo, anchor(카고 Lifting 시작일) }
+// opt: { pastCargo, anchor(카고 Lifting 시작일), extras, edit }
 function checklistBlock(key, rows, title, opt = {}){
   const ref = S.ref, list = rows.map(it => ({ it, st: M.status(it, ref, opt.pastCargo) }));
   const counts = {}; list.forEach(x => counts[x.st.k] = (counts[x.st.k] || 0) + 1);
   const f = S.filters[key], shown = list.filter(x => !f || x.st.k === f);
-  const open = list.filter(x => x.st.k !== 'done' && x.it.dueDay != null && x.it.dueDay >= ref).sort((a, b) => a.it.dueDay - b.it.dueDay)[0];
-  const lateN = counts.late || 0, missN = counts.miss || 0;
-  return `<div class="chips no-print" role="group" aria-label="상태 필터 (범례)">
+  return `${nextTask(list, key)}
+    ${opt.anchor != null ? progressBar(list) : ''}
+    <div class="chips no-print" role="group" aria-label="상태 필터 (범례)">
       <button type="button" class="chip" data-filter="${esc(key)}" data-k="" aria-pressed="${!f}">전체 ${list.length}</button>
       ${STATUS.filter(([k]) => counts[k]).map(([k, l]) => `<button type="button" class="chip st-${k}" data-filter="${esc(key)}" data-k="${k}" aria-pressed="${f === k}">${sico(k)}${l} ${counts[k]}</button>`).join('')}
     </div>
-    <p class="nextdue">다음 마감: ${open ? `<b>${M.iso(open.it.dueDay)}</b> (${dday(open.it.dueDay - ref)}) ${esc(open.it.event)}` : '기준일 이후 열린 마감 없음'}${lateN ? ` · <span style="color:var(--late);font-weight:700">지연 ${lateN}건</span>` : ''}${missN ? ` · 실적 미입력 ${missN}건 (Lifting이 끝난 카고 — 알림 제외)` : ''}</p>
-    ${timeline(shown, opt)}
+    ${timeline(shown, opt, key)}
     <div class="tw"><table class="t-chk" data-sheet="${esc(title)}"><thead><tr><th>상태</th><th>Due Date</th><th>D-day</th><th>Event</th><th>Due</th><th>Actual</th><th>Contract</th><th>Clauses</th><th>From</th><th>To</th><th>Items covered</th>${(opt.extras || []).map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${
       list.map(({ it, st }) => `<tr id="${esc(key + '-' + it.r)}"${f && f !== st.k ? ' style="display:none"' : ''}>${
-        td((opt.edit ? `<button type="button" class="rowedit no-print" data-edit="${esc(opt.edit.name + '|' + it.r)}" aria-label="행 편집" title="행 편집">✎</button>` : '') + statusPill(st) + (isEdited(it) ? '<span class="eddot" title="이 화면에서 수정한 행">● 수정됨</span>' : '') + (st.k === 'rule' && (it.dueText || it.dueRule) ? `<div class="muted" style="font-size:11.5px;white-space:normal;max-width:160px">${esc(it.dueText || it.dueRule)}</div>` : ''), st.label)}${
-        it.dueDay != null ? tdDay(it.dueDay) : tdTxt(it.dueText)}${tdTxt(it.dueDay != null && st.k !== 'done' ? dday(it.dueDay - ref) : '')}${tdWrap(it.event)}${
-        tdTxt(it.dueRule)}${it.actualDay != null ? tdDay(it.actualDay) : tdTxt(it.actualText)}${tdTxt(it.contract)}${tdWrap(it.clauses)}${tdTxt(it.from)}${tdTxt(it.to)}${
+        td((opt.edit ? `<button type="button" class="rowedit no-print" data-edit="${esc(opt.edit.name + '|' + it.r)}" aria-label="행 편집" title="행 편집">✎</button>` : '') + statusPill(st) + (isEdited(it) ? '<span class="eddot" title="이 화면에서 수정한 행">● 수정됨</span>' : '') + (st.k === 'rule' && it.dueRule && !it.dueText ? `<div class="muted" style="font-size:11.5px;white-space:normal;max-width:160px">${esc(it.dueRule)}</div>` : ''), st.label)}${
+        it.dueDay != null ? tdDay(it.dueDay) : td(MISS('날짜 없음') + (it.dueText ? `<div class="muted" style="font-size:11.5px;white-space:normal">${esc(it.dueText)}</div>` : ''), it.dueText)}${
+        tdTxt(it.dueDay != null && st.k !== 'done' ? dday(it.dueDay - ref) : '')}${it.event ? tdWrap(it.event) : td(MISS('미입력'), '')}${
+        tdTxt(it.dueRule)}${it.actualDay != null ? tdDay(it.actualDay) : it.actualText ? tdTxt(it.actualText) : (st.k === 'late' || st.k === 'miss') ? td(MISS('미입력'), '') : tdTxt('')}${tdTxt(it.contract)}${tdWrap(it.clauses)}${tdTxt(it.from)}${tdTxt(it.to)}${
         td(it.items ? `<div class="items">${esc(it.items)}</div>${it.items.split('\n').length > 2 || it.items.length > 90 ? '<button type="button" class="more" aria-expanded="false">더보기</button>' : ''}` : '–', it.items)}${(it.extra || []).map(tdWrap).join('')}</tr>${opt.edit && S.editing === opt.edit.name + '|' + it.r ? editorRow(opt.edit, it, 11 + (opt.extras || []).length) : ''}`).join('')
     }</tbody></table></div>`;
 }
@@ -1263,7 +1336,7 @@ function renderCargo(){
     const s = slots.find(x => x.slot === S.cargo), pair = m.cargo?.pairs.find(p => M.norm(p.slot) === M.norm(s.slot));
     const f = (l, v) => `<div><div class="l">${l}</div><div class="v">${v}</div></div>`;
     body = `<section class="card"><h2>${esc(s.slot)} <span class="muted" style="font-size:12px;font-weight:600">· "일정" As of ${M.iso(m.schedule.asOf)}</span></h2>
-      <div class="hdrcard">${f('Lifting Slot', M.iso(s.start) + (s.end != null ? ' ~ ' + M.iso(s.end) : ''))}${f('Lifter', lifterPill(s.lifter))}${f('LNG Ship', esc(s.ship || '–'))}
+      <div class="hdrcard">${f('Lifting Slot', s.start == null ? MISS('미입력') : M.iso(s.start) + (s.end != null ? ' ~ ' + M.iso(s.end) : ''))}${f('Lifter', s.lifter ? lifterPill(s.lifter) : MISS('미입력'))}${f('LNG Ship', s.ship ? esc(s.ship) : MISS('미입력'))}
         ${f('Lifting Vol. (cbm)', fmt(s.vol))}${f('Planned (MMBtu)', fmt(s.mmbtu))}${f('Cargo Capacity', fmt(s.capacity))}${f('Ship Type', esc(s.shipType || '–'))}${f('Departing Port', esc(s.port || '–'))}
         ${s.actCbm != null || s.actMmbtu != null ? f('Actual (cbm)', fmt(s.actCbm)) + f('Actual (MMBtu)', fmt(s.actMmbtu)) : ''}</div>
       ${cargoPast(s) ? `<p class="note" style="margin:0 0 8px">Lifting 창이 기준일 전에 끝난 카고입니다 — 지난 마감에 Actual이 비어 있으면 "실적 미입력"으로 표시합니다 (지연 아님, 알림 제외).</p>` : ''}
@@ -1352,6 +1425,7 @@ document.addEventListener('click', e => {
   else if (t.classList.contains('more')) { const box = t.previousElementSibling, open = box.classList.toggle('open'); t.textContent = open ? '접기' : '더보기'; t.setAttribute('aria-expanded', open); }
   else if (t.id === 'openAlerts') openAlerts(S._alerts || []);
   else if (d.act === 'sample') loadSample();
+  else if (d.goto) { const k = d.goto.lastIndexOf('|'), key = d.goto.slice(0, k); delete S.filters[key]; render(); flashRow(key + '-' + d.goto.slice(k + 1)); }
   else if (d.edit) { S.editing = S.editing === d.edit ? null : d.edit; render(); if (S.editing) flashRow(rowId(...d.edit.split('|'))); }
   else if (d.add) addRow(d.add);
   else if (d.apply) applyEdit(t.closest('tr'));
