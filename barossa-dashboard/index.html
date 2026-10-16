@@ -78,7 +78,6 @@ section{margin-bottom:14px}
 .privacy{font-size:12px;color:var(--muted)}
 .sample{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:8px 12px;margin-bottom:12px;border:1.5px dashed var(--brand);border-radius:10px;background:var(--brand-soft);font-size:13px}
 .sample span{color:var(--text2)}
-@media print{.sample:not([hidden]){display:flex!important;border-color:#888;background:none}}
 .loadmsg{font-size:13px;margin-top:8px;color:var(--late)}
 .banner{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;border-radius:10px;background:var(--late-bg);color:var(--late);font-weight:600;font-size:13px;margin-bottom:12px}
 .banner .btn{padding:3px 9px;font-size:12px}
@@ -121,6 +120,26 @@ tr.sds td:first-child{box-shadow:inset 3px 0 0 var(--lng)}
 .tl .hit{cursor:default}
 .rulestrip{font-size:12px;color:var(--text2);background:var(--surface);border-radius:8px;padding:6px 10px;margin:0 0 10px}
 .rulestrip b{color:var(--text)}
+/* 한 줄 알림 */
+.insight{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:9px 12px;margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--brand);border-radius:10px;font-size:13.5px}
+.insight .t{font-weight:600;flex:1 1 300px;min-width:0}
+.insight .btn{padding:3px 9px;font-size:12px}
+.more-ins{flex-basis:100%;font-size:12.5px;color:var(--text2)}
+.more-ins summary{cursor:pointer;font-weight:600}
+.more-ins ul{margin:6px 0 0;padding-left:4px;list-style:none;display:grid;gap:4px}
+/* 체크리스트 편집 */
+.edbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 10px}
+.edbar .btn[disabled]{opacity:.45;cursor:not-allowed}
+.edcount{font-size:12.5px;font-weight:700;color:var(--brand)}
+.rowedit{border:1px solid var(--border);background:var(--card);border-radius:6px;padding:0 6px;margin-right:5px;font-size:12px;line-height:20px}
+.rowedit:hover{border-color:var(--brand)}
+.eddot{display:inline-block;margin-left:5px;font-size:11px;font-weight:700;color:var(--brand)}
+tr.editrow td{background:var(--surface);white-space:normal}
+.edform{display:grid;gap:8px 12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));max-width:min(100%,1100px)}
+.ef{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--text2);font-weight:600}
+.ef.wide{grid-column:1/-1}
+.ef input,.ef textarea{font:inherit;font-weight:400;font-size:13px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);min-width:0}
+.edbtns{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
 /* 달성률 막대 */
 .ach{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end}
 .ach .bar{position:relative;width:84px;height:8px;background:var(--grid);border-radius:0 4px 4px 0}
@@ -165,16 +184,77 @@ dialog::backdrop{background:rgba(10,12,25,.45)}
 .alert-item:hover{background:var(--surface)}
 .alert-item .w{flex:1;min-width:0}
 .print-head{display:none}
+/* ===== 인쇄: A4 가로, 화면 축소 없이 본문 8pt 이상, 잘림 없음 ===== */
+@page{size:A4 landscape;margin:10mm}
 @media print{
-  body{background:#fff;color:#000}
-  .no-print,.tabs,.banner,.filebar,details.check,#tip,dialog{display:none!important}
-  .print-head{display:block;margin-bottom:10px;font-size:13px}
-  .card{box-shadow:none;border-color:#ccc;break-inside:avoid}
-  .tw{overflow:visible}
-  table{font-size:10.5px}
-  .items{display:block;-webkit-line-clamp:unset;max-width:none}
+  /* 어두운 테마여도 밝게 인쇄 (화면용 다크 규칙보다 뒤에 두어 우선) */
+  :root,:root:not([data-theme="light"]),:root[data-theme="dark"]{
+    color-scheme:light;
+    --page:#fff; --card:#fff; --surface:#f1f2f6; --border:#cfd3df; --grid:#e3e5ec; --axis:#b9bfcf;
+    --text:#111; --text2:#3d4255; --muted:#666b80; --brand:#3a4bd8; --brand-soft:#eef0fd;
+    --series:#2a78d6; --context:#8f92a3; --santos:#1baf7a; --sk:#2a78d6; --jera:#eb6834; --other:#8a90a6; --lng:#2a78d6;
+    --late:#b42626; --late-bg:#fde8e8; --d7:#8a5800; --d7-bg:#fff2d6; --d30:#1d5fb8; --d30-bg:#e3eefc;
+    --done:#1d7a3a; --done-bg:#e2f4e7; --plan:#4a5068; --plan-bg:#eef0f6; --rule:#6b4fa8; --rule-bg:#efeafa;
+    --miss:#55586a; --miss-bg:#ececef; --m-d30:#5a86cf; --m-plan:#a3a8ba;
+  }
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{background:#fff!important;color:#111;font-size:9pt}
+  .wrap{max-width:none;width:auto;padding:0}
+  .no-print,.tabs,.banner,.filebar,details.check,#tip,dialog,#loader{display:none!important}
+  header.top{margin-bottom:2mm}
+  h1{font-size:13pt} h2{font-size:10.5pt;margin-bottom:2mm} h3{font-size:9pt}
+  h2,h3{break-after:avoid}
+  .print-head{display:flex;flex-wrap:wrap;gap:1mm 6mm;font-size:8.5pt;color:#333;border-bottom:1px solid #999;padding-bottom:1.5mm;margin-bottom:3mm}
+  .print-head .sb{border:1px dashed #555;padding:0 2mm;font-weight:700}
+  .sample:not([hidden]){display:none!important}
+  /* 큰 덩어리는 쪼개지게, 작은 단위만 붙여 둠 */
+  section,.card,.grid{break-inside:auto}
+  .card{box-shadow:none;border-color:#cfd3df;padding:3mm;border-radius:2mm}
+  section{margin-bottom:3mm}
+  .grid{gap:3mm}
+  .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:2mm}
+  .kpi,.chartbox,.hdrcard,.chart-legend,.tl,.rulestrip,tr,.nextdue{break-inside:avoid}
+  .kpi{padding:2mm 3mm} .kpi .v{font-size:13pt}
+  .chartbox svg{max-height:58mm}
+  .chartbox svg text,.tl svg text{font-size:12.5px}
+  .chart-legend,.note,.chart-flag{font-size:8pt}
+  /* 표: 스크롤 래퍼 없이, 고정 폭, 긴 글은 줄바꿈 */
+  .tw{overflow:visible!important}
+  table{width:100%;table-layout:fixed;font-size:8pt}
+  thead{display:table-header-group}
+  th,td{white-space:normal!important;overflow-wrap:anywhere;padding:1.2mm 1.5mm}
+  th{font-size:7.8pt}
+  td.num{white-space:nowrap!important}
+  td.w{min-width:0;max-width:none}
+  .items{display:block;-webkit-line-clamp:unset;max-width:none;min-width:0;overflow:visible}
   .more{display:none}
-  .wrap{max-width:none;padding:0}
+  .pill{font-size:7.5pt;padding:0 1.5mm;white-space:nowrap}
+  .pill.lifter{white-space:normal}
+  .hdrcard{grid-template-columns:repeat(auto-fill,minmax(32mm,1fr));gap:2mm;margin-bottom:2mm}
+  .hdrcard div{padding:1.5mm 2.5mm}
+  .g3 .chartbox svg{max-height:30mm}
+  .g2.lift{grid-template-columns:3fr 2fr}
+  .lift>.card{break-inside:avoid}
+  th{overflow-wrap:normal!important;word-break:keep-all}
+  .g3 .chart-legend{gap:1mm 3mm;font-size:7.5pt;margin-top:1mm}
+  .g3 .chart-flag,.g3 .note{font-size:7.5pt;margin-top:1mm}
+  .g2 .chartbox svg{max-height:44mm}
+  table.t-mon td,table.t-mon th{padding:.6mm 1.5mm}
+  .ach .bar{width:14mm}
+  table.t-hist{table-layout:auto}
+  table.t-mon{width:60%}
+  /* 열 폭 (합 100%) */
+  table.t-chk th:nth-child(1){width:9%} table.t-chk th:nth-child(2){width:7%} table.t-chk th:nth-child(3){width:5%}
+  table.t-chk th:nth-child(4){width:13%} table.t-chk th:nth-child(5){width:6%} table.t-chk th:nth-child(6){width:7%}
+  table.t-chk th:nth-child(7){width:6%} table.t-chk th:nth-child(8){width:7%} table.t-chk th:nth-child(9){width:6%}
+  table.t-chk th:nth-child(10){width:6%} table.t-chk th:nth-child(11){width:24%}
+  table.t-lng th:nth-child(1){width:10%} table.t-lng th:nth-child(2){width:21%} table.t-lng th:nth-child(3){width:7%} table.t-lng th:nth-child(4){width:13%}
+  table.t-lng th:nth-child(5){width:11%} table.t-lng th:nth-child(6){width:9%} table.t-lng th:nth-child(7){width:17%} table.t-lng th:nth-child(8){width:12%}
+  table.t-cond th:nth-child(1){width:12%} table.t-cond th:nth-child(2){width:19%} table.t-cond th:nth-child(3){width:9%} table.t-cond th:nth-child(4){width:17%}
+  table.t-cond th:nth-child(5){width:14%} table.t-cond th:nth-child(6){width:14%} table.t-cond th:nth-child(7){width:15%}
+  table.t-prod th:nth-child(1){width:15%} table.t-prod th:nth-child(2){width:10%} table.t-prod th:nth-child(n+3):nth-child(-n+7){width:9%} table.t-prod th:nth-child(n+8){width:15%}
 }
 </style>
 </head>
@@ -277,6 +357,7 @@ const M = (() => {
       const row = new Array(R.e.c + 1).fill(null);
       for (let c = 0; c <= R.e.c; c++) {
         let v = cellValue(ws[XLSX.utils.encode_cell({ r, c })]);
+        if (typeof v === 'string') v = v.replace(/\r\n?/g, '\n');   // 줄바꿈 정규화 (엑셀·XML 해석과 같게)
         if (typeof v === 'string') { const t = textDate(v); if (t) { notes.push({ a: XLSX.utils.encode_cell({ r, c }), raw: v.trim(), amb: t.amb }); v = t.dt; } }
         row[c] = v;
       }
@@ -617,7 +698,9 @@ const M = (() => {
         it.dueRule = H.due >= 0 ? strOf(at(g, r, H.due)) : '';
         rows.push(dueActual(ctx, name, g, r, H['due date'], H.actual, it));
       }
-      m.sheets.push({ name, cy: cyDay == null ? 'CY 미상' : 'CY ' + new Date(cyDay * DAY).getUTCFullYear(), rows, extras: extras.map(x => x.label) });
+      // 편집·저장용: 표 위치(헤더 행, 열 번호, 추가 열, 마지막 데이터 행). 행은 Due Date 순으로 정렬
+      const meta = { hr: h.r, cols: { ...H }, extraCols: extras.map(x => x.c), lastRow: rows.length ? Math.max(...rows.map(x => x.r)) : h.r + 1 };
+      m.sheets.push({ name, cy: cyDay == null ? 'CY 미상' : 'CY ' + new Date(cyDay * DAY).getUTCFullYear(), rows: sortRows(rows), extras: extras.map(x => x.label), meta });
     }
     // 시트/헤더가 없는 체크리스트도 탭은 남겨 사유를 보여 줌 (CY는 다른 시트 것을 따름)
     const cy0 = (m.sheets.find(x => x.cy) || {}).cy || 'CY 미상'; m.sheets.forEach(x => { if (!x.cy) x.cy = cy0; });
@@ -705,7 +788,9 @@ const M = (() => {
     }
     return { k: 'rule', label: '수시/규칙' };
   }
-  return { parseLedger, parseCheck, detect, status, asDay, iso, todayDay, isErr, isNum, isEmpty, norm, DAY };
+  // Due Date 오름차순, 날짜 없는 행은 원래 순서 그대로 맨 뒤 (안정 정렬)
+  function sortRows(rows){ return rows.filter(x => x.dueDay != null).sort((a, b) => a.dueDay - b.dueDay).concat(rows.filter(x => x.dueDay == null)); }
+  return { parseLedger, parseCheck, detect, status, sortRows, asDay, iso, todayDay, isErr, isNum, isEmpty, norm, DAY };
 })();
 if (typeof module !== 'undefined') module.exports = M;
 </script>
@@ -890,7 +975,7 @@ function renderProd(){
   const pctMax = prod ? Math.max(1.2, ...prod.rows.flatMap(r => r.vals.slice(5)).filter(M.isNum)) : 1.2;
   const pctCell = v => M.isNum(v) ? td(`<span class="ach"><span class="bar" aria-hidden="true"><i style="width:${Math.max(0, v) / pctMax * 100}%"></i><b style="left:${100 / pctMax}%"></b></span>${fmt(v * 100, 1)}%</span>`, v, true) : `<td class="num" data-v="">–</td>`;
   const prodTable = !prod ? errBox(m.err.prod || 'Operation Daily 표를 읽지 못했습니다') :
-    `<div class="tw"><table data-sheet="생산 실적 vs 계획"><thead><tr><th>구분</th><th></th><th class="num">Day (${M.iso(prod.day)})</th><th class="num">MTD 실적</th><th class="num">YTD 실적</th><th class="num">MTD 계획</th><th class="num">YTD 계획</th><th class="num">MTD 달성률</th><th class="num">YTD 달성률</th></tr></thead><tbody>${
+    `<div class="tw"><table class="t-prod" data-sheet="생산 실적 vs 계획"><thead><tr><th>구분</th><th></th><th class="num">Day (${M.iso(prod.day)})</th><th class="num">MTD 실적</th><th class="num">YTD 실적</th><th class="num">MTD 계획</th><th class="num">YTD 계획</th><th class="num">MTD 달성률</th><th class="num">YTD 달성률</th></tr></thead><tbody>${
       prod.rows.map((r, k) => { const dec = /lng|condensate/i.test(r.group) ? 2 : 1; return `<tr>${tdTxt(k && prod.rows[k - 1].group === r.group ? '' : r.group)}${tdTxt(r.sub)}${r.vals.slice(0, 5).map(v => tdNum(v, dec)).join('')}${r.vals.slice(5).map(pctCell).join('')}</tr>`; }).join('')
     }</tbody></table></div><p class="note">계획 기준: ${esc(prod.planLabel)} · 달성률 = 실적 ÷ 계획</p>`;
 
@@ -899,7 +984,7 @@ function renderProd(){
     const ch = l && prev ? l[key] - prev[key] : null;
     return `<div><div class="kpi"><div class="l">${name} 최근값 (${l ? M.iso(l.d) : '–'})</div><div class="v">${fmt(l?.[key], 2)}<small>${unit}</small></div><div class="s">전일 대비 ${ch == null ? '–' : (ch >= 0 ? '+' : '') + fmt(ch, 2)}</div></div>${lineChart({ label: name, unit, tight: true, dec: 2, h: 150, series: [{ label: name, color, pts: p.daily.map(x => ({ d: x.d, v: x[key] })) }] })}</div>`; };
 
-  return `
+  return `${insightBar()}
   <section class="card"><h2>Project Status <span class="muted" style="font-size:12px;font-weight:600">· 최신 보고일 ${M.iso(B)} 실적</span></h2>
     <div class="kpis">
       ${kpi('Feed Gas Export', fmt(fgB?.v, 1), 'mmscf', '일 실적')}
@@ -916,16 +1001,16 @@ function renderProd(){
       <div class="card"><h3>Condensate 생산 (bbl)</h3>${m.err.cond ? errBox(m.err.cond) : one('Condensate 생산', win(m.cond, 'p'), 'bbl') + legend + inv('Condensate 재고 (bbl)', m.cond, m.condRef || [], condMk, m.condFlags || [], 'bbl')}</div>
     </div>
   </section>
-  <section class="grid g2">
+  <section class="grid g2 lift">
     <div class="card"><h2>LNG Lifting 일정 (향후)</h2>
       ${m.err.lngLift ? "" : `<p class="note" style="margin:0 0 8px">ADP Issue ${M.iso(iss)} · SDS 90일 창 ${iss != null ? M.iso(iss) + ' ~ ' + M.iso(iss + 90) + ` (슬롯 ${in90}개)` : '–'} · 마지막 SDS 확정 슬롯 ${esc((m.lngLift.lastSds || '–').toUpperCase())}</p>`}
-      ${m.err.lngLift ? errBox(m.err.lngLift) : lngRows.length ? `<div class="tw"><table data-sheet="LNG Lifting"><thead><tr><th>Slot</th><th>Lifting Slot</th><th>D-day</th><th>Lifter</th><th class="num">Planned (cbm)</th><th class="num">Actual (cbm)</th><th>Proposed Vessel</th><th>상태</th></tr></thead><tbody>${
+      ${m.err.lngLift ? errBox(m.err.lngLift) : lngRows.length ? `<div class="tw"><table class="t-lng" data-sheet="LNG Lifting"><thead><tr><th>Slot</th><th>Lifting Slot</th><th>D-day</th><th>Lifter</th><th class="num">Planned (cbm)</th><th class="num">Actual (cbm)</th><th>Proposed Vessel</th><th>상태</th></tr></thead><tbody>${
         lngRows.map(s => `<tr class="${s.sds ? 'sds' : ''}">${tdTxt(s.slot)}${td(M.iso(s.start) + (s.end != null ? ' ~ ' + M.iso(s.end).slice(5) : ''), M.iso(s.start))}${tdTxt(dday(s.start - S.ref))}${td(lifterPill(s.lifter), s.lifter)}${tdNum(s.plan)}${tdNum(s.act)}${tdTxt(s.vessel)}${td(s.sds ? '<span class="pill st-d30">SDS 확정</span>' : '<span class="pill st-plan">ADP</span>', s.sds ? 'SDS 확정' : 'ADP')}</tr>`).join('')
       }</tbody></table></div>` : `<div class="placeholder">기준일 이후 LNG 슬롯이 없습니다.</div>`}
     </div>
     <div class="card"><h2>Condensate Lifting 일정 (향후)</h2>
       ${m.err.condLift ? "" : `<p class="note" style="margin:0 0 8px">LP Issue ${M.iso(m.condLift.issue)}</p>`}
-      ${m.err.condLift ? errBox(m.err.condLift) : condRows.length ? `<div class="tw"><table data-sheet="Condensate Lifting"><thead><tr><th>Slot</th><th>Lifting Slot</th><th>D-day</th><th>Lifter</th><th class="num">Planned (bbl)</th><th class="num">Actual (bbl)</th><th>Proposed Vessel</th></tr></thead><tbody>${
+      ${m.err.condLift ? errBox(m.err.condLift) : condRows.length ? `<div class="tw"><table class="t-cond" data-sheet="Condensate Lifting"><thead><tr><th>Slot</th><th>Lifting Slot</th><th>D-day</th><th>Lifter</th><th class="num">Planned (bbl)</th><th class="num">Actual (bbl)</th><th>Proposed Vessel</th></tr></thead><tbody>${
         condRows.map(s => s.parts.map((pt, k) => `<tr>${k ? '<td data-v=""></td><td data-v=""></td><td data-v=""></td>' : tdTxt(s.slot) + td(M.iso(s.start) + (s.end != null ? ' ~ ' + M.iso(s.end).slice(5) : ''), M.iso(s.start)) + tdTxt(dday(s.start - S.ref))}${td(lifterPill(pt.lifter), pt.lifter)}${tdNum(pt.plan)}${tdNum(pt.act)}${k ? '<td data-v=""></td>' : tdTxt(s.vessel)}</tr>`).join('')).join('')
       }</tbody></table></div>` : `<div class="placeholder">기준일 이후 Condensate 슬롯이 없습니다.</div>`}
     </div>
@@ -933,7 +1018,7 @@ function renderProd(){
   <section class="card"><h2>생산 실적 vs 계획</h2>${prodTable}</section>
   <section class="card"><h2>Brent · JKM</h2>${m.err.price ? errBox(m.err.price) : ''}
     <div class="grid g2">${priceKpi('b', 'Brent', 'US$/bbl', 'var(--series)')}${priceKpi('j', 'JKM', '$/MMBtu', 'var(--series)')}</div>
-    ${p.monthly.length ? `<div class="tw" style="margin-top:10px"><table data-sheet="Brent JKM 월평균"><thead><tr><th>월</th><th class="num">Brent 월평균 (US$/bbl)</th><th class="num">JKM 월평균 ($/MMBtu)</th></tr></thead><tbody>${
+    ${p.monthly.length ? `<div class="tw" style="margin-top:10px"><table class="t-mon" data-sheet="Brent JKM 월평균"><thead><tr><th>월</th><th class="num">Brent 월평균 (US$/bbl)</th><th class="num">JKM 월평균 ($/MMBtu)</th></tr></thead><tbody>${
       p.monthly.map(x => `<tr>${td(M.iso(x.d).slice(0, 7), M.iso(x.d).slice(0, 7))}${tdNum(x.b, 2)}${tdNum(x.j, 2)}</tr>`).join('')}</tbody></table></div>` : ''}
   </section>`;
 }
@@ -992,13 +1077,150 @@ function checklistBlock(key, rows, title, opt = {}){
     </div>
     <p class="nextdue">다음 마감: ${open ? `<b>${M.iso(open.it.dueDay)}</b> (${dday(open.it.dueDay - ref)}) ${esc(open.it.event)}` : '기준일 이후 열린 마감 없음'}${lateN ? ` · <span style="color:var(--late);font-weight:700">지연 ${lateN}건</span>` : ''}${missN ? ` · 실적 미입력 ${missN}건 (Lifting이 끝난 카고 — 알림 제외)` : ''}</p>
     ${timeline(shown, opt)}
-    <div class="tw"><table data-sheet="${esc(title)}"><thead><tr><th>상태</th><th>Due Date</th><th>D-day</th><th>Event</th><th>Due</th><th>Actual</th><th>Contract</th><th>Clauses</th><th>From</th><th>To</th><th>Items covered</th>${(opt.extras || []).map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${
+    <div class="tw"><table class="t-chk" data-sheet="${esc(title)}"><thead><tr><th>상태</th><th>Due Date</th><th>D-day</th><th>Event</th><th>Due</th><th>Actual</th><th>Contract</th><th>Clauses</th><th>From</th><th>To</th><th>Items covered</th>${(opt.extras || []).map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${
       list.map(({ it, st }) => `<tr id="${esc(key + '-' + it.r)}"${f && f !== st.k ? ' style="display:none"' : ''}>${
-        td(statusPill(st) + (st.k === 'rule' && (it.dueText || it.dueRule) ? `<div class="muted" style="font-size:11.5px;white-space:normal;max-width:160px">${esc(it.dueText || it.dueRule)}</div>` : ''), st.label)}${
+        td((opt.edit ? `<button type="button" class="rowedit no-print" data-edit="${esc(opt.edit.name + '|' + it.r)}" aria-label="행 편집" title="행 편집">✎</button>` : '') + statusPill(st) + (isEdited(it) ? '<span class="eddot" title="이 화면에서 수정한 행">● 수정됨</span>' : '') + (st.k === 'rule' && (it.dueText || it.dueRule) ? `<div class="muted" style="font-size:11.5px;white-space:normal;max-width:160px">${esc(it.dueText || it.dueRule)}</div>` : ''), st.label)}${
         it.dueDay != null ? tdDay(it.dueDay) : tdTxt(it.dueText)}${tdTxt(it.dueDay != null && st.k !== 'done' ? dday(it.dueDay - ref) : '')}${tdWrap(it.event)}${
         tdTxt(it.dueRule)}${it.actualDay != null ? tdDay(it.actualDay) : tdTxt(it.actualText)}${tdTxt(it.contract)}${tdWrap(it.clauses)}${tdTxt(it.from)}${tdTxt(it.to)}${
-        td(it.items ? `<div class="items">${esc(it.items)}</div>${it.items.split('\n').length > 2 || it.items.length > 90 ? '<button type="button" class="more" aria-expanded="false">더보기</button>' : ''}` : '–', it.items)}${(it.extra || []).map(tdWrap).join('')}</tr>`).join('')
+        td(it.items ? `<div class="items">${esc(it.items)}</div>${it.items.split('\n').length > 2 || it.items.length > 90 ? '<button type="button" class="more" aria-expanded="false">더보기</button>' : ''}` : '–', it.items)}${(it.extra || []).map(tdWrap).join('')}</tr>${opt.edit && S.editing === opt.edit.name + '|' + it.r ? editorRow(opt.edit, it, 11 + (opt.extras || []).length) : ''}`).join('')
     }</tbody></table></div>`;
+}
+
+// ---------- 한 줄 알림 (규칙 기반 · 우선순위: 재고 위험 > 마감 > 생산 미달 > 현황) ----------
+function insights(){
+  const out = [], ref = S.ref, L = S.ledger?.model, C = S.check?.model, fd = d => M.iso(d).slice(5);
+  if (L) {
+    // 1) 최신 실적 재고 + 기준일~다음 리프팅일 예측 재고 중 Tank Top 초과 또는 0 미만 (기준일 이전의 지난 예측은 제외)
+    const B = L.lastActual ?? ref - 1;
+    [['LNG', L.lng, L.lngRef, L.lngLift.slots.find(s => s.start >= ref), 'cbm'],
+     ['Condensate', L.cond, L.condRef, L.condLift.slots.find(s => s.start != null && s.start >= ref), 'bbl']].forEach(([nm, rows, refs, nx, u]) => {
+      const tt = (refs || []).find(r => r.key === 'tank top'), end = nx ? nx.start : ref + 30;
+      const hit = rows.find(x => (x.d === B || (x.d >= ref && x.d > B && x.d <= end)) && x.i != null && (x.i < 0 || (tt && x.i > tt.v)));
+      if (!hit) return;
+      const tail = nx ? ` — 다음 리프팅 ${nx.slot}(${fd(nx.start)}) 전에 확인 필요` : '';
+      out.push({ p: 1, k: 'late', tag: '재고 위험', text: hit.i < 0
+        ? `${nm} ${hit.d > B ? '예측 ' : ''}재고가 ${fd(hit.d)}에 0 미만(${fmt(hit.i)} ${u})${hit.d > B ? '이 될 전망' : ''}${tail}`
+        : `${nm} 재고가 ${fd(hit.d)}에 ${tt.label} ${fmt(tt.v)} ${u}을 넘을 전망 (${fmt(hit.i)} ${u})${tail}` });
+    });
+  }
+  if (C) {
+    // 2) 지연·D-7 (실적 미입력 제외) — 가장 급한 항목: 임박이 있으면 가장 이른 임박, 없으면 가장 최근 지연
+    const a = alertItems(), late = a.filter(x => x.st.k === 'late'), d7 = a.filter(x => x.st.k === 'd7');
+    if (a.length) {
+      const top = d7.length ? d7.sort((x, y) => x.it.dueDay - y.it.dueDay)[0] : late.sort((x, y) => y.it.dueDay - x.it.dueDay)[0];
+      out.push({ p: 2, k: 'late', tag: '마감', nav: top.nav,
+        text: `지연 ${late.length}건${d7.length ? ` · D-7 임박 ${d7.length}건` : ''} · 가장 급한 항목: ${top.it.event || '–'} (${dday(top.st.diff)}, ${top.where})` });
+    }
+  }
+  if (L?.prod) {
+    // 3) 그룹 첫 행(전체 생산)의 MTD 달성률 90% 미만
+    const seen = new Set();
+    L.prod.rows.forEach(r => {
+      if (seen.has(r.group)) return; seen.add(r.group);
+      const v = r.vals[5], unit = (r.group.match(/\(([^)]+)\)/) || [])[1] || '', nm = r.group.replace(/\s*\(.*$/, '');
+      if (M.isNum(v) && v < .9) out.push({ p: 3, v, k: 'd7', tag: '생산 미달', text: `${nm} MTD 달성률 ${fmt(v * 100, 1)}% (계획 ${fmt(r.vals[3])} ${unit} 대비 ${fmt(r.vals[1])} ${unit})` });
+    });
+  }
+  if (L) {
+    // 4) 현황: 다음 LNG 리프팅 + 최신 재고의 Tank Top 대비 %
+    const B = L.lastActual ?? ref - 1, nx = L.lngLift.slots.find(s => s.start >= ref), inv = (L.lng.find(x => x.d === B) || {}).i, tt = (L.lngRef || []).find(r => r.key === 'tank top');
+    out.push({ p: 4, k: 'plan', tag: '현황', text: `${nx ? `다음 LNG 리프팅 ${nx.slot} ${fd(nx.start)} (${dday(nx.start - ref)})` : '기준일 이후 LNG 리프팅 없음'} · LNG 재고 ${fmt(inv)} cbm${tt && M.isNum(inv) ? ` (${tt.label} 대비 ${fmt(inv / tt.v * 100)}%)` : ''} · 최신 보고일 ${M.iso(B)}` });
+  }
+  return out.sort((a, b) => a.p - b.p || (a.v ?? 0) - (b.v ?? 0));
+}
+function edBar(sh){
+  const n = editCount();
+  return `<div class="edbar no-print"><button type="button" class="btn" data-add="${esc(sh.name)}">+ 행 추가</button>`
+    + `<span class="edcount">${n ? `● 수정 ${n}건` : '수정 없음'}</span>`
+    + `<button type="button" class="btn" data-undo="1"${n ? '' : ' disabled'}>수정 취소(전체)</button>`
+    + `<button type="button" class="btn primary" data-save="1"${n ? '' : ' disabled'} title="원본 워크북을 바탕으로 새 .xlsx를 만듭니다. SheetJS 무료판은 셀 서식(색·테두리)을 보존하지 않으며 값과 구조만 유지합니다.">수정본 엑셀 저장</button>`
+    + `<span class="muted" style="font-size:12px">브라우저에는 저장되지 않습니다 — 엑셀로 저장해 두세요. 서식(색·테두리)은 보존되지 않음</span></div>`;
+}
+function insightBar(){
+  const list = insights(); if (!list.length) return '';
+  const [top, ...rest] = list;
+  return `<div class="insight" role="status">${statusPill({ k: top.k, label: top.tag })}<span class="t">${esc(top.text)}</span>${
+    top.nav ? `<button type="button" class="btn no-print" data-inav="1">보기</button>` : ''}${
+    rest.length ? `<details class="more-ins no-print"><summary>다른 알림 ${rest.length}건</summary><ul>${rest.map(x => `<li>${statusPill({ k: x.k, label: x.tag })} ${esc(x.text)}</li>`).join('')}</ul></details>` : ''}</div>`;
+}
+
+// ---------- 체크리스트 편집 (브라우저 저장 없음 · "수정본 엑셀 저장"으로만 남김) ----------
+let newRowId = 900000;
+function snapshotOrig(model){ model.sheets.forEach(sh => { sh._orig = sh.rows.map(x => ({ ...x, extra: [...(x.extra || [])] })); sh._del = 0; }); }
+const isEdited = it => it._new || (it._ed && it._ed.length);
+const editCount = () => (S.check?.model.sheets || []).reduce((n, sh) => n + sh.rows.filter(isEdited).length + (sh._del || 0), 0);
+const chkSheet = name => S.check.model.sheets.find(x => x.name === name);
+function editorRow(sh, it, ncol){
+  const v = d => d == null ? '' : M.iso(d), f = (lab, html) => `<label class="ef"><span>${lab}</span>${html}</label>`, inp = (n, val) => `<input name="${n}" value="${esc(val || '')}">`;
+  return `<tr class="editrow no-print" data-ed="${esc(sh.name)}|${it.r}"><td colspan="${ncol}"><div class="edform">
+    ${f('Due Date', `<input type="date" name="due" value="${v(it.dueDay)}">`)}${f('Due Date 텍스트 (날짜 없을 때)', inp('dueText', it.dueText))}${f('Due 규칙', inp('dueRule', it.dueRule))}
+    ${f('Actual', `<input type="date" name="act" value="${v(it.actualDay)}">`)}${f('Actual 텍스트 (날짜 없을 때)', inp('actText', it.actualText))}${f('Event', inp('event', it.event))}
+    ${f('Contract', inp('contract', it.contract))}${f('Clauses', inp('clauses', it.clauses))}${f('From', inp('from', it.from))}${f('To', inp('to', it.to))}
+    ${(sh.extras || []).map((x, k) => f(esc(x), inp('x' + k, (it.extra || [])[k]))).join('')}
+    <label class="ef wide"><span>Items covered</span><textarea name="items" rows="3">${esc(it.items || '')}</textarea></label>
+    <div class="edbtns"><button type="button" class="btn primary" data-apply="1">적용</button><button type="button" class="btn" data-ecancel="1">취소</button><button type="button" class="btn" data-del="1">행 삭제</button></div>
+  </div></td></tr>`;
+}
+function flashRow(id){ requestAnimationFrame(() => { const tr = document.getElementById(id); if (tr) { tr.scrollIntoView({ block: 'center' }); tr.classList.remove('flash'); void tr.offsetWidth; tr.classList.add('flash'); } }); }
+const rowId = (name, r) => 'chk-' + name.replace(/\W/g, '') + '-' + r;
+function applyEdit(tr){
+  const [name, r] = tr.dataset.ed.split('|'), sh = chkSheet(name), it = sh.rows.find(x => String(x.r) === r);
+  const q = n => (tr.querySelector(`[name="${n}"]`) || {}).value || '';
+  const dayOf = s => s ? Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / M.DAY : null;
+  const nv = { contract: q('contract').trim(), clauses: q('clauses').trim(), from: q('from').trim(), to: q('to').trim(), event: q('event').trim(), items: q('items').trim(), dueRule: q('dueRule').trim(),
+    dueDay: dayOf(q('due')), dueText: q('due') ? '' : q('dueText').trim(), actualDay: dayOf(q('act')), actualText: q('act') ? '' : q('actText').trim() };
+  const ed = new Set(it._ed || []);
+  for (const k in nv) if ((nv[k] ?? '') !== (it[k] ?? '')) { it[k] = nv[k]; ed.add(k); }
+  (sh.extras || []).forEach((x, k) => { const val = q('x' + k).trim(); if (val !== ((it.extra || [])[k] || '')) { it.extra[k] = val; ed.add('x' + k); } });
+  it._ed = [...ed]; delete it._fresh; S.editing = null;
+  sh.rows = M.sortRows(sh.rows); render(); flashRow(rowId(name, it.r));
+}
+function addRow(name){
+  const sh = chkSheet(name), it = { r: newRowId++, contract: '', clauses: '', from: '', to: '', event: '', items: '', dueRule: '', dueDay: null, dueText: '', actualDay: null, actualText: '', extra: (sh.extras || []).map(() => ''), _new: true, _fresh: true, _ed: [] };
+  sh.rows.push(it); S.editing = name + '|' + it.r; delete S.filters[rowId(name, '').slice(0, -1)]; render(); flashRow(rowId(name, it.r));
+}
+function deleteRow(tr){
+  const [name, r] = tr.dataset.ed.split('|'), sh = chkSheet(name), it = sh.rows.find(x => String(x.r) === r);
+  if (!it._fresh && !confirm(`이 행을 삭제할까요?\n${it.event || '(Event 없음)'}`)) return;
+  sh.rows = sh.rows.filter(x => x !== it); if (!it._new) sh._del++; S.editing = null; render();
+}
+function cancelEdit(tr){
+  const [name, r] = tr.dataset.ed.split('|'), sh = chkSheet(name), it = sh.rows.find(x => String(x.r) === r);
+  if (it && it._fresh) sh.rows = sh.rows.filter(x => x !== it);   // 적용 전 새 행은 버림
+  S.editing = null; render();
+}
+function undoAll(){ S.check.model.sheets.forEach(sh => { if (sh._orig) { sh.rows = sh._orig.map(x => ({ ...x, extra: [...(x.extra || [])] })); sh._del = 0; } }); S.editing = null; render(); }
+// 원본 워크북을 다시 읽어 수정된 체크리스트 시트의 표 영역만 정렬 순서대로 다시 씀 (다른 시트·표 밖 셀은 그대로)
+function saveEdited(){
+  const c = S.check, wb = XLSX.read(c.buf, { type: 'array', cellNF: true });   // cellDates 없이 + 숫자 서식 유지: 날짜는 서식 붙은 일련번호 그대로 (다른 시트 날짜도 보존)
+  const enc = (r, col) => XLSX.utils.encode_cell({ r, c: col });
+  c.model.sheets.forEach(sh => {
+    if (!sh.meta || !(sh._del || sh.rows.some(isEdited))) return;
+    const ws = wb.Sheets[sh.name], m = sh.meta, cols = [...new Set(Object.values(m.cols).filter(x => x >= 0).concat(m.extraCols))], old = {};
+    for (let r = m.hr + 2; r <= m.lastRow; r++) cols.forEach(col => { const cell = ws[enc(r, col)]; if (cell) old[r + ',' + col] = cell; delete ws[enc(r, col)]; });
+    const field = { contract: m.cols.contract, clauses: m.cols.clauses, from: m.cols.from, to: m.cols.to, event: m.cols.event, items: m.cols['items covered'], dueRule: m.cols.due };
+    const str = v => v ? { t: 's', v } : null, date = d => d == null ? null : { t: 'n', v: d + 25569, z: 'yyyy-mm-dd' };
+    sh.rows.forEach((it, k) => {
+      const r = m.hr + 2 + k, ed = new Set(it._ed || []);
+      const put = (col, cell) => { if (col == null || col < 0) return; if (cell) ws[enc(r, col)] = cell; else delete ws[enc(r, col)]; };
+      // 원래 행의 셀을 그대로 옮김 (수식은 계산값으로 고정)
+      if (!it._new) cols.forEach(col => { const src = old[it.r + ',' + col]; if (src) { const cp = { ...src }; delete cp.f; ws[enc(r, col)] = cp; } });
+      for (const [key, col] of Object.entries(field)) if (it._new || ed.has(key)) put(col, str(it[key]));
+      if (it._new || ed.has('dueDay') || ed.has('dueText')) put(m.cols['due date'], it.dueDay != null ? date(it.dueDay) : str(it.dueText));
+      if (it._new || ed.has('actualDay') || ed.has('actualText')) put(m.cols.actual, it.actualDay != null ? date(it.actualDay) : str(it.actualText));
+      m.extraCols.forEach((col, j) => { if (it._new || ed.has('x' + j)) put(col, str(it.extra[j])); });
+    });
+    const R = XLSX.utils.decode_range(ws['!ref']); R.e.r = Math.max(R.e.r, m.hr + 1 + sh.rows.length); ws['!ref'] = XLSX.utils.encode_range(R);
+  });
+  // SheetJS는 문자열 속 CR+LF를 그대로 읽고 CR을 _x000d_ 로 써서 다른 프로그램에 글자로 보임 → 모든 시트 문자열 줄바꿈을 LF로 정규화
+  wb.SheetNames.forEach(n => { const ws = wb.Sheets[n]; for (const k in ws) { const cell = ws[k]; if (k[0] !== '!' && cell && cell.t === 's' && typeof cell.v === 'string' && /\r/.test(cell.v)) { cell.v = cell.v.replace(/\r\n?/g, '\n'); delete cell.h; delete cell.r; delete cell.w; } } });
+  const d = new Date(), p2 = n => String(n).padStart(2, '0');
+  const name = c.name.replace(/\.xls[xm]?$/i, '') + `_수정_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}.xlsx`;
+  const data = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+  S.lastSaved = { name, data };   // 메모리에만 (브라우저 저장소 아님) — 확인·테스트용
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
 // ---------- Tab 2: Periodical Checklist ----------
@@ -1012,7 +1234,7 @@ function renderCheck(){
   if (!sheets.some(s => s.name === S.sheet)) S.sheet = sheets[0].name;
   const sh = sheets.find(s => s.name === S.sheet);
   return tabBar('mid', cys.map(c => [c, c]), S.cy, 'cy') + tabBar('sub', sheets.map(s => [s.name, s.name]), S.sheet, 'sheet') +
-    `<section class="card"><h2>${esc(S.cy)} · ${esc(sh.name)}</h2>${sh.err ? errBox(sh.err) : checklistBlock('chk-' + sh.name.replace(/\W/g, ''), sh.rows, sh.name, { extras: sh.extras })}</section>`;
+    `<section class="card"><h2>${esc(S.cy)} · ${esc(sh.name)}</h2>${sh.err ? errBox(sh.err) : edBar(sh) + checklistBlock('chk-' + sh.name.replace(/\W/g, ''), sh.rows, sh.name, { extras: sh.extras, edit: sh })}</section>`;
 }
 
 // ---------- Tab 3: Cargo Operation (LNG) ----------
@@ -1057,7 +1279,7 @@ function renderHistory(g){
   const span = {}, skip = new Set();
   g.merges.forEach(mg => { span[mg.s.r + ',' + mg.s.c] = mg; for (let r = mg.s.r; r <= mg.e.r; r++) for (let c = mg.s.c; c <= mg.e.c; c++) if (r !== mg.s.r || c !== mg.s.c) skip.add(r + ',' + c); });
   const show = v => v instanceof Date ? M.iso(M.asDay(v)) : M.isErr(v) ? '–' : typeof v === 'boolean' ? (v ? 'TRUE' : 'FALSE') : M.isNum(v) ? fmt(v, Math.abs(v) < 100 && v % 1 ? 2 : 0) : esc(v ?? '');
-  return `<section class="card"><h2>연간 History</h2><div class="tw"><table data-sheet="History"><tbody>${usedRows.map(r => `<tr>${usedCols.map(c => {
+  return `<section class="card"><h2>연간 History</h2><div class="tw"><table class="t-hist" data-sheet="History"><tbody>${usedRows.map(r => `<tr>${usedCols.map(c => {
     if (skip.has(r + ',' + c)) return '';
     const mg = span[r + ',' + c], v = rows[r][c];
     const rs = mg ? usedRows.filter(x => x >= mg.s.r && x <= mg.e.r).length : 1, cs = mg ? usedCols.filter(x => x >= mg.s.c && x <= mg.e.c).length : 1;
@@ -1113,6 +1335,7 @@ function render(){
   const warnN = iss.filter(x => x.level === 'warn').length;
   $('#checkPanel').querySelector('summary').textContent = `데이터 점검 — 경고 ${warnN}건 · 참고 ${iss.length - warnN}건`;
   $('#checkBody').innerHTML = iss.length ? `<ul>${iss.map(x => `<li class="${x.level}">[${x.wb}] <b>${esc(x.sheet)}</b> · ${esc(x.header)} — ${esc(x.msg)}</li>`).join('')}</ul>` : '<p class="muted">문제 없음</p>';
+  printHeader();
 }
 
 // ---------- 이벤트 ----------
@@ -1129,6 +1352,14 @@ document.addEventListener('click', e => {
   else if (t.classList.contains('more')) { const box = t.previousElementSibling, open = box.classList.toggle('open'); t.textContent = open ? '접기' : '더보기'; t.setAttribute('aria-expanded', open); }
   else if (t.id === 'openAlerts') openAlerts(S._alerts || []);
   else if (d.act === 'sample') loadSample();
+  else if (d.edit) { S.editing = S.editing === d.edit ? null : d.edit; render(); if (S.editing) flashRow(rowId(...d.edit.split('|'))); }
+  else if (d.add) addRow(d.add);
+  else if (d.apply) applyEdit(t.closest('tr'));
+  else if (d.ecancel) cancelEdit(t.closest('tr'));
+  else if (d.del) deleteRow(t.closest('tr'));
+  else if (d.undo) { if (confirm('이 화면에서 한 수정을 모두 되돌릴까요?')) undoAll(); }
+  else if (d.save) saveEdited();
+  else if (d.inav) { const top = insights()[0]; if (top && top.nav) go(top.nav); }
   else if (d.act === 'real') { if (S.ledger?.sample) S.ledger = null; if (S.check?.sample) S.check = null; render(); }
 });
 $('#alertClose').onclick = () => $('#alertDlg').close();
@@ -1216,10 +1447,10 @@ async function loadFiles(files, sample = false){
   const errs = []; let gotCheck = false;
   for (const f of files) {
     try {
-      const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+      const buf = await f.arrayBuffer(), wb = XLSX.read(buf, { type: 'array', cellDates: true });
       const kind = M.detect(wb);
       if (kind === 'ledger') S.ledger = { name: f.name, model: M.parseLedger(wb), sample };
-      else if (kind === 'check') { S.check = { name: f.name, model: M.parseCheck(wb), sample }; gotCheck = true; }
+      else if (kind === 'check') { S.check = { name: f.name, model: M.parseCheck(wb), sample, buf }; snapshotOrig(S.check.model); gotCheck = true; }
       else errs.push(`${f.name}: 시트 구성으로 Ledger/체크리스트 어느 쪽인지 판별하지 못했습니다.`);
     } catch (err) { errs.push(`${f.name}: 읽기 실패 — ${err.message}`); }
   }
@@ -1243,7 +1474,21 @@ $('#btnTheme').onclick = () => {
 
 // PDF 출력 / 엑셀 내보내기 — 현재 탭만
 const tabName = () => (TABS.find(t => t[0] === S.tab) || [])[1] + (S.tab === 'check' && S.check ? ` · ${S.cy} · ${S.sheet}` : S.tab === 'cargo' && S.check ? ` · ${S.year} · ${S.cargo === '__hist' ? '연간 History' : S.cargo}` : '');
-$('#btnPrint').onclick = () => { $('#printHead').innerHTML = `<b>${esc(tabName())}</b> · 기준일 ${M.iso(S.ref)}${isSample() ? ' · <b>샘플 데이터 — 실제 값 아님</b>' : ''}`; window.print(); };
+function tabPath(){
+  if (S.tab === 'check') return ['Periodical Checklist', S.cy, S.sheet];
+  if (S.tab === 'cargo') { const sl = (S.check?.model.schedule?.slots || []).filter(s => (s.start == null ? '날짜 없음' : String(new Date(s.start * M.DAY).getUTCFullYear())) === S.year);
+    const k = sl.findIndex(s => s.slot === S.cargo); return ['Cargo Operation (LNG)', S.year, S.cargo === '__hist' ? '연간 History' : k >= 0 ? `#${k + 1} ${S.cargo}` : S.cargo]; }
+  return ['Production Overview'];
+}
+function printHeader(){
+  const n = new Date(), ts = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')} ${String(n.getHours()).padStart(2, '0')}:${String(n.getMinutes()).padStart(2, '0')}`;
+  $('#printHead').innerHTML = `<b>${esc(tabPath().filter(Boolean).join(' › '))}</b><span>기준일 ${M.iso(S.ref)}</span>`
+    + `<span>파일: Ledger ${esc(S.ledger?.name || '–')} · 체크리스트 ${esc(S.check?.name || '–')}</span><span>인쇄 ${ts}</span>`
+    + (isSample() ? '<span class="sb">샘플 데이터 — 실제 값 아님</span>' : '')
+    + (S.tab === 'prod' && S.ledger ? (() => { const t = insights()[0]; return t ? `<span>알림(${esc(t.tag)}): ${esc(t.text)}</span>` : ''; })() : '');
+}
+window.addEventListener('beforeprint', printHeader);
+$('#btnPrint').onclick = () => { printHeader(); window.print(); };
 $('#btnExport').onclick = () => {
   const tables = [...document.querySelectorAll('#app [role=tabpanel] table')];
   if (!tables.length) { alert('내보낼 표가 없습니다. 먼저 워크북을 불러오세요.'); return; }
