@@ -310,6 +310,7 @@ dialog::backdrop{background:rgba(10,12,25,.45)}
 
   <div id="banner" class="banner" hidden></div>
   <div id="app" hidden></div>
+  <details class="check" id="matchPanel" hidden><summary>시트 매칭</summary><div id="matchBody"></div></details>
   <details class="check" id="checkPanel" hidden><summary>데이터 점검</summary><div id="checkBody"></div></details>
 </div>
 <div id="tip" role="tooltip"></div>
@@ -809,9 +810,65 @@ const M = (() => {
     }
     return { k: 'rule', label: '수시/규칙' };
   }
+  // ---------- 시트 매칭: 파일 단위가 아니라 시트 단위 ----------
+  const GROUPS = { ledger: ['Feed Gas', 'Forecast', 'Ledger_ADP 및 SDS', 'Condensate Ledger', 'ADP 및 SDS', 'LP', 'Operation Daily', 'BrentnJKM'],
+    check: ['ADP Process', 'Annual', 'Monthly', '일정', 'Cargo', 'History (연단위)'] };
+  // 헤더 지문: 각 파서가 찾는 대표 헤더가 시트 위쪽(45행·60열 안)에 있는지
+  function sheetFP(ws){
+    if (!ws || !ws['!ref']) return [];
+    const R = XLSX.utils.decode_range(ws['!ref']), rows = [];
+    for (let r = 0; r <= Math.min(R.e.r, 45); r++) { const row = []; for (let c = 0; c <= Math.min(R.e.c, 60); c++) { const v = cellValue(ws[XLSX.utils.encode_cell({ r, c })]); if (typeof v === 'string' && v.trim()) row.push(norm(v)); } rows.push(row); }
+    const all = new Set(rows.flat()), has = (...t) => t.every(x => all.has(x)), sameRow = (...t) => rows.some(r => t.every(x => r.includes(x)));
+    const out = [], led = sameRow('date', 'production', 'inventory') && has('working capacity');
+    if (has('nomination', 'actual', 'mmscf')) out.push('Feed Gas');
+    if (sameRow('date', 'feed gas', 'lng', 'condensate')) out.push('Forecast');
+    if (led && has('cbm')) out.push('Ledger_ADP 및 SDS');
+    if (led && has('bbl')) out.push('Condensate Ledger');
+    if (sameRow('slot number', 'lifting slot', 'cargo size (planned_cbm)')) out.push('ADP 및 SDS');
+    if (sameRow('slot number', 'lifting slot', 'cargo size (planned_bbl)')) out.push('LP');
+    if (has('barossa & dlng production', 'actual vs plan')) out.push('Operation Daily');
+    if (sameRow('날짜', 'brent가격')) out.push('BrentnJKM');
+    if (has('contract', 'cy start', 'event', 'items covered')) out.push('ADP Process', 'Annual', 'Monthly');
+    if (sameRow('slot number', 'lifting slot', 'lifting vol.', 'lng ship')) out.push('일정');
+    if (has('slot no.', 'lifting slot', 'lng ship', 'due date', 'actual')) out.push('Cargo');
+    if (has('cargo no.') && (has('annual (avg)') || has('spec'))) out.push('History (연단위)');
+    return out;
+  }
+  // 이름 비슷한 정도: 같음 3 / 포함 2 / 낱말 겹침 1 / 없음 0
+  function simScore(a, b){
+    const n = s => s.toLowerCase().replace(/[^a-z0-9가-힣]/g, ''), x = n(a), y = n(b);
+    if (!x || !y) return 0; if (x === y) return 3; if (x.includes(y) || y.includes(x)) return 2;
+    const tok = s => new Set(s.toLowerCase().split(/[^a-z0-9가-힣]+/).filter(Boolean)), ta = tok(a), tb = tok(b);
+    return [...ta].some(t => tb.has(t)) ? 1 : 0;
+  }
+  // files: 불러온 순서대로 [{id, name, wb}]. 순서: 수동 선택 → 이름 그대로(나중 파일 우선) → 헤더 지문(모호하면 고르지 않음)
+  function resolveSheets(files, manual = {}){
+    const all = []; files.forEach((f, order) => f.wb.SheetNames.forEach(sheet => all.push({ f, order, sheet, key: f.id + '|' + sheet })));
+    const cache = new Map(), fp = s => { if (!cache.has(s.key)) cache.set(s.key, sheetFP(s.f.wb.Sheets[s.sheet])); return cache.get(s.key); };
+    const LOG = [...GROUPS.ledger, ...GROUPS.check], res = {}, claimed = new Set(), label = s => `${s.f.name} › ${s.sheet}`;
+    LOG.forEach(L => { const s = manual[L] && all.find(x => x.key === manual[L]); if (s && !claimed.has(s.key)) { res[L] = { s, how: '수동', dup: [] }; claimed.add(s.key); } });
+    LOG.forEach(L => {
+      if (res[L]) return;
+      const c = all.filter(x => x.sheet.trim() === L && !claimed.has(x.key)).sort((a, b) => b.order - a.order);
+      if (c.length) { res[L] = { s: c[0], how: '이름', dup: c.slice(1).map(label) }; c.forEach(x => claimed.add(x.key)); }
+    });
+    LOG.forEach(L => {
+      if (res[L]) return;
+      const c = all.filter(x => !claimed.has(x.key) && fp(x).includes(L)).map(x => ({ x, sc: simScore(x.sheet, L) })).sort((a, b) => b.sc - a.sc || b.x.order - a.x.order);
+      if (!c.length) { res[L] = { status: 'none', cands: [] }; return; }
+      const top = c[0], rival = c.find(y => y !== top && y.sc === top.sc && y.x.sheet !== top.x.sheet);
+      // 이름 단서가 없고 같은 지문을 쓰는 다른 미해결 시트가 있으면 추측하지 않음
+      const shared = top.sc === 0 && LOG.some(K => K !== L && !res[K] && fp(top.x).includes(K));
+      if (rival || shared) { res[L] = { status: 'ambiguous', cands: c.map(y => label(y.x)) }; return; }
+      const dup = c.filter(y => y !== top && y.x.sheet === top.x.sheet);
+      res[L] = { s: top.x, how: '헤더', dup: dup.map(y => label(y.x)) }; claimed.add(top.x.key); dup.forEach(y => claimed.add(y.x.key));
+    });
+    LOG.forEach(L => { const r = res[L]; if (r.s) { r.status = r.dup.length ? 'dup' : 'ok'; r.file = r.s.f; r.sheet = r.s.sheet; r.key = r.s.key; delete r.s; } });
+    return res;
+  }
   // Due Date 오름차순, 날짜 없는 행은 원래 순서 그대로 맨 뒤 (안정 정렬)
   function sortRows(rows){ return rows.filter(x => x.dueDay != null).sort((a, b) => a.dueDay - b.dueDay).concat(rows.filter(x => x.dueDay == null)); }
-  return { parseLedger, parseCheck, detect, status, sortRows, asDay, iso, todayDay, isErr, isNum, isEmpty, norm, DAY };
+  return { parseLedger, parseCheck, detect, status, sortRows, GROUPS, sheetFP, resolveSheets, asDay, iso, todayDay, isErr, isNum, isEmpty, norm, DAY };
 })();
 if (typeof module !== 'undefined') module.exports = M;
 </script>
@@ -1244,8 +1301,9 @@ function applyEdit(tr){
   const nv = { contract: q('contract').trim(), clauses: q('clauses').trim(), from: q('from').trim(), to: q('to').trim(), event: q('event').trim(), items: q('items').trim(), dueRule: q('dueRule').trim(),
     dueDay: dayOf(q('due')), dueText: q('due') ? '' : q('dueText').trim(), actualDay: dayOf(q('act')), actualText: q('act') ? '' : q('actText').trim() };
   const ed = new Set(it._ed || []);
-  for (const k in nv) if ((nv[k] ?? '') !== (it[k] ?? '')) { it[k] = nv[k]; ed.add(k); }
-  (sh.extras || []).forEach((x, k) => { const val = q('x' + k).trim(); if (val !== ((it.extra || [])[k] || '')) { it.extra[k] = val; ed.add('x' + k); } });
+  const flat = v => String(v ?? '').replace(/[\r\n]/g, '').trim();   // <input>은 줄바꿈을 지움
+  for (const k in nv) { const a = nv[k] ?? '', b = it[k] ?? ''; if (a === b || (k !== 'items' && typeof a === 'string' && flat(a) === flat(b))) continue; it[k] = nv[k]; ed.add(k); }
+  (sh.extras || []).forEach((x, k) => { const val = q('x' + k).trim(); if (flat(val) !== flat((it.extra || [])[k])) { it.extra[k] = val; ed.add('x' + k); } });
   it._ed = [...ed]; delete it._fresh; S.editing = null;
   sh.rows = M.sortRows(sh.rows); render(); flashRow(rowId(name, it.r));
 }
@@ -1265,36 +1323,45 @@ function cancelEdit(tr){
 }
 function undoAll(){ S.check.model.sheets.forEach(sh => { if (sh._orig) { sh.rows = sh._orig.map(x => ({ ...x, extra: [...(x.extra || [])] })); sh._del = 0; } }); S.editing = null; render(); }
 // 원본 워크북을 다시 읽어 수정된 체크리스트 시트의 표 영역만 정렬 순서대로 다시 씀 (다른 시트·표 밖 셀은 그대로)
+// 시트마다 데이터가 실제로 온 파일·시트에 씀 — 합친 워크북이면 그 한 파일, 여러 파일이면 파일마다 하나씩
 function saveEdited(){
-  const c = S.check, wb = XLSX.read(c.buf, { type: 'array', cellNF: true });   // cellDates 없이 + 숫자 서식 유지: 날짜는 서식 붙은 일련번호 그대로 (다른 시트 날짜도 보존)
-  const enc = (r, col) => XLSX.utils.encode_cell({ r, c: col });
+  const c = S.check, enc = (r, col) => XLSX.utils.encode_cell({ r, c: col }), byFile = new Map();
   c.model.sheets.forEach(sh => {
     if (!sh.meta || !(sh._del || sh.rows.some(isEdited))) return;
-    const ws = wb.Sheets[sh.name], m = sh.meta, cols = [...new Set(Object.values(m.cols).filter(x => x >= 0).concat(m.extraCols))], old = {};
-    for (let r = m.hr + 2; r <= m.lastRow; r++) cols.forEach(col => { const cell = ws[enc(r, col)]; if (cell) old[r + ',' + col] = cell; delete ws[enc(r, col)]; });
-    const field = { contract: m.cols.contract, clauses: m.cols.clauses, from: m.cols.from, to: m.cols.to, event: m.cols.event, items: m.cols['items covered'], dueRule: m.cols.due };
-    const str = v => v ? { t: 's', v } : null, date = d => d == null ? null : { t: 'n', v: d + 25569, z: 'yyyy-mm-dd' };
-    sh.rows.forEach((it, k) => {
-      const r = m.hr + 2 + k, ed = new Set(it._ed || []);
-      const put = (col, cell) => { if (col == null || col < 0) return; if (cell) ws[enc(r, col)] = cell; else delete ws[enc(r, col)]; };
-      // 원래 행의 셀을 그대로 옮김 (수식은 계산값으로 고정)
-      if (!it._new) cols.forEach(col => { const src = old[it.r + ',' + col]; if (src) { const cp = { ...src }; delete cp.f; ws[enc(r, col)] = cp; } });
-      for (const [key, col] of Object.entries(field)) if (it._new || ed.has(key)) put(col, str(it[key]));
-      if (it._new || ed.has('dueDay') || ed.has('dueText')) put(m.cols['due date'], it.dueDay != null ? date(it.dueDay) : str(it.dueText));
-      if (it._new || ed.has('actualDay') || ed.has('actualText')) put(m.cols.actual, it.actualDay != null ? date(it.actualDay) : str(it.actualText));
-      m.extraCols.forEach((col, j) => { if (it._new || ed.has('x' + j)) put(col, str(it.extra[j])); });
-    });
-    const R = XLSX.utils.decode_range(ws['!ref']); R.e.r = Math.max(R.e.r, m.hr + 1 + sh.rows.length); ws['!ref'] = XLSX.utils.encode_range(R);
+    const src = c.src[sh.name]; if (!src) return;
+    if (!byFile.has(src.file)) byFile.set(src.file, []);
+    byFile.get(src.file).push([sh, src.sheet]);
   });
-  // SheetJS는 문자열 속 CR+LF를 그대로 읽고 CR을 _x000d_ 로 써서 다른 프로그램에 글자로 보임 → 모든 시트 문자열 줄바꿈을 LF로 정규화
-  wb.SheetNames.forEach(n => { const ws = wb.Sheets[n]; for (const k in ws) { const cell = ws[k]; if (k[0] !== '!' && cell && cell.t === 's' && typeof cell.v === 'string' && /\r/.test(cell.v)) { cell.v = cell.v.replace(/\r\n?/g, '\n'); delete cell.h; delete cell.r; delete cell.w; } } });
-  const d = new Date(), p2 = n => String(n).padStart(2, '0');
-  const name = c.name.replace(/\.xls[xm]?$/i, '') + `_수정_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}.xlsx`;
-  const data = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-  S.lastSaved = { name, data };   // 메모리에만 (브라우저 저장소 아님) — 확인·테스트용
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
-  a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  S.saved = [];
+  byFile.forEach((list, file) => {
+    const wb = XLSX.read(file.buf, { type: 'array', cellNF: true });   // cellDates 없이 + 숫자 서식 유지: 날짜는 서식 붙은 일련번호 그대로
+    list.forEach(([sh, real]) => {
+      const ws = wb.Sheets[real], m = sh.meta, cols = [...new Set(Object.values(m.cols).filter(x => x >= 0).concat(m.extraCols))], old = {};
+      for (let r = m.hr + 2; r <= m.lastRow; r++) cols.forEach(col => { const cell = ws[enc(r, col)]; if (cell) old[r + ',' + col] = cell; delete ws[enc(r, col)]; });
+      const field = { contract: m.cols.contract, clauses: m.cols.clauses, from: m.cols.from, to: m.cols.to, event: m.cols.event, items: m.cols['items covered'], dueRule: m.cols.due };
+      const str = v => v ? { t: 's', v } : null, date = d => d == null ? null : { t: 'n', v: d + 25569, z: 'yyyy-mm-dd' };
+      sh.rows.forEach((it, k) => {
+        const r = m.hr + 2 + k, ed = new Set(it._ed || []);
+        const put = (col, cell) => { if (col == null || col < 0) return; if (cell) ws[enc(r, col)] = cell; else delete ws[enc(r, col)]; };
+        // 원래 행의 셀을 그대로 옮김 (수식은 계산값으로 고정)
+        if (!it._new) cols.forEach(col => { const src = old[it.r + ',' + col]; if (src) { const cp = { ...src }; delete cp.f; ws[enc(r, col)] = cp; } });
+        for (const [key, col] of Object.entries(field)) if (it._new || ed.has(key)) put(col, str(it[key]));
+        if (it._new || ed.has('dueDay') || ed.has('dueText')) put(m.cols['due date'], it.dueDay != null ? date(it.dueDay) : str(it.dueText));
+        if (it._new || ed.has('actualDay') || ed.has('actualText')) put(m.cols.actual, it.actualDay != null ? date(it.actualDay) : str(it.actualText));
+        m.extraCols.forEach((col, j) => { if (it._new || ed.has('x' + j)) put(col, str(it.extra[j])); });
+      });
+      const R = XLSX.utils.decode_range(ws['!ref']); R.e.r = Math.max(R.e.r, m.hr + 1 + sh.rows.length); ws['!ref'] = XLSX.utils.encode_range(R);
+    });
+    // SheetJS는 문자열 속 CR+LF를 그대로 읽고 CR을 _x000d_ 로 써서 다른 프로그램에 글자로 보임 → 줄바꿈을 LF로 정규화
+    wb.SheetNames.forEach(n => { const ws = wb.Sheets[n]; for (const k in ws) { const cell = ws[k]; if (k[0] !== '!' && cell && cell.t === 's' && typeof cell.v === 'string' && /\r/.test(cell.v)) { cell.v = cell.v.replace(/\r\n?/g, '\n'); delete cell.h; delete cell.r; delete cell.w; } } });
+    const d = new Date(), p2 = n => String(n).padStart(2, '0');
+    const name = file.name.replace(/\.xls[xm]?$/i, '') + `_수정_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}.xlsx`;
+    const data = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+    S.lastSaved = { name, data }; S.saved.push({ name, data });   // 메모리에만 (브라우저 저장소 아님) — 확인·테스트용
+    const el = document.createElement('a');
+    el.href = URL.createObjectURL(new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    el.download = name; document.body.append(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(el.href), 2000);
+  });
 }
 
 // ---------- Tab 2: Periodical Checklist ----------
@@ -1406,6 +1473,8 @@ function render(){
   if (any) $('#app').innerHTML = tabBar('', TABS, S.tab, 'tab') + `<div role="tabpanel">${S.tab === 'prod' ? renderProd() : S.tab === 'check' ? renderCheck() : renderCargo()}</div>`;
   const iss = [...(S.ledger?.model.issues || []).map(x => ({ ...x, wb: 'Ledger' })), ...(S.check?.model.issues || []).map(x => ({ ...x, wb: '체크리스트' }))];
   $('#checkPanel').hidden = !any;
+  $('#matchPanel').hidden = !S.files.length;
+  if (S.files.length) renderMatch();
   const warnN = iss.filter(x => x.level === 'warn').length;
   $('#checkPanel').querySelector('summary').textContent = `데이터 점검 — 경고 ${warnN}건 · 참고 ${iss.length - warnN}건`;
   $('#checkBody').innerHTML = iss.length ? `<ul>${iss.map(x => `<li class="${x.level}">[${x.wb}] <b>${esc(x.sheet)}</b> · ${esc(x.header)} — ${esc(x.msg)}</li>`).join('')}</ul>` : '<p class="muted">문제 없음</p>';
@@ -1435,7 +1504,7 @@ document.addEventListener('click', e => {
   else if (d.undo) { if (confirm('이 화면에서 한 수정을 모두 되돌릴까요?')) undoAll(); }
   else if (d.save) saveEdited();
   else if (d.inav) { const top = insights()[0]; if (top && top.nav) go(top.nav); }
-  else if (d.act === 'real') { if (S.ledger?.sample) S.ledger = null; if (S.check?.sample) S.check = null; render(); }
+  else if (d.act === 'real') { if (!dropEdits()) return; S.files = S.files.filter(f => !f.sample); rebuild(); render(); }
 });
 $('#alertClose').onclick = () => $('#alertDlg').close();
 const refInput = $('#refDate');
@@ -1516,22 +1585,84 @@ async function loadSample(){
   await loadFiles([file(a, 'sample-ledger.xlsx'), file(b, 'sample-checklist.xlsx')], true);
 }
 
+// 시트 풀: 불러온 파일 전부. 같은 이름 파일을 다시 넣으면 교체
+let fileSeq = 1;
+S.files = []; S.manual = {}; S.match = {};
+function rebuild(){
+  const res = S.match = M.resolveSheets(S.files, S.manual);
+  const make = group => {
+    const wb = { SheetNames: [], Sheets: {} }, src = {}, used = new Set();
+    M.GROUPS[group].forEach(L => { const r = res[L]; if (r.file) { wb.SheetNames.push(L); wb.Sheets[L] = r.file.wb.Sheets[r.sheet]; src[L] = { file: r.file, sheet: r.sheet }; used.add(r.file); } });
+    return { wb, src, used: [...used] };
+  };
+  const ld = make('ledger'), ck = make('check');
+  const note = (model, group) => M.GROUPS[group].forEach(L => {
+    const r = res[L];
+    if (r.status === 'ambiguous') {
+      const i = model.issues.findIndex(x => x.sheet === L && x.header === '(시트)'); if (i >= 0) model.issues.splice(i, 1);
+      model.issues.unshift({ level: 'warn', sheet: L, header: '(시트 매칭)', msg: `후보가 여러 개라 고르지 않음 (${r.cands.join(', ')}) — "시트 매칭"에서 직접 고르세요` });
+      const msg = `'${L}' 시트 후보가 여러 개입니다 — 아래 "시트 매칭"에서 직접 고르세요`, sec = ({ 'Feed Gas': 'fg', Forecast: 'fc', 'Ledger_ADP 및 SDS': 'lng', 'Condensate Ledger': 'cond', 'ADP 및 SDS': 'lngLift', LP: 'condLift', 'Operation Daily': 'prod', BrentnJKM: 'price', '일정': 'schedule', Cargo: 'cargo', 'History (연단위)': 'history' })[L] || L;
+      model.err[sec] = msg; (model.sheets || []).forEach(sh => { if (sh.name === L) sh.err = msg; });
+    }
+    if (r.status === 'dup') model.issues.push({ level: 'info', sheet: L, header: '(시트 매칭)', msg: `같은 시트가 여러 파일에 있어 나중 파일 사용: ${r.file.name} › ${r.sheet} (사용 안 함: ${r.dup.join(', ')})` });
+    if (r.how === '헤더') model.issues.push({ level: 'info', sheet: L, header: '(시트 매칭)', msg: `이름이 달라 헤더로 찾음: ${r.file.name} › ${r.sheet}` });
+    // 직접 고른 시트의 헤더가 이 논리 시트와 맞지 않으면 경고 (선택은 그대로 따름)
+    if (r.how === '수동' && !M.sheetFP(r.file.wb.Sheets[r.sheet]).includes(L)) model.issues.unshift({ level: 'warn', sheet: L, header: '(시트 매칭)', msg: `직접 고른 ${r.file.name} › ${r.sheet} 의 헤더가 '${L}' 형식과 맞지 않습니다 — 값이 틀릴 수 있음` });
+  });
+  const names = used => [...new Set(used.map(f => f.name))].join(', ');
+  S.ledger = ld.wb.SheetNames.length ? { name: names(ld.used), model: M.parseLedger(ld.wb), sample: ld.used.some(f => f.sample), src: ld.src } : null;
+  if (S.ledger) note(S.ledger.model, 'ledger');
+  S.check = ck.wb.SheetNames.length ? { name: names(ck.used), model: M.parseCheck(ck.wb), sample: ck.used.some(f => f.sample), src: ck.src } : null;
+  if (S.check) { note(S.check.model, 'check'); snapshotOrig(S.check.model); }
+  S.editing = null;
+}
+// 저장하지 않은 수정이 있으면 다시 만들기 전에 확인
+const dropEdits = () => !editCount() || confirm(`저장하지 않은 체크리스트 수정 ${editCount()}건이 사라집니다. 계속할까요?`);
 async function loadFiles(files, sample = false){
   const msg = $('#loadMsg'); msg.textContent = '';
   if (typeof XLSX === 'undefined') { msg.textContent = 'SheetJS 라이브러리를 불러오지 못했습니다 (네트워크 확인). cdn.jsdelivr.net 접속이 필요합니다.'; alert(msg.textContent); return; }
-  const errs = []; let gotCheck = false;
+  if (!dropEdits()) return;
+  const errs = [], added = [], hadCheck = S.check?.name;
   for (const f of files) {
     try {
       const buf = await f.arrayBuffer(), wb = XLSX.read(buf, { type: 'array', cellDates: true });
-      const kind = M.detect(wb);
-      if (kind === 'ledger') S.ledger = { name: f.name, model: M.parseLedger(wb), sample };
-      else if (kind === 'check') { S.check = { name: f.name, model: M.parseCheck(wb), sample, buf }; snapshotOrig(S.check.model); gotCheck = true; }
-      else errs.push(`${f.name}: 시트 구성으로 Ledger/체크리스트 어느 쪽인지 판별하지 못했습니다.`);
+      S.files = S.files.filter(x => x.name !== f.name);
+      const entry = { id: fileSeq++, name: f.name, wb, buf, sample }; S.files.push(entry); added.push(entry);
     } catch (err) { errs.push(`${f.name}: 읽기 실패 — ${err.message}`); }
   }
-  if (errs.length) { msg.textContent = errs.join(' / '); if (S.ledger || S.check) alert(errs.join('\n')); }
+  rebuild();
+  // 어떤 논리 시트에도 쓰이지 않고 후보도 아닌 파일은 알리고 뺌
+  added.forEach(e => {
+    const usedHere = Object.values(S.match).some(r => r.file === e || (r.cands || []).some(c => c.startsWith(e.name + ' › ')) || (r.dup || []).some(c => c.startsWith(e.name + ' › ')));
+    if (!usedHere) { errs.push(`${e.name}: 필요한 시트와 맞는 것이 없습니다 (시트 이름·헤더 모두 불일치).`); S.files = S.files.filter(x => x !== e); }
+  });
+  if (errs.length) { rebuild(); msg.textContent = errs.join(' / '); if (S.ledger || S.check) alert(errs.join('\n')); }
   render();
+  const gotCheck = added.some(e => S.check && Object.values(S.check.src).some(x => x.file === e)) || (S.check && S.check.name !== hadCheck);
   if (gotCheck || (!S.alerted && S._alerts?.length)) { S.alerted = true; if (S._alerts?.length) openAlerts(S._alerts); }
+}
+// 시트 매칭 표의 직접 선택
+document.addEventListener('change', e => {
+  const sel = e.target.closest && e.target.closest('select[data-match]'); if (!sel) return;
+  if (!dropEdits()) { render(); return; }
+  if (sel.value) S.manual[sel.dataset.match] = sel.value; else delete S.manual[sel.dataset.match];
+  rebuild(); render();
+});
+function renderMatch(){
+  const res = S.match || {}, groups = Object.entries(M.GROUPS).filter(([, Ls]) => Ls.some(L => res[L] && res[L].file));
+  const pool = S.files.flatMap(f => f.wb.SheetNames.map(sh => [f.id + '|' + sh, `${f.name} › ${sh}`]));
+  const st = r => r.status === 'ok' ? '<span class="pill st-done">정상</span>' : r.status === 'dup' ? `<span class="pill st-plan">중복</span> <span class="muted">사용 안 함: ${esc(r.dup.join(', '))}</span>`
+    : r.status === 'ambiguous' ? `<span class="pill st-late">▲ 모호</span> <span class="muted">후보: ${esc(r.cands.join(', '))}</span>` : `<span class="miss-in">⊘ 없음</span>`;
+  let warn = 0;
+  const rows = groups.map(([g, Ls]) => Ls.map(L => {
+    const r = res[L] || {}; if (r.status === 'ambiguous' || r.status === 'none') warn++;
+    return `<tr><td>${esc(g === 'ledger' ? 'Ledger' : '체크리스트')}</td><td><b>${esc(L)}</b></td><td>${r.file ? esc(r.file.name) : '–'}</td><td>${r.file ? esc(r.sheet) : '–'}</td><td>${esc(r.how || '–')}</td><td>${st(r)}</td>
+      <td><select data-match="${esc(L)}" aria-label="${esc(L)} 시트 직접 선택"><option value="">(자동)</option>${pool.map(([k, lab]) => `<option value="${esc(k)}"${S.manual[L] === k ? ' selected' : ''}>${esc(lab)}</option>`).join('')}</select></td></tr>`;
+  }).join('')).join('');
+  $('#matchPanel').querySelector('summary').textContent = `시트 매칭 — 파일 ${S.files.length}개${warn ? ` · 경고 ${warn}건` : ''}`;
+  $('#matchBody').innerHTML = `<div class="tw"><table class="t-match"><thead><tr><th>구분</th><th>필요한 시트</th><th>파일</th><th>실제 시트</th><th>방법</th><th>상태</th><th>직접 선택</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="note">이름이 같은 시트를 먼저 쓰고, 없으면 헤더로 찾습니다. 같은 시트가 여러 파일에 있으면 나중에 불러온 파일을 씁니다. 직접 선택은 이 화면에서만 유지됩니다.</p>`;
+  if (warn) $('#matchPanel').open = true;
 }
 $('#fileInput').addEventListener('change', e => { loadFiles([...e.target.files]); e.target.value = ''; });
 ['dragover', 'dragenter'].forEach(ev => document.addEventListener(ev, e => { e.preventDefault(); $('#loader').classList.add('drag'); $('#filebar').classList.add('drag'); }));
