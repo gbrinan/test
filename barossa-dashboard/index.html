@@ -152,7 +152,8 @@ tr.sds td:first-child{box-shadow:inset 3px 0 0 var(--lng)}
 .rowedit:hover{border-color:var(--brand)}
 .eddot{display:inline-block;margin-left:5px;font-size:11px;font-weight:700;color:var(--brand)}
 tr.editrow td{background:var(--surface);white-space:normal}
-.edform{display:grid;gap:8px 12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));max-width:min(100%,1100px)}
+/* 편집 폼은 넓은 표 안에 있어도 보이는 폭에 맞추고 가로 스크롤 시 왼쪽에 고정 */
+.edform{display:grid;gap:8px 12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));width:min(1100px,calc(100vw - 80px));position:sticky;left:8px}
 .ef{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--text2);font-weight:600}
 .ef.wide{grid-column:1/-1}
 .ef input,.ef textarea{font:inherit;font-weight:400;font-size:13px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);min-width:0}
